@@ -1,1 +1,539 @@
-<!DOCTYPE html><html lang='it'><head><meta charset='UTF-8'><title>Wedding Tattoo Experience v2</title></head><body><h1>Wedding Tattoo Experience v2</h1></body></html>
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080705">
+  <meta name="description" content="Wedding Tattoo Experience by Tattoo Beauty Saloon. Un'esperienza esclusiva che rende indelebile il giorno del matrimonio.">
+  <meta property="og:title" content="Wedding Tattoo Experience">
+  <meta property="og:description" content="Love. Marked. Forever.">
+  <meta property="og:type" content="website">
+  <meta name="robots" content="index,follow">
+  <title>Wedding Tattoo Experience — Love. Marked. Forever.</title>
+
+  <style>
+    :root{
+      --bg:#070604;
+      --bg2:#0d0a07;
+      --panel:#12100c;
+      --gold:#c89b3c;
+      --gold2:#f2d37e;
+      --cream:#f7f0e4;
+      --muted:#b7ad9b;
+      --line:rgba(242,211,126,.18);
+      --radius:26px;
+      --shadow:0 34px 110px rgba(0,0,0,.52);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--bg)}
+    body{
+      margin:0;background:var(--bg);color:var(--cream);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      overflow-x:hidden;-webkit-font-smoothing:antialiased;
+    }
+    body.lock{overflow:hidden}
+    button,a,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit}
+    :focus-visible{outline:2px solid var(--gold2);outline-offset:4px}
+
+    .grain{
+      position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.024;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E")
+    }
+
+    .site-header{
+      position:fixed;top:0;left:0;right:0;z-index:40;
+      min-height:74px;padding:14px clamp(16px,4vw,60px);
+      display:flex;align-items:center;justify-content:space-between;
+      transition:.3s ease;
+    }
+    .site-header.scrolled{
+      background:rgba(6,5,4,.84);backdrop-filter:blur(18px);
+      border-bottom:1px solid var(--line);
+    }
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+    .brand-icon{
+      width:38px;height:38px;border:1px solid rgba(242,211,126,.58);
+      transform:rotate(45deg);display:grid;place-items:center;
+    }
+    .brand-icon span{
+      transform:rotate(-45deg);font-family:Georgia,serif;color:var(--gold2);font-size:15px;
+    }
+    .brand-copy{display:flex;flex-direction:column}
+    .brand-copy strong{font-family:Georgia,serif;font-weight:400;letter-spacing:.025em}
+    .brand-copy small{font-size:9px;text-transform:uppercase;letter-spacing:.17em;color:var(--muted);margin-top:3px}
+    .nav{display:flex;gap:25px}
+    .nav a{font-size:13px;text-decoration:none;color:#e5dccd;transition:.2s}
+    .nav a:hover{color:var(--gold2)}
+    .header-right{display:flex;align-items:center;gap:10px}
+    .header-cta{
+      border:1px solid rgba(242,211,126,.5);background:rgba(200,155,60,.08);
+      color:var(--gold2);border-radius:999px;padding:11px 16px;
+    }
+    .menu-btn{
+      display:none;width:42px;height:42px;border-radius:50%;
+      background:transparent;border:1px solid var(--line);position:relative;
+    }
+    .menu-btn span{position:absolute;left:12px;right:12px;height:1px;background:#fff}
+    .menu-btn span:first-child{top:16px}.menu-btn span:last-child{top:24px}
+
+    .mobile-menu{
+      position:fixed;inset:0;z-index:35;background:rgba(6,5,4,.985);
+      transform:translateX(100%);transition:.35s ease;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .mobile-menu.open{transform:none}
+    .mobile-menu nav{display:flex;flex-direction:column;align-items:center;gap:22px}
+    .mobile-menu a{font-family:Georgia,serif;font-size:31px;text-decoration:none}
+    .mobile-menu button{margin-top:10px}
+
+    .hero{
+      position:relative;min-height:100svh;display:grid;place-items:center;overflow:hidden;
+      background:
+        radial-gradient(circle at 50% 40%,rgba(200,155,60,.22),transparent 28%),
+        linear-gradient(180deg,#171006 0%,#080705 58%,#070604 100%);
+    }
+    .hero::before{
+      content:"";position:absolute;inset:0;
+      background:
+        linear-gradient(115deg,transparent 15%,rgba(242,211,126,.08) 38%,transparent 58%),
+        radial-gradient(ellipse at 50% 48%,transparent 0 24%,rgba(0,0,0,.42) 62%,rgba(0,0,0,.82) 100%);
+    }
+    .hero-art{
+      position:absolute;width:min(72vw,900px);aspect-ratio:1;border-radius:50%;
+      border:1px solid rgba(242,211,126,.12);
+      box-shadow:0 0 140px rgba(200,155,60,.12),inset 0 0 100px rgba(0,0,0,.5);
+    }
+    .hero-art::before,.hero-art::after{
+      content:"";position:absolute;border-radius:50%;inset:10%;
+      border:1px solid rgba(242,211,126,.1);
+    }
+    .hero-art::after{inset:22%;background:radial-gradient(circle,rgba(200,155,60,.16),rgba(0,0,0,.18) 55%,transparent)}
+    .hero-content{
+      position:relative;text-align:center;max-width:930px;padding:120px 20px 90px;
+    }
+    .eyebrow,.section-kicker{
+      color:var(--gold2);font-size:10px;letter-spacing:.23em;
+      text-transform:uppercase;margin:0 0 15px;
+    }
+    .hero h1{
+      margin:0;font-family:Georgia,serif;font-weight:400;
+      font-size:clamp(58px,11vw,148px);line-height:.83;letter-spacing:-.05em;
+      text-shadow:0 24px 70px rgba(0,0,0,.55);
+    }
+    .hero-copy{
+      max-width:680px;margin:28px auto 0;color:#ddd4c6;
+      font-size:clamp(15px,2vw,20px);line-height:1.7;
+    }
+    .actions{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+    .btn{
+      min-height:52px;border-radius:999px;padding:0 24px;
+      display:inline-flex;align-items:center;justify-content:center;
+      border:1px solid transparent;text-decoration:none;font-weight:700;transition:.22s;
+    }
+    .btn-gold{
+      background:linear-gradient(135deg,var(--gold2),var(--gold));
+      color:#181108;box-shadow:0 16px 42px rgba(200,155,60,.18);
+    }
+    .btn-gold:hover{transform:translateY(-2px);box-shadow:0 21px 52px rgba(200,155,60,.26)}
+    .btn-dark{border-color:rgba(255,255,255,.22);background:rgba(0,0,0,.2);backdrop-filter:blur(12px)}
+    .scroll{
+      position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
+      display:flex;flex-direction:column;align-items:center;gap:8px;
+      color:#cfc4b3;text-decoration:none;text-transform:uppercase;
+      letter-spacing:.17em;font-size:9px;
+    }
+    .scroll i{width:1px;height:36px;background:linear-gradient(var(--gold2),transparent)}
+
+    .trust{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+      background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    }
+    .trust span{
+      background:#0b0907;padding:17px 10px;text-align:center;
+      color:#d8cfbf;text-transform:uppercase;letter-spacing:.1em;font-size:10px;
+    }
+
+    .section{padding:clamp(88px,11vw,155px) clamp(18px,6vw,88px)}
+    .statement{text-align:center;max-width:1260px;margin:auto}
+    .statement h2,.heading h2,.editorial-copy h2,.book-copy h2,.tato-copy h2,.final h2,.modal-card h2{
+      font-family:Georgia,serif;font-weight:400;line-height:1.03;margin:0;
+      font-size:clamp(38px,6vw,76px);
+    }
+    .intro{max-width:730px;margin:24px auto 0;color:var(--muted);line-height:1.75;font-size:17px}
+    .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:58px;text-align:left}
+    .pillar{
+      border-top:1px solid var(--line);padding:27px;
+      background:linear-gradient(180deg,rgba(255,255,255,.018),transparent);
+    }
+    .pillar span,.timeline span{font-size:11px;letter-spacing:.16em;color:var(--gold)}
+    .pillar h3{font-family:Georgia,serif;font-size:28px;font-weight:400;margin:40px 0 10px}
+    .pillar p{color:var(--muted);line-height:1.65}
+
+    .editorial{display:grid;grid-template-columns:1.15fr .85fr;min-height:750px;background:var(--bg2)}
+    .editorial-photo{
+      min-height:620px;position:relative;overflow:hidden;
+      background:
+        radial-gradient(circle at 50% 40%,rgba(200,155,60,.34),transparent 22%),
+        linear-gradient(145deg,#24170b,#070604 65%);
+    }
+    .editorial-photo::before{
+      content:"";position:absolute;width:58%;aspect-ratio:3/4;left:21%;top:10%;
+      border-radius:48% 48% 20% 20%;
+      background:
+        radial-gradient(circle at 50% 23%,#c58c62 0 7%,#3a2214 7.5% 13%,transparent 13.5%),
+        linear-gradient(180deg,#17110d 10%,#090807 65%);
+      box-shadow:0 30px 90px rgba(0,0,0,.5);
+    }
+    .editorial-photo::after{
+      content:"WTE CONCIERGE";position:absolute;bottom:10%;left:50%;transform:translateX(-50%);
+      color:rgba(242,211,126,.72);letter-spacing:.18em;font-family:Georgia,serif;
+    }
+    .editorial-copy{padding:clamp(58px,8vw,115px);display:flex;flex-direction:column;justify-content:center}
+    .editorial-copy p:not(.section-kicker),.book-copy p:not(.section-kicker),.tato-copy p{
+      color:var(--muted);line-height:1.75;font-size:17px;
+    }
+    .text-link{margin-top:22px;color:var(--gold2);text-decoration:none}
+
+    .heading{max-width:900px;margin-bottom:52px}
+    .timeline{border-top:1px solid var(--line)}
+    .timeline article{display:grid;grid-template-columns:85px 1fr;gap:22px;padding:27px 0;border-bottom:1px solid var(--line)}
+    .timeline h3{font-family:Georgia,serif;font-weight:400;font-size:30px;margin:0 0 7px}
+    .timeline p{margin:0;color:var(--muted)}
+
+    .gallery{background:#090806}
+    .gallery-grid{
+      display:grid;grid-template-columns:1.1fr .9fr .9fr;
+      grid-template-rows:310px 310px;gap:15px;
+    }
+    .photo{
+      border-radius:22px;border:1px solid rgba(242,211,126,.12);
+      overflow:hidden;position:relative;box-shadow:0 20px 56px rgba(0,0,0,.28);
+      background:linear-gradient(145deg,#26180b,#090806);
+    }
+    .photo::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 38%,rgba(242,211,126,.26),transparent 23%)}
+    .photo::after{
+      content:attr(data-label);position:absolute;left:18px;bottom:16px;
+      font-family:Georgia,serif;color:#ead9b5;letter-spacing:.08em;
+    }
+    .p1{grid-row:1/3}.p2{background:linear-gradient(145deg,#180f08,#3a2410)}.p3{background:linear-gradient(145deg,#0f0c09,#6d4e20)}.p4{background:linear-gradient(145deg,#20160d,#0b0907)}.p5{background:linear-gradient(145deg,#0c0a08,#40301a)}
+
+    .packages{background:#0a0907}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+    .card{
+      position:relative;min-height:490px;padding:29px;border:1px solid var(--line);
+      border-radius:var(--radius);display:flex;flex-direction:column;
+      background:linear-gradient(160deg,rgba(255,255,255,.025),rgba(255,255,255,.006));
+      transition:.28s;
+    }
+    .card:hover{transform:translateY(-6px);border-color:rgba(242,211,126,.4);box-shadow:var(--shadow)}
+    .card.featured{border-color:rgba(242,211,126,.52);transform:translateY(-11px)}
+    .badge{position:absolute;right:15px;top:15px;border-radius:999px;padding:7px 10px;background:rgba(200,155,60,.15);color:var(--gold2);font-size:9px;text-transform:uppercase;letter-spacing:.13em}
+    .card-name{font-size:10px;color:var(--gold2);text-transform:uppercase;letter-spacing:.18em}
+    .card small{color:var(--muted);margin-top:8px}
+    .card h3{font-family:Georgia,serif;font-weight:400;font-size:35px;margin:22px 0 10px}
+    .card>p{color:var(--muted);line-height:1.55}
+    .card ul{list-style:none;margin:25px 0;padding:0;display:grid;gap:12px}
+    .card li::before{content:"✓";color:var(--gold2);margin-right:9px}
+    .card button{margin-top:auto;min-height:47px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--gold2)}
+
+    .book{
+      background:radial-gradient(circle at 15% 20%,rgba(200,155,60,.12),transparent 31%),linear-gradient(#0d0a07,#070604);
+    }
+    .book-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:clamp(40px,8vw,105px);align-items:center}
+    .book-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+    .device{
+      width:min(500px,100%);aspect-ratio:3/4;margin:auto;padding:13px;border-radius:32px;
+      border:1px solid rgba(242,211,126,.32);background:linear-gradient(145deg,#1b160f,#070604);
+      box-shadow:0 44px 120px rgba(0,0,0,.56);transform:perspective(1200px) rotateY(-6deg);
+    }
+    .device-top{width:29%;height:7px;border-radius:99px;background:rgba(255,255,255,.08);margin:4px auto 12px}
+    .screen{
+      height:calc(100% - 23px);border-radius:23px;
+      background:radial-gradient(circle,rgba(200,155,60,.26),transparent 42%),linear-gradient(#171006,#020202);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:25px;
+    }
+    .screen span,.screen small{text-transform:uppercase;color:#d8c59b;letter-spacing:.18em;font-size:9px}
+    .screen strong{font-family:Georgia,serif;font-weight:400;color:var(--gold2);font-size:clamp(38px,5vw,67px);line-height:.9;margin:27px 0}
+
+    .tato{
+      margin:0 clamp(18px,6vw,88px) clamp(88px,10vw,140px);
+      padding:clamp(38px,6vw,76px);border:1px solid var(--line);border-radius:32px;
+      display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;
+      background:radial-gradient(circle at 10% 10%,rgba(200,155,60,.11),transparent 35%),#0d0b08;
+    }
+    .avatar{
+      width:74px;height:74px;border-radius:50%;display:grid;place-items:center;
+      background:linear-gradient(135deg,var(--gold2),var(--gold));color:#171008;font-family:Georgia,serif;font-size:34px;
+    }
+    .tato-copy h2{font-size:52px}.tato-copy p{max-width:650px}
+
+    .faq article{border-top:1px solid var(--line)}.faq article:last-child{border-bottom:1px solid var(--line)}
+    .question{width:100%;border:0;background:transparent;color:#fff;padding:23px 0;display:flex;justify-content:space-between;text-align:left;font-family:Georgia,serif;font-size:25px}
+    .answer{max-height:0;overflow:hidden;transition:max-height .35s}.answer p{color:var(--muted);line-height:1.65;max-width:780px;padding:0 0 23px}
+    .faq article.open .answer{max-height:220px}.faq article.open .question span{transform:rotate(45deg)}
+
+    .final{text-align:center;padding:clamp(100px,14vw,185px) 20px;background:radial-gradient(circle,rgba(200,155,60,.12),transparent 42%)}
+    .final .btn{margin-top:32px}
+    footer{
+      padding:32px clamp(18px,6vw,88px);border-top:1px solid var(--line);
+      display:grid;grid-template-columns:1fr auto auto;gap:22px;align-items:center;
+    }
+    footer strong{font-family:Georgia,serif;font-weight:400}
+    footer small{color:var(--muted);font-size:10px;line-height:1.5}
+    .footer-links{display:flex;gap:17px}.footer-links a{text-decoration:none;font-size:12px}
+
+    .reveal{opacity:0;transform:translateY(28px);transition:.8s}.reveal.visible{opacity:1;transform:none}
+
+    .modal{
+      position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:14px;
+      opacity:0;visibility:hidden;pointer-events:none;transition:.25s;
+    }
+    .modal.open{opacity:1;visibility:visible;pointer-events:auto}
+    .modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(14px)}
+    .modal-card{
+      position:relative;width:min(710px,100%);max-height:calc(100svh - 28px);overflow:auto;
+      padding:clamp(28px,5vw,50px);border-radius:28px;border:1px solid rgba(242,211,126,.34);
+      background:radial-gradient(circle at 80% 5%,rgba(200,155,60,.11),transparent 34%),#0b0a08;box-shadow:var(--shadow);
+    }
+    .modal-card h2{font-size:45px;margin-bottom:25px}
+    .close{position:absolute;right:17px;top:17px;width:41px;height:41px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#fff;font-size:25px}
+    form{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+    label{display:flex;flex-direction:column;gap:7px;color:#dbcba9;font-size:10px;text-transform:uppercase;letter-spacing:.07em}
+    label.full{grid-column:1/-1}
+    input,select,textarea{border:1px solid var(--line);border-radius:14px;background:#12100d;color:#fff;padding:13px 14px;outline:none}
+    textarea{min-height:98px;resize:vertical}
+    form .btn{grid-column:1/-1}
+    .tato-card{text-align:center}.tato-options{display:grid;gap:10px;margin:23px 0}
+    .tato-options button{min-height:47px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.02);color:#fff}
+
+    .float{
+      position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));
+      z-index:60;display:flex;flex-direction:column;gap:9px;
+    }
+    .float button,.float a{
+      width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
+      text-decoration:none;font-weight:800;box-shadow:0 16px 42px rgba(0,0,0,.42);
+    }
+    .float button{border:1px solid rgba(242,211,126,.62);background:linear-gradient(145deg,#171108,#080705);color:var(--gold2)}
+    .float a{border:1px solid rgba(255,255,255,.18);background:#151515;color:#fff;font-size:11px}
+
+    @media(max-width:1050px){
+      .nav,.header-cta{display:none}.menu-btn{display:block}
+      .cards{grid-template-columns:1fr 1fr}.card.featured{transform:none}
+      .editorial{grid-template-columns:1fr}.gallery-grid{grid-template-columns:1fr 1fr}.p1{grid-row:auto}
+      .book-grid{grid-template-columns:1fr}.book-copy{text-align:center}.book-actions{justify-content:center}.device{transform:none}
+      .tato{grid-template-columns:auto 1fr}.tato .btn{grid-column:1/-1}
+    }
+    @media(max-width:700px){
+      .brand-copy strong{font-size:14px}.brand-copy small{display:none}
+      .hero h1{font-size:clamp(54px,19vw,92px)}.hero-actions .btn{width:100%}
+      .trust{grid-template-columns:1fr 1fr}.pillars,.cards{grid-template-columns:1fr}
+      .editorial-copy{padding:68px 20px}.timeline article{grid-template-columns:48px 1fr}
+      .gallery-grid{grid-template-columns:1fr;grid-template-rows:none}.photo{min-height:310px}
+      .tato{grid-template-columns:1fr;text-align:center}.avatar{margin:auto}.tato-copy h2{font-size:42px}
+      footer{grid-template-columns:1fr;text-align:center}.footer-links{justify-content:center;flex-wrap:wrap}
+      .modal{padding:0}.modal-card{width:100%;min-height:100svh;max-height:100svh;border-radius:0;padding:74px 17px 25px}
+      form{grid-template-columns:1fr}label.full,form .btn{grid-column:auto}
+    }
+    @media(max-width:480px){.trust{grid-template-columns:1fr}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+
+  <header class="site-header" id="header">
+    <a class="brand" href="#home">
+      <span class="brand-icon"><span>W</span></span>
+      <span class="brand-copy"><strong>Wedding Tattoo Experience</strong><small>by Tattoo Beauty Saloon</small></span>
+    </a>
+    <nav class="nav">
+      <a href="#experience">L’esperienza</a><a href="#how">Come funziona</a>
+      <a href="#gallery">Galleria</a><a href="#packages">Pacchetti</a>
+      <a href="#book">Wedding Book</a><a href="#faq">FAQ</a>
+    </nav>
+    <div class="header-right">
+      <button class="header-cta" data-open-booking>Verifica disponibilità</button>
+      <button class="menu-btn" id="menuBtn"><span></span><span></span></button>
+    </div>
+  </header>
+
+  <aside class="mobile-menu" id="mobileMenu">
+    <nav>
+      <a href="#home">Home</a><a href="#experience">L’esperienza</a><a href="#how">Come funziona</a>
+      <a href="#gallery">Galleria</a><a href="#packages">Pacchetti</a><a href="#book">Wedding Book</a><a href="#faq">FAQ</a>
+      <button class="btn btn-gold" data-open-booking>Verifica disponibilità</button>
+    </nav>
+  </aside>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-art"></div>
+      <div class="hero-content reveal visible">
+        <p class="eyebrow">Wedding Tattoo Experience</p>
+        <h1>LOVE.<br>MARKED.<br>FOREVER.</h1>
+        <p class="hero-copy">Un’esperienza esclusiva che trasforma il giorno del vostro matrimonio in un ricordo autentico, condiviso e indelebile.</p>
+        <div class="actions">
+          <button class="btn btn-gold" data-open-booking>Richiedi disponibilità</button>
+          <button class="btn btn-dark" data-open-tato>Parla con Tato</button>
+        </div>
+      </div>
+      <a class="scroll" href="#experience"><i></i>Scopri l’esperienza</a>
+    </section>
+
+    <section class="trust reveal">
+      <span>Servizio professionale</span><span>Solo maggiorenni</span>
+      <span>Materiali sterili e monouso</span><span>Aftercare incluso</span>
+    </section>
+
+    <section class="section statement reveal" id="experience">
+      <p class="section-kicker">Non è un semplice tatuaggio</p>
+      <h2>È un momento che i vostri ospiti porteranno con sé per sempre.</h2>
+      <p class="intro">Progettiamo una postazione elegante e professionale, integrata nell’atmosfera del matrimonio e curata in ogni dettaglio.</p>
+      <div class="pillars">
+        <article class="pillar"><span>01</span><h3>Emozione</h3><p>Un gesto simbolico che racconta il vostro giorno.</p></article>
+        <article class="pillar"><span>02</span><h3>Esclusività</h3><p>Un servizio creato esclusivamente per eventi wedding.</p></article>
+        <article class="pillar"><span>03</span><h3>Ricordo</h3><p>Un segno reale che continua a vivere oltre la festa.</p></article>
+      </div>
+    </section>
+
+    <section class="editorial reveal">
+      <div class="editorial-photo"></div>
+      <div class="editorial-copy">
+        <p class="section-kicker">Un servizio costruito intorno a voi</p>
+        <h2>Eleganza, sicurezza e personalizzazione.</h2>
+        <p>Dalla selezione dei flash all’allestimento, ogni elemento viene concordato per rispettare stile, tempi e identità del matrimonio.</p>
+        <a class="text-link" href="#book">Scopri il Wedding Book ↓</a>
+      </div>
+    </section>
+
+    <section class="section reveal" id="how">
+      <div class="heading"><p class="section-kicker">Come funziona</p><h2>Un percorso semplice, seguito dall’inizio alla fine.</h2></div>
+      <div class="timeline">
+        <article><span>01</span><div><h3>Richiesta</h3><p>Verifichiamo data, location ed esigenze.</p></div></article>
+        <article><span>02</span><div><h3>Progettazione</h3><p>Definiamo pacchetto, flash e allestimento.</p></div></article>
+        <article><span>03</span><div><h3>Wedding Day</h3><p>Allestiamo e gestiamo l’esperienza sul posto.</p></div></article>
+        <article><span>04</span><div><h3>Aftercare</h3><p>Ogni ospite riceve indicazioni e assistenza.</p></div></article>
+      </div>
+    </section>
+
+    <section class="section gallery reveal" id="gallery">
+      <div class="heading"><p class="section-kicker">Wedding moments</p><h2>Dettagli, atmosfera, emozioni.</h2></div>
+      <div class="gallery-grid">
+        <div class="photo p1" data-label="The Experience"></div><div class="photo p2" data-label="Elegant Setup"></div>
+        <div class="photo p3" data-label="Tattoo Detail"></div><div class="photo p4" data-label="Wedding Guests"></div>
+        <div class="photo p5" data-label="Aftercare"></div>
+      </div>
+    </section>
+
+    <section class="section packages reveal" id="packages">
+      <div class="heading"><p class="section-kicker">I pacchetti</p><h2>Quattro livelli, una sola esperienza indimenticabile.</h2></div>
+      <div class="cards">
+        <article class="card"><span class="card-name">Bronze</span><small>Intimo e curato</small><h3>Essenziale</h3><p>La formula ideale per un’esperienza raccolta e raffinata.</p><ul><li>Allestimento dedicato</li><li>Flash selezionati</li><li>Kit aftercare</li></ul><button data-open-booking>Richiedi informazioni</button></article>
+        <article class="card featured"><span class="badge">Più scelto</span><span class="card-name">Silver</span><small>Equilibrio perfetto</small><h3>Signature</h3><p>Più tempo, più possibilità, maggiore personalizzazione.</p><ul><li>Allestimento premium</li><li>Selezione flash ampliata</li><li>Assistenza dedicata</li></ul><button data-open-booking>Richiedi informazioni</button></article>
+        <article class="card"><span class="card-name">Gold</span><small>Esperienza completa</small><h3>Experience</h3><p>Un servizio completo per eventi con molti invitati.</p><ul><li>Presenza estesa</li><li>Gestione ospiti</li><li>Dettagli personalizzati</li></ul><button data-open-booking>Richiedi informazioni</button></article>
+        <article class="card"><span class="card-name">Luxury</span><small>Progetto su misura</small><h3>Bespoke</h3><p>Un progetto dedicato, senza compromessi.</p><ul><li>Progettazione dedicata</li><li>Copertura Piemonte</li><li>Esperienza personalizzata</li></ul><button data-open-booking>Parliamone insieme</button></article>
+      </div>
+    </section>
+
+    <section class="section book reveal" id="book">
+      <div class="book-grid">
+        <div class="book-copy">
+          <p class="section-kicker">Wedding Book</p><h2>Scoprite il servizio, pagina dopo pagina.</h2>
+          <p>Una presentazione completa di atmosfera, allestimento, sicurezza, flash tattoo e pacchetti.</p>
+          <div class="book-actions"><button class="btn btn-gold" data-open-tato>Scopri con Tato</button><button class="btn btn-dark" data-open-booking>Verifica disponibilità</button></div>
+        </div>
+        <div class="device"><div class="device-top"></div><div class="screen"><span>Wedding Tattoo Experience</span><strong>LOVE.<br>MARKED.<br>FOREVER.</strong><small>by Tattoo Beauty Saloon</small></div></div>
+      </div>
+    </section>
+
+    <section class="tato reveal">
+      <div class="avatar">T</div>
+      <div class="tato-copy"><p class="section-kicker">Concierge digitale</p><h2>Ciao, sono Tato.</h2><p>Posso spiegarti il servizio, aiutarti a orientarti tra i pacchetti e preparare la richiesta per il nostro team.</p></div>
+      <button class="btn btn-gold" data-open-tato>Parla con Tato</button>
+    </section>
+
+    <section class="section reveal" id="faq">
+      <div class="heading"><p class="section-kicker">Domande frequenti</p><h2>Tutto quello che serve sapere.</h2></div>
+      <div class="faq">
+        <article><button class="question">Chi può tatuarsi?<span>+</span></button><div class="answer"><p>Il servizio è riservato esclusivamente a persone maggiorenni, previa valutazione e consenso informato.</p></div></article>
+        <article><button class="question">Come vengono scelti i soggetti?<span>+</span></button><div class="answer"><p>Prima dell’evento prepariamo una selezione di flash coerente con il matrimonio e realmente tatuabile nei tempi disponibili.</p></div></article>
+        <article><button class="question">La postazione è sicura?<span>+</span></button><div class="answer"><p>Utilizziamo procedure professionali, materiali sterili e monouso e una postazione organizzata secondo le esigenze operative del servizio.</p></div></article>
+        <article><button class="question">Come verifico la disponibilità?<span>+</span></button><div class="answer"><p>Compila il modulo indicando data e location. La richiesta verrà inoltrata direttamente al team tramite WhatsApp.</p></div></article>
+      </div>
+    </section>
+
+    <section class="final reveal"><p class="section-kicker">La vostra storia merita qualcosa di unico</p><h2>Alcuni ricordi svaniscono.<br>Altri restano sulla pelle.</h2><button class="btn btn-gold" data-open-booking>Verifica la vostra data</button></section>
+  </main>
+
+  <footer>
+    <div><strong>Wedding Tattoo Experience</strong><br><small>by Tattoo Beauty Saloon</small></div>
+    <div class="footer-links"><a href="https://wa.me/393477050250" target="_blank">WhatsApp</a><a href="https://www.instagram.com/tattoo.beautysalooncondove/" target="_blank">Instagram</a><a href="tel:+393477050250">Telefono</a></div>
+    <small>Via Torino 1A · 10055 Condove (TO)<br>Love. Marked. Forever.</small>
+  </footer>
+
+  <div class="modal" id="bookingModal"><div class="modal-bg" data-close-booking></div><div class="modal-card">
+    <button class="close" data-close-booking>×</button><p class="section-kicker">Verifica disponibilità</p><h2>Raccontateci il vostro matrimonio.</h2>
+    <form id="bookingForm">
+      <label>Nomi degli sposi<input name="names" required placeholder="Es. Marco e Giulia"></label>
+      <label>Data del matrimonio<input type="date" name="date" required></label>
+      <label>Location<input name="location" required placeholder="Città o location"></label>
+      <label>Telefono<input type="tel" name="phone" required placeholder="347..."></label>
+      <label>Pacchetto<select name="package"><option>Da definire</option><option>Bronze</option><option>Silver</option><option>Gold</option><option>Luxury</option></select></label>
+      <label class="full">Note<textarea name="notes" placeholder="Orari, invitati, richieste particolari..."></textarea></label>
+      <button class="btn btn-gold" type="submit">Invia su WhatsApp</button>
+    </form>
+  </div></div>
+
+  <div class="modal" id="tatoModal"><div class="modal-bg" data-close-tato></div><div class="modal-card tato-card">
+    <button class="close" data-close-tato>×</button><div class="avatar" style="margin:auto">T</div>
+    <p class="section-kicker" style="margin-top:18px">Tato Concierge</p><h2>Come posso aiutarti?</h2>
+    <div class="tato-options"><button data-tato="Vorrei capire come funziona Wedding Tattoo Experience.">Come funziona?</button><button data-tato="Vorrei informazioni sui pacchetti Wedding Tattoo Experience.">Quale pacchetto scegliere?</button><button data-open-booking>Verifica disponibilità</button></div>
+    <a class="btn btn-gold" id="tatoLink" href="https://wa.me/393477050250" target="_blank">Continua su WhatsApp</a>
+  </div></div>
+
+  <div class="float"><button data-open-tato>T</button><a href="https://wa.me/393477050250" target="_blank">WA</a></div>
+
+  <script>
+    const body=document.body,header=document.getElementById('header'),menu=document.getElementById('mobileMenu');
+    const booking=document.getElementById('bookingModal'),tato=document.getElementById('tatoModal');
+
+    function modal(el,open){el.classList.toggle('open',open);body.classList.toggle('lock',open)}
+    addEventListener('scroll',()=>header.classList.toggle('scrolled',scrollY>30),{passive:true});
+
+    document.getElementById('menuBtn').onclick=()=>{menu.classList.toggle('open');body.classList.toggle('lock',menu.classList.contains('open'))}
+    menu.querySelectorAll('a').forEach(a=>a.onclick=()=>{menu.classList.remove('open');body.classList.remove('lock')})
+
+    document.querySelectorAll('[data-open-booking]').forEach(b=>b.onclick=()=>{modal(tato,false);modal(booking,true)})
+    document.querySelectorAll('[data-close-booking]').forEach(b=>b.onclick=()=>modal(booking,false))
+    document.querySelectorAll('[data-open-tato]').forEach(b=>b.onclick=()=>modal(tato,true))
+    document.querySelectorAll('[data-close-tato]').forEach(b=>b.onclick=()=>modal(tato,false))
+
+    document.querySelectorAll('.question').forEach(q=>q.onclick=()=>{const a=q.parentElement;document.querySelectorAll('.faq article').forEach(x=>x!==a&&x.classList.remove('open'));a.classList.toggle('open')})
+
+    const io=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add('visible')),{threshold:.12});
+    document.querySelectorAll('.reveal').forEach(x=>io.observe(x));
+
+    document.querySelectorAll('[data-tato]').forEach(b=>b.onclick=()=>{document.getElementById('tatoLink').href='https://wa.me/393477050250?text='+encodeURIComponent(b.dataset.tato);document.getElementById('tatoLink').textContent='Continua questa richiesta su WhatsApp'})
+
+    document.getElementById('bookingForm').onsubmit=e=>{
+      e.preventDefault();const f=new FormData(e.target);
+      const text=`💍 NUOVA RICHIESTA WEDDING TATTOO EXPERIENCE
+
+👰 Sposi: ${f.get('names')}
+📅 Data: ${f.get('date')}
+📍 Location: ${f.get('location')}
+📞 Telefono: ${f.get('phone')}
+🎁 Pacchetto: ${f.get('package')}
+
+📝 Note:
+${f.get('notes')||'Nessuna'}
+
+Vorrei verificare la disponibilità della data.`;
+      open('https://wa.me/393477050250?text='+encodeURIComponent(text),'_blank')
+    }
+  </script>
+</body>
+</html>
