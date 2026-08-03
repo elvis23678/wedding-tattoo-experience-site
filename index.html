@@ -10,6 +10,7 @@
   <meta property="og:type" content="website">
   <meta name="robots" content="index,follow">
   <title>Wedding Tattoo Experience — Love. Marked. Forever.</title>
+  <meta name="version" content="2.1">
 
   <style>
     :root{
@@ -339,6 +340,104 @@
     }
     @media(max-width:480px){.trust{grid-template-columns:1fr}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  
+    /* HOME PREMIUM 2.1 */
+    .hero{
+      isolation:isolate;
+      background:
+        radial-gradient(circle at 50% 36%,rgba(211,161,58,.24),transparent 27%),
+        linear-gradient(180deg,#171006 0%,#090704 58%,#070604 100%);
+    }
+    .hero::after{
+      content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+      background:
+        linear-gradient(180deg,transparent 0 72%,rgba(7,6,4,.95) 100%),
+        radial-gradient(ellipse at center,transparent 0 26%,rgba(0,0,0,.28) 58%,rgba(0,0,0,.72) 100%);
+    }
+    .hero-light{
+      position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none;
+      animation:heroFloat 9s ease-in-out infinite alternate;
+    }
+    .hero-light-one{
+      width:42vw;height:42vw;max-width:580px;max-height:580px;
+      top:12%;left:-10%;background:rgba(187,125,32,.09);
+    }
+    .hero-light-two{
+      width:36vw;height:36vw;max-width:480px;max-height:480px;
+      right:-10%;bottom:10%;background:rgba(242,211,126,.07);
+      animation-delay:-4s;
+    }
+    .hero-rings{
+      position:absolute;left:50%;top:46%;width:min(72vw,760px);aspect-ratio:1;
+      transform:translate(-50%,-50%);pointer-events:none;opacity:.62;
+    }
+    .hero-rings i{
+      position:absolute;border-radius:50%;border:1px solid rgba(242,211,126,.10);
+      inset:0;animation:ringPulse 8s ease-in-out infinite;
+    }
+    .hero-rings i:nth-child(2){inset:12%;animation-delay:-2.5s}
+    .hero-rings i:nth-child(3){inset:25%;animation-delay:-5s}
+    .hero-content{z-index:2}
+    .hero h1{
+      background:linear-gradient(180deg,#fff9ed 0%,#f2e4cf 68%,#cfb278 100%);
+      -webkit-background-clip:text;background-clip:text;color:transparent;
+      filter:drop-shadow(0 16px 34px rgba(0,0,0,.38));
+    }
+    .hero-copy{max-width:650px}
+    .btn-dark{
+      color:#fff !important;
+      background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.015)) !important;
+      border-color:rgba(242,211,126,.32) !important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 14px 35px rgba(0,0,0,.18);
+    }
+    .btn-dark:hover{
+      color:var(--gold2) !important;
+      border-color:rgba(242,211,126,.64) !important;
+      background:rgba(200,155,60,.08) !important;
+      transform:translateY(-2px);
+    }
+    .btn-tato{gap:10px}
+    .chat-dot{
+      width:25px;height:25px;border-radius:50%;display:grid;place-items:center;
+      background:linear-gradient(135deg,var(--gold2),var(--gold));
+      color:#181108;font-family:Georgia,serif;font-size:13px;font-weight:700;
+    }
+    .site-header.scrolled{box-shadow:0 12px 45px rgba(0,0,0,.18)}
+    .brand-icon{box-shadow:0 0 25px rgba(200,155,60,.08)}
+    .scroll i{animation:scrollLine 2s ease-in-out infinite}
+    .pillar,.card,.photo,.tato{
+      backdrop-filter:blur(4px);
+    }
+    .trust span{transition:color .2s ease,background .2s ease}
+    .trust span:hover{color:var(--gold2);background:#0f0c08}
+    @keyframes heroFloat{
+      from{transform:translate3d(0,-10px,0) scale(.96)}
+      to{transform:translate3d(22px,18px,0) scale(1.05)}
+    }
+    @keyframes ringPulse{
+      0%,100%{transform:scale(.96);opacity:.48}
+      50%{transform:scale(1.025);opacity:1}
+    }
+    @keyframes scrollLine{
+      0%,100%{opacity:.35;transform:scaleY(.6);transform-origin:top}
+      50%{opacity:1;transform:scaleY(1);transform-origin:top}
+    }
+    @media(max-width:700px){
+      .hero{min-height:100svh}
+      .hero-content{padding-top:112px;padding-bottom:108px}
+      .hero .eyebrow{font-size:9px;letter-spacing:.2em}
+      .hero h1{line-height:.88}
+      .hero-copy{line-height:1.58;margin-top:24px}
+      .hero-actions,.actions{gap:11px}
+      .btn{min-height:56px;font-size:16px}
+      .btn-dark{background:rgba(10,9,7,.62) !important}
+      .hero-rings{width:96vw;top:43%}
+      .scroll{bottom:18px}
+    }
+    @media(prefers-reduced-motion:reduce){
+      .hero-light,.hero-rings i,.scroll i{animation:none!important}
+    }
+
   </style>
 </head>
 <body>
@@ -370,6 +469,9 @@
 
   <main>
     <section class="hero" id="home">
+      <div class="hero-light hero-light-one"></div>
+      <div class="hero-light hero-light-two"></div>
+      <div class="hero-rings" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="hero-art"></div>
       <div class="hero-content reveal visible">
         <p class="eyebrow">Wedding Tattoo Experience</p>
@@ -377,7 +479,7 @@
         <p class="hero-copy">Un’esperienza esclusiva che trasforma il giorno del vostro matrimonio in un ricordo autentico, condiviso e indelebile.</p>
         <div class="actions">
           <button class="btn btn-gold" data-open-booking>Richiedi disponibilità</button>
-          <button class="btn btn-dark" data-open-tato>Parla con Tato</button>
+          <button class="btn btn-dark btn-tato" data-open-tato><span class="chat-dot">T</span><span>Parla con Tato</span></button>
         </div>
       </div>
       <a class="scroll" href="#experience"><i></i>Scopri l’esperienza</a>
@@ -497,6 +599,7 @@
   <div class="float"><button data-open-tato>T</button><a href="https://wa.me/393477050250" target="_blank">WA</a></div>
 
   <script>
+    document.documentElement.classList.add('js-ready');
     const body=document.body,header=document.getElementById('header'),menu=document.getElementById('mobileMenu');
     const booking=document.getElementById('bookingModal'),tato=document.getElementById('tatoModal');
 
