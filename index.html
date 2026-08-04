@@ -3429,7 +3429,92 @@
       display:none !important;
     }
   }
-</style><meta content="WTE-PDF-SINGLE-A4" name="version"/></head>
+</style><meta content="WTE-PDF-SINGLE-A4" name="version"/><script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script><script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><style id="wte-mobile-sign-pdf-fix-css">
+  /* =========================================================
+     FIX DEFINITIVO
+     - data larga
+     - firma touch Android/iPhone
+     - vero download PDF
+     ========================================================= */
+
+  #s2AvailabilityForm .s2-form-grid{
+    grid-template-columns:minmax(0,1fr) !important;
+  }
+
+  #s2AvailabilityForm .s2-form-grid label{
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  #s2AvailabilityForm input,
+  #s2AvailabilityForm select{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  #s2AvailabilityForm input[type="date"],
+  #s2AvailabilityForm input[type="time"]{
+    display:block !important;
+    min-height:52px !important;
+    padding:0 14px !important;
+    font-size:16px !important;
+    color-scheme:dark;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+
+  #s2AvailabilityForm input[type="date"]::-webkit-date-and-time-value,
+  #s2AvailabilityForm input[type="time"]::-webkit-date-and-time-value{
+    text-align:left;
+    min-height:1.2em;
+  }
+
+  .s2p3-signature-box{
+    position:relative;
+    overflow:hidden;
+  }
+
+  #s2SignatureCanvas{
+    display:block !important;
+    width:100% !important;
+    height:190px !important;
+    min-height:190px !important;
+    background:#fffdf8 !important;
+    touch-action:none !important;
+    -ms-touch-action:none !important;
+    user-select:none !important;
+    -webkit-user-select:none !important;
+    cursor:crosshair;
+    overscroll-behavior:contain;
+  }
+
+  .s2-signing-active{
+    overflow:hidden !important;
+    touch-action:none !important;
+  }
+
+  #s2PrintProposal::after{
+    content:"" !important;
+  }
+
+  .s2-pdf-loading{
+    opacity:.55;
+    pointer-events:none;
+  }
+
+  @media(min-width:700px){
+    #s2AvailabilityForm .s2-form-grid{
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    }
+
+    #s2SignatureCanvas{
+      height:210px !important;
+      min-height:210px !important;
+    }
+  }
+</style><meta content="WTE-MOBILE-SIGNATURE-PDF-FIX" name="version"/></head>
 <body>
 <div class="grain"></div>
 <header class="header" id="header">
@@ -5539,6 +5624,367 @@ ${item.notes || 'Nessuna nota'}`;
 </html>`);
     popup.document.close();
   });
+})();
+</script><script id="wte-mobile-sign-pdf-fix-js">
+(() => {
+  const PHONE = '393477050250';
+
+  function waitForDom() {
+    const originalCanvas = document.getElementById('s2SignatureCanvas');
+    const originalClear = document.getElementById('s2ClearSignature');
+    const originalConfirm = document.getElementById('s2ConfirmProposal');
+    const originalSend = document.getElementById('s2SendProposal');
+    const originalPdf = document.getElementById('s2PrintProposal');
+    const proposal = document.getElementById('s2ProposalDocument');
+    const form = document.getElementById('s2AvailabilityForm');
+
+    if (!originalCanvas || !originalConfirm || !originalPdf || !proposal || !form) {
+      setTimeout(waitForDom, 150);
+      return;
+    }
+
+    /* ---------- FIRMA: rimuove i vecchi listener ---------- */
+    const canvas = originalCanvas.cloneNode(false);
+    originalCanvas.parentNode.replaceChild(canvas, originalCanvas);
+
+    const clearButton = originalClear ? originalClear.cloneNode(true) : null;
+    if (originalClear && clearButton) {
+      originalClear.parentNode.replaceChild(clearButton, originalClear);
+    }
+
+    const confirmButton = originalConfirm.cloneNode(true);
+    originalConfirm.parentNode.replaceChild(confirmButton, originalConfirm);
+
+    const sendButton = originalSend ? originalSend.cloneNode(true) : null;
+    if (originalSend && sendButton) {
+      originalSend.parentNode.replaceChild(sendButton, originalSend);
+    }
+
+    const pdfButton = originalPdf.cloneNode(true);
+    pdfButton.textContent = 'Scarica PDF';
+    originalPdf.parentNode.replaceChild(pdfButton, originalPdf);
+
+    const ctx = canvas.getContext('2d', {alpha:true});
+    let drawing = false;
+    let signed = false;
+    let confirmed = false;
+    let lastPoint = null;
+
+    function resizeCanvas(keep = true) {
+      const previous = keep && signed ? canvas.toDataURL('image/png') : null;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 3));
+
+      canvas.width = Math.max(1, Math.round(rect.width * dpr));
+      canvas.height = Math.max(1, Math.round(rect.height * dpr));
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.lineWidth = 2.4;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#17110b';
+
+      if (previous) {
+        const image = new Image();
+        image.onload = () => {
+          ctx.drawImage(image, 0, 0, rect.width, rect.height);
+        };
+        image.src = previous;
+      }
+    }
+
+    function coordinates(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function begin(clientX, clientY, event) {
+      event?.preventDefault();
+      drawing = true;
+      confirmed = false;
+      sendButton && (sendButton.disabled = true);
+      proposal.classList.remove('s2p3-confirmed');
+      document.body.classList.add('s2-signing-active');
+
+      lastPoint = coordinates(clientX, clientY);
+      ctx.beginPath();
+      ctx.moveTo(lastPoint.x, lastPoint.y);
+    }
+
+    function draw(clientX, clientY, event) {
+      if (!drawing) return;
+      event?.preventDefault();
+
+      const point = coordinates(clientX, clientY);
+      const middleX = (lastPoint.x + point.x) / 2;
+      const middleY = (lastPoint.y + point.y) / 2;
+
+      ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, middleX, middleY);
+      ctx.stroke();
+
+      lastPoint = point;
+      signed = true;
+    }
+
+    function end(event) {
+      if (!drawing) return;
+      event?.preventDefault();
+      drawing = false;
+      lastPoint = null;
+      ctx.closePath();
+      document.body.classList.remove('s2-signing-active');
+    }
+
+    if (window.PointerEvent) {
+      canvas.addEventListener('pointerdown', event => {
+        canvas.setPointerCapture?.(event.pointerId);
+        begin(event.clientX, event.clientY, event);
+      }, {passive:false});
+
+      canvas.addEventListener('pointermove', event => {
+        draw(event.clientX, event.clientY, event);
+      }, {passive:false});
+
+      ['pointerup','pointercancel','pointerleave'].forEach(type => {
+        canvas.addEventListener(type, end, {passive:false});
+      });
+    } else {
+      canvas.addEventListener('touchstart', event => {
+        const touch = event.changedTouches[0];
+        begin(touch.clientX, touch.clientY, event);
+      }, {passive:false});
+
+      canvas.addEventListener('touchmove', event => {
+        const touch = event.changedTouches[0];
+        draw(touch.clientX, touch.clientY, event);
+      }, {passive:false});
+
+      canvas.addEventListener('touchend', end, {passive:false});
+      canvas.addEventListener('touchcancel', end, {passive:false});
+
+      canvas.addEventListener('mousedown', event => {
+        begin(event.clientX, event.clientY, event);
+      });
+
+      window.addEventListener('mousemove', event => {
+        draw(event.clientX, event.clientY, event);
+      });
+
+      window.addEventListener('mouseup', end);
+    }
+
+    clearButton?.addEventListener('click', event => {
+      event.preventDefault();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      signed = false;
+      confirmed = false;
+      sendButton && (sendButton.disabled = true);
+      confirmButton.textContent = 'Firma e prepara invio';
+      proposal.classList.remove('s2p3-confirmed');
+      document.getElementById('s2SignedName').textContent = '—';
+      document.getElementById('s2SignedAt').textContent = '—';
+      const hidden = document.getElementById('s2SignatureData');
+      if (hidden) hidden.value = '';
+    });
+
+    confirmButton.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const accepted = document.getElementById('s2AcceptTerms');
+      if (!accepted?.checked) {
+        alert('Seleziona prima la casella di accettazione.');
+        accepted?.focus();
+        return;
+      }
+
+      if (!signed) {
+        alert('Firma nel riquadro bianco con il dito.');
+        canvas.scrollIntoView({behavior:'smooth', block:'center'});
+        return;
+      }
+
+      const fd = new FormData(form);
+      const name = fd.get('name') || 'Firmatario';
+      const now = new Date();
+
+      document.getElementById('s2SignedName').textContent = name;
+      document.getElementById('s2SignedAt').textContent =
+        now.toLocaleString('it-IT');
+
+      const hidden = document.getElementById('s2SignatureData');
+      if (hidden) hidden.value = canvas.toDataURL('image/png');
+
+      confirmed = true;
+      sendButton && (sendButton.disabled = false);
+      confirmButton.textContent = 'Proposta firmata ✓';
+      proposal.classList.add('s2p3-confirmed');
+    }, true);
+
+    sendButton?.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      if (!confirmed) {
+        alert('Firma e conferma prima la proposta.');
+        return;
+      }
+
+      const fd = new FormData(form);
+      const message =
+`✍️ PROPOSTA PRELIMINARE FIRMATA
+
+Firmatario: ${fd.get('name') || ''}
+Data matrimonio: ${fd.get('date') || ''}
+Location: ${fd.get('location') || ''}
+Invitati: ${fd.get('guests') || ''}
+Ore richieste: ${fd.get('hours') || ''}
+Distanza: ${fd.get('distance') || ''} km
+
+Pacchetto: ${document.getElementById('s2DocPackage')?.textContent || ''}
+Prezzo base: ${document.getElementById('s2DocPrice')?.textContent || ''}
+
+Il cliente ha accettato le condizioni preliminari e firmato la proposta sul sito.`;
+
+      window.open(
+        `https://wa.me/${PHONE}?text=${encodeURIComponent(message)}`,
+        '_blank',
+        'noopener'
+      );
+    }, true);
+
+    /* ---------- VERO DOWNLOAD PDF ---------- */
+    pdfButton.addEventListener('click', async event => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      if (!window.html2canvas || !window.jspdf?.jsPDF) {
+        alert('Il generatore PDF si sta caricando. Riprova tra qualche secondo.');
+        return;
+      }
+
+      pdfButton.classList.add('s2-pdf-loading');
+      pdfButton.textContent = 'Creazione PDF...';
+
+      try {
+        const clone = proposal.cloneNode(true);
+
+        clone.querySelectorAll(
+          '.s2p2-document-head button, .s2p2-document-footer, ' +
+          '.s2p3-signature-toolbar, .s2p3-check, button'
+        ).forEach(el => el.remove());
+
+        const clonedCanvas = clone.querySelector('#s2SignatureCanvas');
+        if (clonedCanvas) {
+          const image = document.createElement('img');
+          image.src = signed ? canvas.toDataURL('image/png') : '';
+          image.alt = 'Firma';
+          image.style.cssText =
+            'display:block;width:100%;height:150px;object-fit:contain;background:#fffdf8;';
+          clonedCanvas.replaceWith(image);
+        }
+
+        clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+        clone.style.cssText =
+          'position:relative;width:794px;max-height:none;overflow:visible;' +
+          'background:#f4efe5;color:#1d150b;';
+
+        const holder = document.createElement('div');
+        holder.style.cssText =
+          'position:fixed;left:-10000px;top:0;width:794px;background:#f4efe5;z-index:-1;';
+        holder.appendChild(clone);
+        document.body.appendChild(holder);
+
+        const rendered = await html2canvas(clone, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#f4efe5',
+          logging: false,
+          windowWidth: 794
+        });
+
+        holder.remove();
+
+        const {jsPDF} = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+          compress: true
+        });
+
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 7;
+        const usableWidth = pageWidth - margin * 2;
+        const usableHeight = pageHeight - margin * 2;
+
+        const imageRatio = rendered.width / rendered.height;
+        let drawWidth = usableWidth;
+        let drawHeight = drawWidth / imageRatio;
+
+        if (drawHeight > usableHeight) {
+          drawHeight = usableHeight;
+          drawWidth = drawHeight * imageRatio;
+        }
+
+        const x = (pageWidth - drawWidth) / 2;
+        const y = (pageHeight - drawHeight) / 2;
+
+        pdf.addImage(
+          rendered.toDataURL('image/jpeg', 0.94),
+          'JPEG',
+          x,
+          y,
+          drawWidth,
+          drawHeight,
+          undefined,
+          'FAST'
+        );
+
+        const fd = new FormData(form);
+        const safeName = String(fd.get('name') || 'cliente')
+          .trim()
+          .replace(/[^a-zA-Z0-9À-ÿ_-]+/g, '_');
+
+        pdf.save(`Proposta_Wedding_Tattoo_${safeName}.pdf`);
+      } catch (error) {
+        console.error(error);
+        alert('Non sono riuscito a creare il PDF. Ricarica la pagina e riprova.');
+      } finally {
+        pdfButton.classList.remove('s2-pdf-loading');
+        pdfButton.textContent = 'Scarica PDF';
+      }
+    }, true);
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => resizeCanvas(true), 180);
+    });
+
+    // Resize whenever the proposal opens.
+    document.getElementById('s2CreateProposal')?.addEventListener('click', () => {
+      setTimeout(() => {
+        resizeCanvas(false);
+        signed = false;
+        confirmed = false;
+        sendButton && (sendButton.disabled = true);
+        confirmButton.textContent = 'Firma e prepara invio';
+      }, 250);
+    }, {capture:true});
+
+    setTimeout(() => resizeCanvas(false), 250);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', waitForDom);
+  } else {
+    waitForDom();
+  }
 })();
 </script></body>
 </html>
