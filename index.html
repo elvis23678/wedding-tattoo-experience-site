@@ -2537,7 +2537,388 @@
       grid-template-columns:1fr 1fr;
     }
   }
-</style><meta content="WTE-SPRINT2-PHASE1" name="version"/></head>
+</style><meta content="WTE-SPRINT2-PHASE1" name="version"/><style id="wte-sprint2-phase2-css">
+  /* =========================================================
+     SPRINT 2 — FASE 2
+     PROPOSTA PREMIUM + BLOCCO DATA
+     ========================================================= */
+
+  .s2-form-result{
+    padding:0 !important;
+    overflow:hidden;
+  }
+
+  .s2p2-result-head{
+    padding:24px 20px 20px;
+    text-align:center;
+    background:
+      radial-gradient(circle at 50% 0%,rgba(201,153,66,.15),transparent 52%),
+      #090604;
+  }
+
+  .s2p2-result-head > span{
+    color:var(--gold2);
+    font-size:8px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+
+  .s2p2-result-head > strong{
+    display:block;
+    margin:7px 0 5px;
+    font-family:var(--serif);
+    font-size:48px;
+    font-weight:400;
+  }
+
+  .s2p2-result-head p{
+    margin:0;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.55;
+  }
+
+  .s2p2-metrics{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    border-top:1px solid var(--line);
+  }
+
+  .s2p2-metrics div{
+    min-height:94px;
+    padding:16px 12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    text-align:center;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+
+  .s2p2-metrics div:nth-child(even){
+    border-right:0;
+  }
+
+  .s2p2-metrics small{
+    color:#bdaF99;
+    font-size:7px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+  }
+
+  .s2p2-metrics strong{
+    color:#f1dfb7;
+    font-family:var(--serif);
+    font-size:20px;
+    font-weight:400;
+  }
+
+  .s2p2-reason{
+    padding:20px;
+    text-align:left;
+  }
+
+  .s2p2-reason span{
+    color:var(--gold2);
+    font-size:8px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .s2p2-reason p{
+    margin:9px 0 0;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.62;
+  }
+
+  .s2p2-actions{
+    display:grid;
+    gap:10px;
+  }
+
+  .s2p2-actions button{
+    width:100%;
+    min-height:56px;
+    font-size:9px;
+    font-weight:800;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+  }
+
+  .s2p2-proposal{
+    border:1px solid rgba(240,221,176,.28);
+    background:#0b0805;
+    color:var(--gold2);
+  }
+
+  .s2p2-lock{
+    border:0;
+    background:linear-gradient(135deg,#f2dfad,#cc9f48 58%,#a87526);
+    color:#171006;
+    box-shadow:0 14px 34px rgba(171,119,38,.22);
+  }
+
+  .s2p2-proposal-modal{
+    position:fixed;
+    inset:0;
+    z-index:210;
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+  }
+
+  .s2p2-proposal-modal.open{
+    display:flex;
+  }
+
+  .s2p2-proposal-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.90);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+  }
+
+  .s2p2-document{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-height:95svh;
+    overflow:auto;
+    color:#1d150b;
+    background:
+      radial-gradient(circle at 20% 8%,rgba(201,153,66,.14),transparent 28%),
+      #f4efe5;
+  }
+
+  .s2p2-document-head{
+    min-height:76px;
+    padding:12px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid rgba(50,35,16,.16);
+  }
+
+  .s2p2-document-head div{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+
+  .s2p2-document-head span{
+    color:#8a621e;
+    font-size:8px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+
+  .s2p2-document-head strong{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:20px;
+    font-weight:400;
+  }
+
+  .s2p2-document-head button{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    border:1px solid rgba(50,35,16,.2);
+    background:transparent;
+    color:#1d150b;
+    font-size:25px;
+  }
+
+  .s2p2-document-hero{
+    padding:42px 20px 34px;
+    text-align:center;
+  }
+
+  .s2p2-document-hero small{
+    color:#9b6e23;
+    font-size:8px;
+    letter-spacing:.20em;
+  }
+
+  .s2p2-document-hero h2{
+    margin:13px 0 8px;
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:40px;
+    line-height:1;
+    font-weight:400;
+  }
+
+  .s2p2-document-hero p{
+    margin:0;
+    color:#6e6254;
+  }
+
+  .s2p2-document-package{
+    margin:0 18px;
+    padding:24px;
+    text-align:center;
+    border:1px solid rgba(120,82,24,.25);
+    background:rgba(255,255,255,.46);
+  }
+
+  .s2p2-document-package span{
+    display:block;
+    color:#8a621e;
+    font-size:8px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .s2p2-document-package strong{
+    display:block;
+    margin:7px 0;
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:44px;
+    font-weight:400;
+  }
+
+  .s2p2-document-package em{
+    font-style:normal;
+    font-weight:700;
+  }
+
+  .s2p2-document-grid{
+    margin:18px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    border-top:1px solid rgba(50,35,16,.16);
+    border-left:1px solid rgba(50,35,16,.16);
+  }
+
+  .s2p2-document-grid div{
+    min-height:82px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:7px;
+    border-right:1px solid rgba(50,35,16,.16);
+    border-bottom:1px solid rgba(50,35,16,.16);
+  }
+
+  .s2p2-document-grid small{
+    color:#8a621e;
+    font-size:7px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+  }
+
+  .s2p2-document-grid strong{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:18px;
+    font-weight:400;
+  }
+
+  .s2p2-document-note,
+  .s2p2-document-legal{
+    margin:18px;
+    padding:18px;
+    border-left:2px solid #b37a26;
+    background:rgba(255,255,255,.36);
+  }
+
+  .s2p2-document-note span{
+    color:#8a621e;
+    font-size:8px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .s2p2-document-note p,
+  .s2p2-document-legal p{
+    margin:8px 0 0;
+    color:#5e5346;
+    font-size:12px;
+    line-height:1.58;
+  }
+
+  .s2p2-document-footer{
+    position:sticky;
+    bottom:0;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+    background:rgba(244,239,229,.96);
+    border-top:1px solid rgba(50,35,16,.16);
+  }
+
+  .s2p2-document-footer button{
+    min-height:48px;
+    border:1px solid rgba(50,35,16,.20);
+    background:transparent;
+    color:#1d150b;
+    font-size:8px;
+    font-weight:800;
+    text-transform:uppercase;
+  }
+
+  .s2p2-document-footer button:last-child{
+    border:0;
+    background:linear-gradient(135deg,#e7c782,#b67b27);
+  }
+
+  @media(min-width:800px){
+    .s2p2-metrics{
+      grid-template-columns:repeat(4,1fr);
+    }
+
+    .s2p2-metrics div{
+      border-bottom:0;
+    }
+
+    .s2p2-metrics div:nth-child(even){
+      border-right:1px solid var(--line);
+    }
+
+    .s2p2-metrics div:last-child{
+      border-right:0;
+    }
+
+    .s2p2-proposal-modal{
+      align-items:center;
+      padding:24px;
+    }
+
+    .s2p2-document{
+      width:min(760px,100%);
+      max-height:92svh;
+      box-shadow:0 34px 110px rgba(0,0,0,.55);
+    }
+  }
+
+  @media print{
+    body *{
+      visibility:hidden !important;
+    }
+
+    #s2ProposalDocument,
+    #s2ProposalDocument *{
+      visibility:visible !important;
+    }
+
+    #s2ProposalDocument{
+      position:absolute !important;
+      inset:0 !important;
+      width:100% !important;
+      max-height:none !important;
+      overflow:visible !important;
+    }
+
+    .s2p2-document-head button,
+    .s2p2-document-footer{
+      display:none !important;
+    }
+  }
+</style><meta content="WTE-SPRINT2-PHASE2" name="version"/></head>
 <body>
 <div class="grain"></div>
 <header class="header" id="header">
@@ -3087,13 +3468,40 @@
           <input min="0" name="distance" required="" type="number" value="50"/>
 </label>
 </div>
-<div class="s2-form-result">
-<span>Pacchetto suggerito</span>
+<div class="s2-form-result"><div class="s2p2-result-head">
+<span>La formula più adatta</span>
 <strong id="s2SuggestedPackage">Silver</strong>
 <p id="s2SuggestedCopy">La proposta sarà confermata dallo staff dopo la verifica della data.</p>
+</div><div class="s2p2-metrics">
+<div>
+<small>Prezzo base</small>
+<strong id="s2Price">€ 1.090</strong>
 </div>
-<button class="s2-submit-gold" type="submit">Invia la richiesta allo staff</button>
-</form>
+<div>
+<small>Ore previste</small>
+<strong id="s2HoursIncluded">5 ore</strong>
+</div>
+<div>
+<small>Tatuaggi stimati</small>
+<strong id="s2TattooEstimate">circa 15</strong>
+</div>
+<div>
+<small>Trasferta</small>
+<strong id="s2Travel">Da confermare</strong>
+</div>
+</div><div class="s2p2-reason">
+<span>Perché è la scelta giusta</span>
+<p id="s2Reason">Equilibra durata dell’evento, numero di invitati e distanza della location.</p>
+</div></div>
+
+<div class="s2p2-actions">
+<button class="s2p2-proposal" id="s2CreateProposal" type="button">
+    Ricevi proposta professionale
+  </button>
+<button class="s2p2-lock" type="submit">
+    Blocca la data
+  </button>
+</div></form>
 </div>
 </div><script id="wte-sprint2-assistant-js">
 (() => {
@@ -3436,6 +3844,246 @@ Vorrei verificare la disponibilità e ricevere una proposta dallo staff.`;
   });
 
   resetFlow();
+})();
+</script><div aria-hidden="true" class="s2p2-proposal-modal" id="s2ProposalModal">
+<div class="s2p2-proposal-backdrop" data-s2p2-close=""></div>
+<article class="s2p2-document" id="s2ProposalDocument">
+<header class="s2p2-document-head">
+<div>
+<span>Wedding Tattoo Experience</span>
+<strong>Proposta personalizzata</strong>
+</div>
+<button aria-label="Chiudi" data-s2p2-close="" type="button">×</button>
+</header>
+<section class="s2p2-document-hero">
+<small>LOVE. MARKED. FOREVER.</small>
+<h2 id="s2DocNames">La vostra esperienza</h2>
+<p id="s2DocDate">Data da definire</p>
+</section>
+<section class="s2p2-document-package">
+<span>Pacchetto consigliato</span>
+<strong id="s2DocPackage">Silver</strong>
+<em id="s2DocPrice">€ 1.090</em>
+</section>
+<section class="s2p2-document-grid">
+<div><small>Location</small><strong id="s2DocLocation">—</strong></div>
+<div><small>Invitati</small><strong id="s2DocGuests">—</strong></div>
+<div><small>Ore previste</small><strong id="s2DocHours">—</strong></div>
+<div><small>Tatuaggi stimati</small><strong id="s2DocTattoos">—</strong></div>
+<div><small>Distanza</small><strong id="s2DocDistance">—</strong></div>
+<div><small>Trasferta</small><strong id="s2DocTravel">Da confermare</strong></div>
+</section>
+<section class="s2p2-document-note">
+<span>Perché questa formula</span>
+<p id="s2DocReason"></p>
+</section>
+<section class="s2p2-document-legal">
+<p>
+        Proposta preliminare soggetta a verifica della disponibilità, conferma dello staff,
+        definizione della trasferta e sottoscrizione del contratto.
+      </p>
+</section>
+<footer class="s2p2-document-footer">
+<button id="s2PrintProposal" type="button">Salva / stampa PDF</button>
+<button id="s2SendProposal" type="button">Invia allo staff</button>
+</footer>
+</article>
+</div><script id="wte-sprint2-phase2-js">
+(() => {
+  const PHONE = '393477050250';
+
+  const PACKAGES = {
+    Bronze: {
+      price: '€ 790',
+      hours: 3,
+      reason: 'È la formula essenziale per matrimoni più intimi, con tempi contenuti e una richiesta ridotta di tatuaggi.'
+    },
+    Silver: {
+      price: '€ 1.090',
+      hours: 5,
+      reason: 'Offre il miglior equilibrio tra durata dell’evento, numero di invitati e possibilità di coinvolgere più persone.'
+    },
+    Gold: {
+      price: '€ 1.690',
+      hours: 7,
+      reason: 'È pensato per eventi più grandi, maggiore affluenza e una presenza più lunga e completa durante il matrimonio.'
+    },
+    Luxury: {
+      price: 'Su misura',
+      hours: 9,
+      reason: 'È una proposta personalizzata per matrimoni importanti, trasferte estese e necessità organizzative fuori standard.'
+    }
+  };
+
+  const form = document.getElementById('s2AvailabilityForm');
+  const modal = document.getElementById('s2AvailabilityModal');
+  const proposalModal = document.getElementById('s2ProposalModal');
+
+  if (!form || !modal || !proposalModal) return;
+
+  const packageEl = document.getElementById('s2SuggestedPackage');
+  const copyEl = document.getElementById('s2SuggestedCopy');
+  const priceEl = document.getElementById('s2Price');
+  const hoursEl = document.getElementById('s2HoursIncluded');
+  const tattoosEl = document.getElementById('s2TattooEstimate');
+  const travelEl = document.getElementById('s2Travel');
+  const reasonEl = document.getElementById('s2Reason');
+
+  function packageFromData(guests, hours, distance) {
+    if (guests > 150 || hours >= 8 || distance > 180) return 'Luxury';
+    if (guests > 110 || hours >= 6 || distance > 100) return 'Gold';
+    if (guests > 65 || hours >= 4) return 'Silver';
+    return 'Bronze';
+  }
+
+  function collect() {
+    const data = new FormData(form);
+    const guests = Number(data.get('guests')) || 0;
+    const requestedHours = Number(data.get('hours')) || 0;
+    const distance = Number(data.get('distance')) || 0;
+    const pack = packageFromData(guests, requestedHours, distance);
+    const details = PACKAGES[pack];
+
+    // 3 tatuaggi/ora come stima operativa
+    const operationalHours = Math.max(requestedHours, details.hours);
+    const tattoos = operationalHours * 3;
+
+    let travel = 'Da confermare';
+    if (distance <= 50) travel = 'Breve trasferta';
+    else if (distance <= 100) travel = 'Trasferta media';
+    else if (distance <= 180) travel = 'Trasferta estesa';
+    else travel = 'Su preventivo';
+
+    return {
+      name: data.get('name') || '',
+      date: data.get('date') || '',
+      location: data.get('location') || '',
+      guests,
+      requestedHours,
+      distance,
+      pack,
+      details,
+      operationalHours,
+      tattoos,
+      travel
+    };
+  }
+
+  function formatDate(value) {
+    if (!value) return 'Data da definire';
+    const parts = value.split('-');
+    if (parts.length !== 3) return value;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+
+  function updateResult() {
+    const d = collect();
+
+    packageEl.textContent = d.pack;
+    priceEl.textContent = d.details.price;
+    hoursEl.textContent = `${d.operationalHours} ore`;
+    tattoosEl.textContent = `circa ${d.tattoos}`;
+    travelEl.textContent = d.travel;
+    reasonEl.textContent = d.details.reason;
+
+    copyEl.textContent =
+      `Suggerimento basato su ${d.guests || 0} invitati, ${d.requestedHours || 0} ore richieste e ${d.distance || 0} km. La proposta definitiva sarà confermata dallo staff.`;
+
+    return d;
+  }
+
+  function fillProposal() {
+    const d = updateResult();
+
+    document.getElementById('s2DocNames').textContent =
+      d.name ? `Proposta per ${d.name}` : 'La vostra esperienza';
+
+    document.getElementById('s2DocDate').textContent = formatDate(d.date);
+    document.getElementById('s2DocPackage').textContent = d.pack;
+    document.getElementById('s2DocPrice').textContent = d.details.price;
+    document.getElementById('s2DocLocation').textContent = d.location || '—';
+    document.getElementById('s2DocGuests').textContent = d.guests || '—';
+    document.getElementById('s2DocHours').textContent = `${d.operationalHours} ore`;
+    document.getElementById('s2DocTattoos').textContent = `circa ${d.tattoos}`;
+    document.getElementById('s2DocDistance').textContent = `${d.distance || 0} km`;
+    document.getElementById('s2DocTravel').textContent = d.travel;
+    document.getElementById('s2DocReason').textContent = d.details.reason;
+
+    return d;
+  }
+
+  function proposalMessage(d) {
+    return `💎 PROPOSTA WEDDING TATTOO EXPERIENCE
+
+Nome: ${d.name}
+Data: ${formatDate(d.date)}
+Location: ${d.location}
+Invitati: ${d.guests}
+Ore richieste: ${d.requestedHours}
+Distanza: ${d.distance} km
+
+Pacchetto suggerito: ${d.pack}
+Prezzo base: ${d.details.price}
+Ore previste: ${d.operationalHours}
+Tatuaggi stimati: circa ${d.tattoos}
+Trasferta: ${d.travel}
+
+Vorrei ricevere conferma della disponibilità e la proposta definitiva.`;
+  }
+
+  form.addEventListener('input', updateResult);
+
+  document.getElementById('s2CreateProposal')?.addEventListener('click', () => {
+    if (!form.reportValidity()) return;
+
+    fillProposal();
+    proposalModal.classList.add('open');
+    proposalModal.setAttribute('aria-hidden','false');
+    document.body.classList.add('lock');
+  });
+
+  document.querySelectorAll('[data-s2p2-close]').forEach(el => {
+    el.addEventListener('click', () => {
+      proposalModal.classList.remove('open');
+      proposalModal.setAttribute('aria-hidden','true');
+      document.body.classList.remove('lock');
+    });
+  });
+
+  document.getElementById('s2PrintProposal')?.addEventListener('click', () => {
+    window.print();
+  });
+
+  document.getElementById('s2SendProposal')?.addEventListener('click', () => {
+    const d = fillProposal();
+    window.open(
+      `https://wa.me/${PHONE}?text=${encodeURIComponent(proposalMessage(d))}`,
+      '_blank',
+      'noopener'
+    );
+  });
+
+  // Override submit: "Blocca la data"
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+
+    const d = updateResult();
+    const message =
+`🔒 RICHIESTA BLOCCO DATA
+
+${proposalMessage(d)}
+
+Chiedo allo staff di verificare la data e indicarmi come procedere con acconto e contratto.`;
+
+    window.open(
+      `https://wa.me/${PHONE}?text=${encodeURIComponent(message)}`,
+      '_blank',
+      'noopener'
+    );
+  }, true);
+
+  updateResult();
 })();
 </script></body>
 </html>
