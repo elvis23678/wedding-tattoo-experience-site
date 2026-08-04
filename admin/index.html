@@ -1,1 +1,407 @@
+<!DOCTYPE html>
 
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport"/>
+<meta content="#050403" name="theme-color"/>
+<meta content="noindex,nofollow" name="robots"/>
+<title>WTE Admin — Archivio pratiche</title>
+
+<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="admin.css?v=1.0.0" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/></head>
+<body><div class="admin-lock" id="adminLock">
+<form class="admin-lock-card" id="adminLockForm">
+<div class="admin-lock-mark">W</div>
+<span>Wedding Tattoo Experience</span>
+<h1>Area gestori</h1>
+<p id="adminLockCopy">Inserisci il PIN per accedere al CRM.</p>
+<input autocomplete="current-password" id="adminPin" inputmode="numeric" maxlength="12" placeholder="PIN gestore" required="" type="password"/>
+<button type="submit">Accedi</button>
+<small id="adminLockError"></small>
+</form>
+</div>
+<div class="grain"></div>
+<div class="app">
+<header class="topbar">
+<div class="brand">
+<div class="brand-mark">W</div>
+<div class="brand-copy">
+<small>Wedding Tattoo Experience</small>
+<strong>Admin CRM</strong>
+</div>
+</div>
+<div class="top-actions">
+<a href="../">Apri sito clienti</a>
+<button id="refreshBtn">Aggiorna</button>
+<button id="adminLogout" type="button">Esci</button></div>
+</header>
+<main>
+<section class="intro">
+<p>Dashboard staff</p>
+<h1>Archivio pratiche</h1>
+<span>Gestisci richieste, proposte e clienti salvati da questo browser.</span>
+</section>
+<section class="kpi-grid">
+<article class="kpi">
+<small>Pratiche totali</small>
+<strong id="kpiTotal">0</strong>
+<em>Tutte le richieste archiviate</em>
+</article>
+<article class="kpi">
+<small>In attesa</small>
+<strong id="kpiWaiting">0</strong>
+<em>Da verificare o contattare</em>
+</article>
+<article class="kpi">
+<small>Confermate</small>
+<strong id="kpiConfirmed">0</strong>
+<em>Pratiche concluse positivamente</em>
+</article>
+<article class="kpi">
+<small>Valore potenziale</small>
+<strong id="kpiValue">€ 0</strong>
+<em>Escluse le pratiche annullate</em>
+</article>
+</section><section class="ops-kpi-grid">
+<article>
+<small>Acconti ricevuti</small>
+<strong id="opsDeposits">€ 0</strong>
+<span>Totale acconti registrati</span>
+</article>
+<article>
+<small>Eventi questo mese</small>
+<strong id="opsThisMonth">0</strong>
+<span>Matrimoni nel mese corrente</span>
+</article>
+<article>
+<small>Prossimi 30 giorni</small>
+<strong id="opsNext30">0</strong>
+<span>Eventi imminenti</span>
+</article>
+<article>
+<small>Senza risposta</small>
+<strong id="opsNoReply">0</strong>
+<span>Preventivi ancora in attesa</span>
+</article>
+</section><section class="followup-panel">
+<h3>Follow-up automatici</h3>
+<div class="follow-grid">
+<label>Prossimo contatto<input id="fuDate" type="date"/></label>
+<label>Tipo
+<select id="fuType">
+<option>Telefonata</option>
+<option>WhatsApp</option>
+<option>Email</option>
+<option>Videocall</option>
+</select></label>
+</div>
+<textarea id="fuNotes" placeholder="Promemoria..."></textarea>
+<div class="follow-actions">
+<button id="saveFollow">Salva follow-up</button>
+<button id="showToday">Scadenze oggi</button>
+</div>
+<div class="today-list" id="todayList"></div>
+</section>
+<section class="controls">
+<input id="searchInput" placeholder="Cerca nome, ID, città o pacchetto" type="search"/>
+<select id="statusFilter">
+<option value="">Tutti gli stati</option>
+<option value="In attesa">In attesa</option>
+<option value="Nuova">Nuova</option>
+<option value="Contattata">Contattata</option>
+<option value="Proposta inviata">Proposta inviata</option>
+<option value="Confermata">Confermata</option>
+<option value="Annullata">Annullata</option>
+</select>
+<select id="sortSelect">
+<option value="recent">Più recenti</option>
+<option value="oldest">Più vecchie</option>
+<option value="eventDate">Data matrimonio</option>
+<option value="value">Valore economico</option>
+</select>
+</section><div class="admin-extra-actions">
+<button id="exportCsvBtn" type="button">Esporta CSV</button>
+<button id="exportJsonBtn" type="button">Esporta JSON</button>
+<button id="backupBtn" type="button">Backup completo</button>
+<label class="restore-label">
+        Ripristina backup
+        <input accept=".json,application/json" id="restoreInput" type="file"/>
+</label>
+</div>
+<section class="analytics-shell">
+<header class="analytics-head">
+<div>
+<p>Analisi commerciale</p>
+<h2>Andamento pratiche</h2>
+</div>
+<span id="analyticsPeriod">Ultimi 12 mesi</span>
+</header>
+<div class="analytics-grid">
+<article class="chart-card chart-wide">
+<div class="chart-title">
+<div>
+<small>Proposte per mese</small>
+<strong id="monthlyTotal">0 richieste</strong>
+</div>
+<span id="monthlyTrend">—</span>
+</div>
+<div class="bar-chart" id="monthlyChart"></div>
+</article>
+<article class="chart-card">
+<div class="chart-title">
+<div>
+<small>Pacchetti più richiesti</small>
+<strong id="topPackage">—</strong>
+</div>
+</div>
+<div class="donut-wrap">
+<div class="donut-chart" id="packageDonut">
+<div>
+<strong id="donutValue">0</strong>
+<span>pratiche</span>
+</div>
+</div>
+<div class="legend" id="packageLegend"></div>
+</div>
+</article>
+<article class="chart-card">
+<div class="chart-title">
+<div>
+<small>Conversione</small>
+<strong id="conversionRate">0%</strong>
+</div>
+<span id="conversionCopy">Nessuna conferma</span>
+</div>
+<div class="conversion-meter">
+<span id="conversionBar"></span>
+</div>
+<div class="conversion-stats">
+<div><small>Confermate</small><strong id="confirmedCount">0</strong></div>
+<div><small>Non concluse</small><strong id="openCount">0</strong></div>
+</div>
+</article>
+<article class="chart-card chart-wide">
+<div class="chart-title">
+<div>
+<small>Valore economico mensile</small>
+<strong id="economicTotal">€ 0</strong>
+</div>
+<span id="averageValue">Media € 0</span>
+</div>
+<div class="line-chart">
+<svg aria-label="Andamento valore economico" id="valueChart" preserveaspectratio="none" viewbox="0 0 800 260"></svg>
+<div class="line-labels" id="valueLabels"></div>
+</div>
+</article>
+</div>
+<div class="insights-grid">
+<article>
+<small>Mese migliore</small>
+<strong id="bestMonth">—</strong>
+<p id="bestMonthCopy">Nessun dato disponibile.</p>
+</article>
+<article>
+<small>Ticket medio</small>
+<strong id="averageTicket">€ 0</strong>
+<p>Valore medio delle pratiche con prezzo definito.</p>
+</article>
+<article>
+<small>Tempo alla data evento</small>
+<strong id="averageLead">—</strong>
+<p>Anticipo medio tra richiesta e matrimonio.</p>
+</article>
+<article>
+<small>Stato prevalente</small>
+<strong id="dominantStatus">—</strong>
+<p id="dominantStatusCopy">Nessuna pratica presente.</p>
+</article>
+</div>
+</section><section class="kanban-shell">
+<header class="kanban-head">
+<div>
+<p>Pipeline commerciale</p>
+<h2>Kanban CRM</h2>
+</div>
+<div class="kanban-tools">
+<button id="kanbanRefresh" type="button">Aggiorna</button>
+<button id="kanbanCompact" type="button">Vista compatta</button>
+</div>
+</header>
+<div class="kanban-board" id="kanbanBoard">
+<section class="kanban-column" data-status="Nuova richiesta">
+<header><span>Nuove richieste</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+<section class="kanban-column" data-status="Contattato">
+<header><span>Contattato</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+<section class="kanban-column" data-status="Preventivo inviato">
+<header><span>Preventivo inviato</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+<section class="kanban-column" data-status="Acconto ricevuto">
+<header><span>Acconto ricevuto</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+<section class="kanban-column" data-status="Confermato">
+<header><span>Confermato</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+<section class="kanban-column" data-status="Evento eseguito">
+<header><span>Evento eseguito</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+</div>
+</section><section class="calendar-shell">
+<header class="calendar-head">
+<div>
+<p>Agenda eventi</p>
+<h2>Calendario matrimoni</h2>
+</div>
+<div class="calendar-nav">
+<button aria-label="Mese precedente" id="calendarPrev" type="button">←</button>
+<strong id="calendarTitle">Mese</strong>
+<button aria-label="Mese successivo" id="calendarNext" type="button">→</button>
+<button id="calendarToday" type="button">Oggi</button>
+</div>
+</header>
+<div class="calendar-legend">
+<span><i class="dot wait"></i> In attesa</span>
+<span><i class="dot confirmed"></i> Confermata</span>
+<span><i class="dot deposit"></i> Acconto ricevuto</span>
+<span><i class="dot done"></i> Evento concluso</span>
+<span><i class="dot cancelled"></i> Annullata</span>
+</div>
+<div class="calendar-weekdays">
+<span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span>
+</div>
+<div class="calendar-grid" id="calendarGrid"></div>
+<div class="calendar-day-panel" id="calendarDayPanel">
+<div>
+<span id="calendarSelectedLabel">Seleziona un giorno</span>
+<strong id="calendarSelectedCount">0 eventi</strong>
+</div>
+<div class="calendar-selected-events" id="calendarSelectedEvents"></div>
+</div>
+</section><section class="list-shell">
+<header class="list-head">
+<strong>Pratiche</strong>
+<span id="resultCount">0 risultati</span>
+</header>
+<div class="mobile-list" id="mobileList"></div>
+<div class="desktop-table">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Cliente</th>
+<th>Data matrimonio</th>
+<th>Location</th>
+<th>Pacchetto</th>
+<th>Prezzo</th>
+<th>Stato</th>
+<th>Creata</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+<div class="empty" id="emptyState">
+<strong>Nessuna pratica trovata</strong>
+<p>Le proposte create e salvate dal sito compariranno qui.</p>
+</div>
+</section>
+</main>
+</div>
+<div aria-hidden="true" class="drawer" id="drawer">
+<div class="drawer-backdrop" data-close-drawer=""></div>
+<aside class="drawer-panel">
+<header class="drawer-head">
+<div>
+<span id="detailId">Pratica</span>
+<strong id="detailName">Dettaglio cliente</strong>
+</div>
+<button data-close-drawer="" type="button">×</button>
+</header>
+<div class="drawer-content">
+<div class="detail-grid" id="detailGrid"></div>
+<div class="ai-box">
+<span>Consigli del consulente</span>
+<ul id="detailAdvice"></ul>
+</div>
+<section class="crm-fields">
+<div class="crm-fields-head">
+<span>Gestione pratica</span>
+<strong>Dettagli operativi</strong>
+</div>
+<div class="crm-fields-grid">
+<label>
+      Telefono
+      <input id="detailPhone" placeholder="+39..." type="tel"/>
+</label>
+<label>
+      Email
+      <input id="detailEmail" placeholder="email@esempio.it" type="email"/>
+</label>
+<label>
+      Operatore assegnato
+      <select id="detailOperator">
+<option value="">Non assegnato</option>
+<option>Elvis</option>
+<option>Dennis</option>
+<option>Daniela</option>
+<option>Staff Wedding</option>
+</select>
+</label>
+<label>
+      Priorità
+      <select id="detailPriority">
+<option value="Normale">Normale</option>
+<option value="Alta">Alta</option>
+<option value="Urgente">Urgente</option>
+<option value="Bassa">Bassa</option>
+</select>
+</label>
+<label>
+      Acconto previsto
+      <input id="detailDepositExpected" min="0" placeholder="0" step="10" type="number"/>
+</label>
+<label>
+      Acconto ricevuto
+      <input id="detailDepositPaid" min="0" placeholder="0" step="10" type="number"/>
+</label>
+<label>
+      Data acconto
+      <input id="detailDepositDate" type="date"/>
+</label>
+<label>
+      Saldo previsto
+      <input id="detailBalance" min="0" placeholder="0" step="10" type="number"/>
+</label>
+</div>
+</section><section class="quick-actions">
+<button id="callBtn" type="button">Chiama</button>
+<button id="emailBtn" type="button">Email</button>
+<button id="registerDepositBtn" type="button">Registra acconto</button>
+<button id="confirmEventBtn" type="button">Conferma evento</button>
+</section><section class="timeline-box">
+<div class="timeline-head">
+<span>Cronologia pratica</span>
+<button id="addTimelineBtn" type="button">Aggiungi nota</button>
+</div>
+<div class="timeline-list" id="timelineList"></div>
+</section><div class="status-box">
+<span>Stato pratica</span>
+<select id="detailStatus"><option>Nuova richiesta</option><option>Contattato</option><option>Preventivo inviato</option><option>Contratto inviato</option><option>Acconto ricevuto</option><option>Confermato</option><option>Evento eseguito</option><option>Archiviato</option><option>Annullato</option></select>
+</div><div class="notes-box">
+<span>Note interne</span>
+<textarea id="detailNotes" placeholder="Scrivi una nota interna..."></textarea>
+</div>
+</div>
+<footer class="drawer-actions"><button id="openPdfBtn" type="button">Apri PDF</button><button id="whatsappBtn" type="button">WhatsApp</button><button id="duplicateBtn" type="button">Duplica</button><button class="danger" id="deleteBtn" type="button">Elimina</button><button id="saveNotesBtn" type="button">Salva modifiche</button><button class="gold" id="closeDetailBtn" type="button">Chiudi</button></footer>
+</aside>
+</div>
+
+<script defer="True" src="admin.js?v=1.0.0"></script></body>
+</html>
