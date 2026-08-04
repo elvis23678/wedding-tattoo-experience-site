@@ -1609,10 +1609,265 @@
       font-size:14px;
     }
   }
-</style><meta content="WTE-HERO-VIDEO-FIRST-FINAL" name="version"/></head>
+</style><meta content="WTE-HERO-VIDEO-FIRST-FINAL" name="version"/><style id="wte-final-premium-code">
+  html,body{
+    touch-action:pan-y;
+    overscroll-behavior-x:none;
+    -webkit-text-size-adjust:100%;
+  }
 
-&lt;!-- Carica hero.mp4 nella root del repository, accanto a index.html --&gt;
-<body class="cinematic-v3">
+  body{
+    background:#020201;
+    padding-bottom:92px;
+  }
+
+  .header{
+    min-height:66px;
+    padding:8px 14px;
+    background:linear-gradient(180deg,rgba(2,2,1,.46),transparent);
+  }
+
+  .header.scrolled{
+    min-height:60px;
+    background:rgba(2,2,1,.72);
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+    border-bottom:1px solid rgba(239,220,169,.10);
+  }
+
+  .logo{
+    width:80px;
+  }
+
+  .menu-btn{
+    width:44px;
+    height:44px;
+    border-color:rgba(239,220,169,.28);
+    background:rgba(0,0,0,.18);
+    backdrop-filter:blur(12px);
+  }
+
+  .hero{
+    min-height:100svh;
+    height:100svh;
+    align-items:flex-end;
+  }
+
+  .hero-video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:52% center;
+    filter:saturate(.76) contrast(1.10) brightness(.78);
+  }
+
+  .hero-bg{
+    opacity:.08;
+  }
+
+  .hero::after{
+    background:
+      linear-gradient(180deg,
+        rgba(2,2,1,.32) 0%,
+        rgba(2,2,1,.05) 22%,
+        rgba(2,2,1,.12) 44%,
+        rgba(2,2,1,.74) 72%,
+        #020201 100%);
+  }
+
+  .hero-content{
+    width:100%;
+    max-width:none;
+    align-self:flex-end;
+    padding:106px 18px 118px;
+    text-align:center;
+  }
+
+  .hero-content .eyebrow{
+    margin-bottom:16px;
+    color:#efdca9;
+    font-size:8px;
+    letter-spacing:.34em;
+  }
+
+  .hero-content h1{
+    margin-inline:auto;
+    max-width:650px;
+    font-size:clamp(54px,15.7vw,82px);
+    line-height:.86;
+    letter-spacing:-.06em;
+  }
+
+  .hero-copy{
+    max-width:390px;
+    margin:20px auto 0;
+    color:#ddd2c3;
+    font-size:14.5px;
+    line-height:1.56;
+  }
+
+  .hero-content .actions{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    margin-top:27px;
+  }
+
+  .hero-content .btn-primary{
+    width:min(100%,430px);
+    min-height:58px;
+    border-radius:0;
+    background:linear-gradient(135deg,#f2dfad 0%,#cc9f48 56%,#a87526 100%);
+    color:#171006;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.36),
+      0 18px 42px rgba(171,119,38,.20);
+  }
+
+  .hero-discover-link{
+    color:#f1e2bd;
+    text-decoration:none;
+    border-bottom:1px solid rgba(239,220,169,.38);
+    padding:7px 0;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+  }
+
+  .scroll-cue{
+    display:none;
+  }
+
+  .luxury-action-bar{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:90;
+    min-height:82px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    background:rgba(3,2,1,.94);
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+    border-top:1px solid rgba(239,220,169,.16);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+
+  .luxury-action-bar a{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    text-decoration:none;
+    border-right:1px solid rgba(239,220,169,.12);
+    color:#efe5d5;
+  }
+
+  .luxury-action-bar a:last-child{
+    border-right:0;
+  }
+
+  .action-icon{
+    color:#dfb45d;
+    font-family:Georgia,serif;
+    font-size:24px;
+    line-height:1;
+  }
+
+  .action-label{
+    font-size:8px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  footer{
+    padding-bottom:120px;
+  }
+
+  @media(min-width:701px){
+    body{
+      padding-bottom:0;
+    }
+
+    .header{
+      min-height:80px;
+      padding:12px clamp(20px,4vw,64px);
+    }
+
+    .logo{
+      width:108px;
+    }
+
+    .hero{
+      align-items:center;
+    }
+
+    .hero::after{
+      background:
+        linear-gradient(90deg,rgba(2,2,1,.86) 0%,rgba(2,2,1,.38) 48%,rgba(2,2,1,.10) 100%),
+        linear-gradient(180deg,rgba(2,2,1,.06),rgba(2,2,1,.62));
+    }
+
+    .hero-content{
+      width:min(700px,100%);
+      padding:132px 24px 90px clamp(28px,6vw,88px);
+      text-align:left;
+      align-self:center;
+    }
+
+    .hero-content h1,
+    .hero-copy{
+      margin-left:0;
+      margin-right:0;
+    }
+
+    .hero-content h1{
+      font-size:clamp(72px,8.8vw,132px);
+    }
+
+    .hero-content .actions{
+      align-items:flex-start;
+    }
+
+    .luxury-action-bar{
+      left:auto;
+      right:22px;
+      bottom:22px;
+      width:440px;
+      min-height:70px;
+      border:1px solid rgba(239,220,169,.18);
+    }
+
+    .action-label{
+      font-size:9px;
+    }
+
+    footer{
+      padding-bottom:34px;
+    }
+  }
+
+  @media(max-width:390px){
+    .hero-content{
+      padding-left:15px;
+      padding-right:15px;
+    }
+
+    .hero-content h1{
+      font-size:clamp(50px,14.8vw,67px);
+    }
+
+    .action-label{
+      font-size:7.5px;
+    }
+  }
+</style><meta content="WTE-FINAL-PREMIUM-HERO-BAR" name="version"/></head><body class="cinematic-v3">
 <div class="grain"></div>
 <div class="scroll-progress" id="scrollProgress"></div>
 <header class="header" id="header">
@@ -1641,13 +1896,12 @@
 <section class="hero" id="home">
 <div class="hero-frame"></div><video autoplay="" class="hero-video" loop="" muted="" playsinline="" poster="" preload="auto"><source src="hero.mp4" type="video/mp4"/></video><div class="hero-bg"></div>
 <div class="hero-content hero-content-premium">
-<p class="eyebrow">Wedding Tattoo Experience</p>
+<p class="eyebrow">WEDDING TATTOO EXPERIENCE</p>
 <h1>LOVE.<br/>MARKED.<br/>FOREVER.</h1>
 <p class="hero-copy">Un’esperienza esclusiva che trasforma il vostro matrimonio in un ricordo indelebile.</p>
 <div class="actions">
 <button class="btn btn-primary" data-open-booking="">Verifica disponibilità</button>
-
-</div>
+<a class="hero-discover-link" href="#experience">Scopri il servizio</a></div>
 </div>
 <a class="scroll-cue" href="#experience"><i></i>Scopri</a>
 </section>
@@ -1765,10 +2019,7 @@
 </form>
 </div>
 </div>
-<div aria-label="Azioni rapide" class="sticky">
-<button onclick="document.getElementById('configurator').scrollIntoView({behavior:'smooth'})">Pacchetto ideale</button>
-<button data-open-booking="">Verifica la data</button>
-</div>
+
 <script>
     const header=document.getElementById('header');
     const menuBtn=document.getElementById('menuBtn');
@@ -1968,6 +2219,38 @@ Vorrei verificare la disponibilità della data.`);
 
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && video.paused) start();
+    });
+  }
+
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', event => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) event.preventDefault();
+    lastTouchEnd = now;
+  }, {passive:false});
+
+  document.addEventListener('gesturestart', event => event.preventDefault(), {passive:false});
+})();
+</script><nav aria-label="Azioni rapide" class="luxury-action-bar"><a href="https://wa.me/393477050250" rel="noopener" target="_blank"><span class="action-icon">WA</span><span class="action-label">WhatsApp</span></a><a href="#contacts"><span class="action-icon">▣</span><span class="action-label">Prenota</span></a><a href="tel:+393477050250"><span class="action-icon">☎</span><span class="action-label">Chiama</span></a><a href="https://www.instagram.com/tattoo.beautysalooncondove/" rel="noopener" target="_blank"><span class="action-icon">◎</span><span class="action-label">Instagram</span></a></nav><script id="wte-final-premium-js">
+(() => {
+  const video = document.querySelector('.hero-video');
+
+  if (video) {
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute('muted','');
+    video.setAttribute('playsinline','');
+
+    const startVideo = () => {
+      const p = video.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    };
+
+    if (video.readyState >= 2) startVideo();
+    else video.addEventListener('canplay', startVideo, {once:true});
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && video.paused) startVideo();
     });
   }
 
