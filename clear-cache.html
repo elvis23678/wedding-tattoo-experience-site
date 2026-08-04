@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Aggiornamento Wedding Tattoo Experience</title>
+  <style>
+    html,body{margin:0;min-height:100%;background:#050403;color:#f3e6ca;font-family:Arial,sans-serif}
+    body{display:grid;place-items:center;padding:24px}
+    main{width:min(92vw,520px);text-align:center;border:1px solid rgba(218,177,89,.35);padding:34px 22px;background:#0a0704}
+    h1{font-family:Georgia,serif;font-weight:400;font-size:34px;margin:0 0 14px}
+    p{line-height:1.6;color:#cfc2ae}
+    .status{margin-top:20px;color:#dfb75f;font-weight:700}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Aggiornamento del sito</h1>
+  <p>Sto eliminando la vecchia versione salvata sul telefono.</p>
+  <div class="status" id="status">Pulizia in corso…</div>
+</main>
+<script>
+(async () => {
+  const status = document.getElementById('status');
+
+  try {
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(reg => reg.unregister()));
+    }
+
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(key => caches.delete(key)));
+    }
+
+    try {
+      localStorage.removeItem('wte_cache_version');
+      sessionStorage.clear();
+    } catch (_) {}
+
+    status.textContent = 'Cache eliminata. Apro la nuova versione…';
+
+    setTimeout(() => {
+      location.replace('/?v=202608041600');
+    }, 900);
+  } catch (error) {
+    status.textContent = 'Ricarica questa pagina una seconda volta.';
+  }
+})();
+</script>
+</body>
+</html>
