@@ -665,7 +665,722 @@
       grid-column:1/-1;
     }
   }
-</style><meta content="WTE-ADMIN-PHASE2C" name="version"/></head>
+</style><meta content="WTE-ADMIN-PHASE2C" name="version"/><style id="wte-admin-phase2d-css">
+  .calendar-shell{
+    margin-bottom:14px;
+    padding:14px;
+    border:1px solid var(--line);
+    background:#070503;
+  }
+
+  .calendar-head{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    margin-bottom:12px;
+  }
+
+  .calendar-head p{
+    margin:0 0 5px;
+    color:var(--gold2);
+    font-size:8px;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+  }
+
+  .calendar-head h2{
+    margin:0;
+    font-family:var(--serif);
+    font-size:28px;
+    font-weight:400;
+  }
+
+  .calendar-nav{
+    display:grid;
+    grid-template-columns:44px 1fr 44px;
+    gap:8px;
+    align-items:center;
+  }
+
+  .calendar-nav button{
+    min-height:42px;
+    border:1px solid var(--line);
+    background:#0b0805;
+    color:#e4d7c3;
+    font-size:14px;
+  }
+
+  .calendar-nav strong{
+    min-height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 10px;
+    border:1px solid var(--line);
+    background:#0a0704;
+    font-family:var(--serif);
+    font-size:18px;
+    font-weight:400;
+    text-align:center;
+  }
+
+  #calendarToday{
+    grid-column:1/-1;
+    font-size:8px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .calendar-legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 12px;
+    margin-bottom:12px;
+    padding:10px 0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+
+  .calendar-legend span{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:#b8aa96;
+    font-size:8px;
+  }
+
+  .calendar-legend .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+  }
+
+  .calendar-legend .wait{background:#d6aa55}
+  .calendar-legend .confirmed{background:#7fb486}
+  .calendar-legend .deposit{background:#c99a43}
+  .calendar-legend .done{background:#8b7ec2}
+  .calendar-legend .cancelled{background:#c46f65}
+
+  .calendar-weekdays{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    border-top:1px solid var(--line);
+    border-left:1px solid var(--line);
+  }
+
+  .calendar-weekdays span{
+    min-height:34px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    color:#9f927f;
+    font-size:7px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .calendar-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    border-left:1px solid var(--line);
+  }
+
+  .calendar-day{
+    position:relative;
+    min-height:84px;
+    padding:7px;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    background:#090704;
+    overflow:hidden;
+  }
+
+  .calendar-day.outside{
+    opacity:.34;
+  }
+
+  .calendar-day.today{
+    box-shadow:inset 0 0 0 1px rgba(240,221,176,.48);
+  }
+
+  .calendar-day.selected{
+    background:rgba(201,154,67,.08);
+    box-shadow:inset 0 0 0 1px rgba(201,154,67,.55);
+  }
+
+  .calendar-day button{
+    all:unset;
+    position:absolute;
+    inset:0;
+    cursor:pointer;
+  }
+
+  .calendar-day-number{
+    position:relative;
+    z-index:1;
+    display:block;
+    margin-bottom:6px;
+    color:#d8ccb9;
+    font-size:11px;
+  }
+
+  .calendar-events{
+    position:relative;
+    z-index:1;
+    display:grid;
+    gap:4px;
+  }
+
+  .calendar-event-chip{
+    min-height:18px;
+    padding:3px 4px;
+    border-left:3px solid #d6aa55;
+    background:rgba(255,255,255,.025);
+    color:#d5c7b2;
+    font-size:6px;
+    line-height:1.2;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+
+  .calendar-event-chip.confirmed{border-left-color:#7fb486}
+  .calendar-event-chip.deposit{border-left-color:#c99a43}
+  .calendar-event-chip.done{border-left-color:#8b7ec2}
+  .calendar-event-chip.cancelled{border-left-color:#c46f65}
+
+  .calendar-more{
+    color:#9c8e7a;
+    font-size:6px;
+  }
+
+  .calendar-day-panel{
+    margin-top:12px;
+    padding:14px;
+    border:1px solid var(--line);
+    background:#0a0704;
+  }
+
+  .calendar-day-panel > div:first-child{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+  }
+
+  .calendar-day-panel span{
+    color:var(--gold2);
+    font-size:8px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+  }
+
+  .calendar-day-panel strong{
+    font-family:var(--serif);
+    font-size:18px;
+    font-weight:400;
+  }
+
+  .calendar-selected-events{
+    display:grid;
+    gap:8px;
+  }
+
+  .calendar-selected-card{
+    padding:12px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:10px;
+    border:1px solid var(--line);
+    background:#0b0805;
+  }
+
+  .calendar-selected-card strong{
+    display:block;
+    font-family:var(--serif);
+    font-size:16px;
+    font-weight:400;
+  }
+
+  .calendar-selected-card p{
+    margin:5px 0 0;
+    color:#b5a793;
+    font-size:9px;
+    line-height:1.45;
+  }
+
+  .calendar-selected-card button{
+    align-self:center;
+    min-height:36px;
+    padding:0 10px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:#dfd1bb;
+    font-size:7px;
+    text-transform:uppercase;
+  }
+
+  .calendar-no-events{
+    color:#948674;
+    font-size:10px;
+  }
+
+  @media(min-width:760px){
+    .calendar-head{
+      flex-direction:row;
+      align-items:flex-end;
+      justify-content:space-between;
+    }
+
+    .calendar-nav{
+      grid-template-columns:44px 190px 44px 70px;
+    }
+
+    #calendarToday{
+      grid-column:auto;
+    }
+
+    .calendar-day{
+      min-height:118px;
+      padding:9px;
+    }
+
+    .calendar-event-chip{
+      font-size:7px;
+      min-height:20px;
+    }
+  }
+</style><meta content="WTE-ADMIN-PHASE2D" name="version"/><style id="wte-admin-phase2e-css">
+  .ops-kpi-grid{
+    margin-bottom:14px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .ops-kpi-grid article{
+    min-height:108px;
+    padding:15px;
+    border:1px solid var(--line);
+    background:#090704;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+
+  .ops-kpi-grid small{
+    color:#a99b87;
+    font-size:7px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+  }
+
+  .ops-kpi-grid strong{
+    font-family:var(--serif);
+    font-size:28px;
+    font-weight:400;
+    color:#f0ddb0;
+  }
+
+  .ops-kpi-grid span{
+    color:var(--muted);
+    font-size:9px;
+    line-height:1.35;
+  }
+
+  .crm-fields,
+  .timeline-box{
+    margin-top:12px;
+    padding:16px;
+    border:1px solid var(--line);
+    background:#0a0704;
+  }
+
+  .crm-fields-head,
+  .timeline-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+
+  .crm-fields-head span,
+  .timeline-head span{
+    color:var(--gold2);
+    font-size:8px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .crm-fields-head strong{
+    font-family:var(--serif);
+    font-size:20px;
+    font-weight:400;
+  }
+
+  .crm-fields-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .crm-fields-grid label{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    color:#d8cbb8;
+    font-size:8px;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+  }
+
+  .crm-fields-grid input,
+  .crm-fields-grid select{
+    width:100%;
+    min-height:46px;
+    padding:0 11px;
+    border:1px solid var(--line);
+    background:#100d09;
+    color:#fff;
+    outline:none;
+  }
+
+  .quick-actions{
+    margin-top:12px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .quick-actions button{
+    min-height:44px;
+    border:1px solid var(--line);
+    background:#0b0805;
+    color:#e0d3bf;
+    font-size:8px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+
+  #registerDepositBtn,
+  #confirmEventBtn{
+    border:0;
+    background:linear-gradient(135deg,#f2dfad,#cc9f48 58%,#a87526);
+    color:#171006;
+  }
+
+  .timeline-head button{
+    min-height:34px;
+    padding:0 10px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:#d8cab6;
+    font-size:7px;
+    text-transform:uppercase;
+  }
+
+  .timeline-list{
+    display:grid;
+    gap:8px;
+  }
+
+  .timeline-item{
+    position:relative;
+    padding:12px 12px 12px 34px;
+    border:1px solid var(--line);
+    background:#0b0805;
+  }
+
+  .timeline-item::before{
+    content:"";
+    position:absolute;
+    left:13px;
+    top:17px;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#c99a43;
+    box-shadow:0 0 0 4px rgba(201,154,67,.09);
+  }
+
+  .timeline-item strong{
+    display:block;
+    font-family:var(--serif);
+    font-size:15px;
+    font-weight:400;
+  }
+
+  .timeline-item span{
+    display:block;
+    margin-top:5px;
+    color:#a99b87;
+    font-size:8px;
+  }
+
+  .timeline-empty{
+    color:#948674;
+    font-size:10px;
+  }
+
+  .priority-high{color:#e0ba69!important}
+  .priority-urgent{color:#d77e73!important}
+  .priority-low{color:#8ea6c6!important}
+
+  @media(min-width:760px){
+    .ops-kpi-grid{
+      grid-template-columns:repeat(4,1fr);
+    }
+
+    .crm-fields-grid{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .quick-actions{
+      grid-template-columns:repeat(4,1fr);
+    }
+  }
+</style><meta content="WTE-ADMIN-PHASE2E" name="version"/><style>
+.followup-panel{margin:14px 0;padding:16px;border:1px solid var(--line);background:#0a0704}
+.follow-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.follow-grid label{display:flex;flex-direction:column;color:#d8cbb8;font-size:8px;text-transform:uppercase}
+.follow-grid input,.follow-grid select,textarea{margin-top:6px;background:#100d09;color:#fff;border:1px solid var(--line);padding:10px}
+textarea{width:100%;min-height:90px}
+.follow-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.follow-actions button{min-height:44px}
+.today-item{padding:10px;border:1px solid var(--line);margin-top:8px}
+</style><style id="wte-admin-phase2g-css">
+  .kanban-shell{
+    margin-bottom:14px;
+    padding:14px;
+    border:1px solid var(--line);
+    background:#070503;
+  }
+
+  .kanban-head{
+    margin-bottom:12px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .kanban-head p{
+    margin:0 0 5px;
+    color:var(--gold2);
+    font-size:8px;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+  }
+
+  .kanban-head h2{
+    margin:0;
+    font-family:var(--serif);
+    font-size:28px;
+    font-weight:400;
+  }
+
+  .kanban-tools{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .kanban-tools button{
+    min-height:42px;
+    border:1px solid var(--line);
+    background:#0b0805;
+    color:#ddd0bc;
+    font-size:8px;
+    font-weight:700;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+
+  .kanban-board{
+    display:grid;
+    grid-auto-flow:column;
+    grid-auto-columns:minmax(280px,86vw);
+    gap:10px;
+    overflow-x:auto;
+    padding-bottom:6px;
+    scroll-snap-type:x proximity;
+  }
+
+  .kanban-board::-webkit-scrollbar{height:7px}
+  .kanban-board::-webkit-scrollbar-thumb{background:#3a2b18}
+
+  .kanban-column{
+    min-height:420px;
+    border:1px solid var(--line);
+    background:#090704;
+    scroll-snap-align:start;
+  }
+
+  .kanban-column > header{
+    min-height:52px;
+    padding:10px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    border-bottom:1px solid var(--line);
+    background:#0b0805;
+  }
+
+  .kanban-column > header span{
+    color:#e4d8c4;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+  }
+
+  .kanban-column > header strong{
+    min-width:28px;
+    height:28px;
+    display:grid;
+    place-items:center;
+    border:1px solid var(--line);
+    border-radius:50%;
+    color:#f0ddb0;
+    font-family:var(--serif);
+    font-size:14px;
+    font-weight:400;
+  }
+
+  .kanban-dropzone{
+    min-height:360px;
+    padding:9px;
+    display:grid;
+    align-content:start;
+    gap:8px;
+    transition:background .2s ease;
+  }
+
+  .kanban-dropzone.drag-over{
+    background:rgba(201,154,67,.08);
+    box-shadow:inset 0 0 0 1px rgba(201,154,67,.36);
+  }
+
+  .kanban-card{
+    position:relative;
+    padding:13px;
+    border:1px solid rgba(240,221,176,.13);
+    background:#0d0906;
+    cursor:grab;
+    user-select:none;
+    -webkit-user-select:none;
+    transition:transform .18s ease,opacity .18s ease,border-color .18s ease;
+  }
+
+  .kanban-card:active{cursor:grabbing}
+  .kanban-card.dragging{
+    opacity:.42;
+    transform:scale(.98);
+    border-color:rgba(201,154,67,.42);
+  }
+
+  .kanban-card-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:8px;
+  }
+
+  .kanban-card strong{
+    font-family:var(--serif);
+    font-size:17px;
+    font-weight:400;
+    color:#fff;
+  }
+
+  .kanban-priority{
+    padding:5px 7px;
+    border:1px solid var(--line);
+    font-size:6px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  .kanban-priority.high{color:#e0ba69}
+  .kanban-priority.urgent{color:#dc8177}
+  .kanban-priority.low{color:#91a8c6}
+
+  .kanban-card p{
+    margin:6px 0 0;
+    color:#b8aa96;
+    font-size:9px;
+    line-height:1.45;
+  }
+
+  .kanban-card-meta{
+    margin-top:10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding-top:9px;
+    border-top:1px solid var(--line);
+  }
+
+  .kanban-card-meta span{
+    color:#9d8f7b;
+    font-size:8px;
+  }
+
+  .kanban-card-meta strong{
+    color:#e4b963;
+    font-family:var(--sans);
+    font-size:10px;
+    font-weight:700;
+  }
+
+  .kanban-empty{
+    padding:26px 12px;
+    text-align:center;
+    color:#847765;
+    font-size:9px;
+    border:1px dashed rgba(240,221,176,.11);
+  }
+
+  .kanban-board.compact{
+    grid-auto-columns:minmax(230px,72vw);
+  }
+
+  .kanban-board.compact .kanban-card{
+    padding:10px;
+  }
+
+  .kanban-board.compact .kanban-card p:nth-of-type(n+2),
+  .kanban-board.compact .kanban-card-meta span{
+    display:none;
+  }
+
+  @media(min-width:900px){
+    .kanban-head{
+      flex-direction:row;
+      align-items:flex-end;
+      justify-content:space-between;
+    }
+
+    .kanban-tools{
+      grid-template-columns:auto auto;
+    }
+
+    .kanban-tools button{
+      padding:0 14px;
+    }
+
+    .kanban-board{
+      grid-auto-columns:minmax(290px,340px);
+    }
+  }
+</style><meta content="WTE-ADMIN-PHASE2G" name="version"/></head>
 <body>
 <div class="grain"></div>
 <div class="app">
@@ -709,6 +1424,45 @@
 <strong id="kpiValue">€ 0</strong>
 <em>Escluse le pratiche annullate</em>
 </article>
+</section><section class="ops-kpi-grid">
+<article>
+<small>Acconti ricevuti</small>
+<strong id="opsDeposits">€ 0</strong>
+<span>Totale acconti registrati</span>
+</article>
+<article>
+<small>Eventi questo mese</small>
+<strong id="opsThisMonth">0</strong>
+<span>Matrimoni nel mese corrente</span>
+</article>
+<article>
+<small>Prossimi 30 giorni</small>
+<strong id="opsNext30">0</strong>
+<span>Eventi imminenti</span>
+</article>
+<article>
+<small>Senza risposta</small>
+<strong id="opsNoReply">0</strong>
+<span>Preventivi ancora in attesa</span>
+</article>
+</section><section class="followup-panel">
+<h3>Follow-up automatici</h3>
+<div class="follow-grid">
+<label>Prossimo contatto<input id="fuDate" type="date"/></label>
+<label>Tipo
+<select id="fuType">
+<option>Telefonata</option>
+<option>WhatsApp</option>
+<option>Email</option>
+<option>Videocall</option>
+</select></label>
+</div>
+<textarea id="fuNotes" placeholder="Promemoria..."></textarea>
+<div class="follow-actions">
+<button id="saveFollow">Salva follow-up</button>
+<button id="showToday">Scadenze oggi</button>
+</div>
+<div class="today-list" id="todayList"></div>
 </section>
 <section class="controls">
 <input id="searchInput" placeholder="Cerca nome, ID, città o pacchetto" type="search"/>
@@ -824,6 +1578,74 @@
 <p id="dominantStatusCopy">Nessuna pratica presente.</p>
 </article>
 </div>
+</section><section class="kanban-shell">
+<header class="kanban-head">
+<div>
+<p>Pipeline commerciale</p>
+<h2>Kanban CRM</h2>
+</div>
+<div class="kanban-tools">
+<button id="kanbanRefresh" type="button">Aggiorna</button>
+<button id="kanbanCompact" type="button">Vista compatta</button>
+</div>
+</header>
+<div class="kanban-board" id="kanbanBoard">
+<section class="kanban-column" data-status="Nuova richiesta">
+<header><span>Nuove richieste</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+<section class="kanban-column" data-status="Contattato">
+<header><span>Contattato</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+<section class="kanban-column" data-status="Preventivo inviato">
+<header><span>Preventivo inviato</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+<section class="kanban-column" data-status="Acconto ricevuto">
+<header><span>Acconto ricevuto</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+<section class="kanban-column" data-status="Confermato">
+<header><span>Confermato</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+<section class="kanban-column" data-status="Evento eseguito">
+<header><span>Evento eseguito</span><strong data-count="">0</strong></header>
+<div class="kanban-dropzone" data-dropzone=""></div>
+</section>
+</div>
+</section><section class="calendar-shell">
+<header class="calendar-head">
+<div>
+<p>Agenda eventi</p>
+<h2>Calendario matrimoni</h2>
+</div>
+<div class="calendar-nav">
+<button aria-label="Mese precedente" id="calendarPrev" type="button">←</button>
+<strong id="calendarTitle">Mese</strong>
+<button aria-label="Mese successivo" id="calendarNext" type="button">→</button>
+<button id="calendarToday" type="button">Oggi</button>
+</div>
+</header>
+<div class="calendar-legend">
+<span><i class="dot wait"></i> In attesa</span>
+<span><i class="dot confirmed"></i> Confermata</span>
+<span><i class="dot deposit"></i> Acconto ricevuto</span>
+<span><i class="dot done"></i> Evento concluso</span>
+<span><i class="dot cancelled"></i> Annullata</span>
+</div>
+<div class="calendar-weekdays">
+<span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span>
+</div>
+<div class="calendar-grid" id="calendarGrid"></div>
+<div class="calendar-day-panel" id="calendarDayPanel">
+<div>
+<span id="calendarSelectedLabel">Seleziona un giorno</span>
+<strong id="calendarSelectedCount">0 eventi</strong>
+</div>
+<div class="calendar-selected-events" id="calendarSelectedEvents"></div>
+</div>
 </section><section class="list-shell">
 <header class="list-head">
 <strong>Pratiche</strong>
@@ -870,19 +1692,70 @@
 <span>Consigli del consulente</span>
 <ul id="detailAdvice"></ul>
 </div>
-<div class="status-box">
-<span>Stato pratica</span>
-<select id="detailStatus">
-<option>In attesa</option>
-<option>Nuova</option>
-<option>Contattata</option>
-<option>Proposta inviata</option>
-<option>Contratto inviato</option>
-<option>Acconto ricevuto</option>
-<option>Confermata</option>
-<option>Evento concluso</option>
-<option>Annullata</option>
+<section class="crm-fields">
+<div class="crm-fields-head">
+<span>Gestione pratica</span>
+<strong>Dettagli operativi</strong>
+</div>
+<div class="crm-fields-grid">
+<label>
+      Telefono
+      <input id="detailPhone" placeholder="+39..." type="tel"/>
+</label>
+<label>
+      Email
+      <input id="detailEmail" placeholder="email@esempio.it" type="email"/>
+</label>
+<label>
+      Operatore assegnato
+      <select id="detailOperator">
+<option value="">Non assegnato</option>
+<option>Elvis</option>
+<option>Dennis</option>
+<option>Daniela</option>
+<option>Staff Wedding</option>
 </select>
+</label>
+<label>
+      Priorità
+      <select id="detailPriority">
+<option value="Normale">Normale</option>
+<option value="Alta">Alta</option>
+<option value="Urgente">Urgente</option>
+<option value="Bassa">Bassa</option>
+</select>
+</label>
+<label>
+      Acconto previsto
+      <input id="detailDepositExpected" min="0" placeholder="0" step="10" type="number"/>
+</label>
+<label>
+      Acconto ricevuto
+      <input id="detailDepositPaid" min="0" placeholder="0" step="10" type="number"/>
+</label>
+<label>
+      Data acconto
+      <input id="detailDepositDate" type="date"/>
+</label>
+<label>
+      Saldo previsto
+      <input id="detailBalance" min="0" placeholder="0" step="10" type="number"/>
+</label>
+</div>
+</section><section class="quick-actions">
+<button id="callBtn" type="button">Chiama</button>
+<button id="emailBtn" type="button">Email</button>
+<button id="registerDepositBtn" type="button">Registra acconto</button>
+<button id="confirmEventBtn" type="button">Conferma evento</button>
+</section><section class="timeline-box">
+<div class="timeline-head">
+<span>Cronologia pratica</span>
+<button id="addTimelineBtn" type="button">Aggiungi nota</button>
+</div>
+<div class="timeline-list" id="timelineList"></div>
+</section><div class="status-box">
+<span>Stato pratica</span>
+<select id="detailStatus"><option>Nuova richiesta</option><option>Contattato</option><option>Preventivo inviato</option><option>Contratto inviato</option><option>Acconto ricevuto</option><option>Confermato</option><option>Evento eseguito</option><option>Archiviato</option><option>Annullato</option></select>
 </div><div class="notes-box">
 <span>Note interne</span>
 <textarea id="detailNotes" placeholder="Scrivi una nota interna..."></textarea>
@@ -1744,6 +2617,787 @@ ${item.notes || 'Nessuna nota'}`;
   });
 
   renderAnalytics();
+})();
+</script><script id="wte-admin-phase2d-js">
+(() => {
+  const STORAGE_KEY='wte_requests_v1';
+  const MONTH_NAMES=[
+    'Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+    'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'
+  ];
+
+  let currentMonth=new Date();
+  currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth(),1);
+  let selectedDate=null;
+
+  function loadItems(){
+    try{
+      const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+      return Array.isArray(data)?data:[];
+    }catch{return[]}
+  }
+
+  function isoDate(date){
+    const y=date.getFullYear();
+    const m=String(date.getMonth()+1).padStart(2,'0');
+    const d=String(date.getDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function formatItalianDate(value){
+    if(!value)return '—';
+    const p=String(value).split('-');
+    if(p.length!==3)return value;
+    return `${p[2]}/${p[1]}/${p[0]}`;
+  }
+
+  function statusClass(status){
+    if(status==='Confermata')return 'confirmed';
+    if(status==='Acconto ricevuto')return 'deposit';
+    if(status==='Evento concluso')return 'done';
+    if(status==='Annullata')return 'cancelled';
+    return 'wait';
+  }
+
+  function itemsByDate(){
+    const map={};
+    loadItems().forEach(item=>{
+      if(!item.date)return;
+      (map[item.date] ||= []).push(item);
+    });
+    return map;
+  }
+
+  function monthCells(year,month){
+    const first=new Date(year,month,1);
+    const last=new Date(year,month+1,0);
+    let startDay=first.getDay();
+    startDay=startDay===0?6:startDay-1;
+
+    const cells=[];
+    const startDate=new Date(year,month,1-startDay);
+
+    for(let i=0;i<42;i++){
+      const date=new Date(startDate);
+      date.setDate(startDate.getDate()+i);
+      cells.push({
+        date,
+        outside:date.getMonth()!==month
+      });
+    }
+
+    return cells;
+  }
+
+  function renderSelected(dateString,events){
+    const label=document.getElementById('calendarSelectedLabel');
+    const count=document.getElementById('calendarSelectedCount');
+    const wrap=document.getElementById('calendarSelectedEvents');
+
+    label.textContent=dateString?formatItalianDate(dateString):'Seleziona un giorno';
+    count.textContent=`${events.length} ${events.length===1?'evento':'eventi'}`;
+    wrap.innerHTML='';
+
+    if(!events.length){
+      const empty=document.createElement('div');
+      empty.className='calendar-no-events';
+      empty.textContent='Nessun matrimonio registrato per questa data.';
+      wrap.appendChild(empty);
+      return;
+    }
+
+    events.forEach(item=>{
+      const card=document.createElement('article');
+      card.className='calendar-selected-card';
+      card.innerHTML=`
+        <div>
+          <strong>${item.name||'Senza nome'}</strong>
+          <p>${item.location||'Location da definire'} · ${item.package||'Pacchetto da definire'}</p>
+          <p>${item.status||'In attesa'} · ${item.price||'—'}</p>
+        </div>
+        <button type="button">Apri</button>
+      `;
+      card.querySelector('button').addEventListener('click',()=>{
+        if(typeof openDetail==='function') openDetail(item.id);
+        else{
+          const rows=[...document.querySelectorAll('tbody tr,.practice-card')];
+          const target=rows.find(el=>el.textContent.includes(item.id));
+          target?.click();
+        }
+      });
+      wrap.appendChild(card);
+    });
+  }
+
+  function renderCalendar(){
+    const year=currentMonth.getFullYear();
+    const month=currentMonth.getMonth();
+    const map=itemsByDate();
+    const grid=document.getElementById('calendarGrid');
+    const title=document.getElementById('calendarTitle');
+
+    title.textContent=`${MONTH_NAMES[month]} ${year}`;
+    grid.innerHTML='';
+
+    const today=isoDate(new Date());
+    const cells=monthCells(year,month);
+
+    cells.forEach(cell=>{
+      const key=isoDate(cell.date);
+      const events=map[key]||[];
+      const day=document.createElement('div');
+      day.className='calendar-day';
+      if(cell.outside)day.classList.add('outside');
+      if(key===today)day.classList.add('today');
+      if(key===selectedDate)day.classList.add('selected');
+
+      const visible=events.slice(0,2).map(item=>
+        `<div class="calendar-event-chip ${statusClass(item.status)}">${item.name||'Evento'}</div>`
+      ).join('');
+
+      day.innerHTML=`
+        <span class="calendar-day-number">${cell.date.getDate()}</span>
+        <div class="calendar-events">
+          ${visible}
+          ${events.length>2?`<div class="calendar-more">+${events.length-2} altri</div>`:''}
+        </div>
+        <button type="button" aria-label="Apri ${key}"></button>
+      `;
+
+      day.querySelector('button').addEventListener('click',()=>{
+        selectedDate=key;
+        renderCalendar();
+        renderSelected(key,events);
+      });
+
+      grid.appendChild(day);
+    });
+
+    if(selectedDate){
+      renderSelected(selectedDate,map[selectedDate]||[]);
+    }
+  }
+
+  document.getElementById('calendarPrev')?.addEventListener('click',()=>{
+    currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()-1,1);
+    selectedDate=null;
+    renderCalendar();
+    renderSelected(null,[]);
+  });
+
+  document.getElementById('calendarNext')?.addEventListener('click',()=>{
+    currentMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1,1);
+    selectedDate=null;
+    renderCalendar();
+    renderSelected(null,[]);
+  });
+
+  document.getElementById('calendarToday')?.addEventListener('click',()=>{
+    const now=new Date();
+    currentMonth=new Date(now.getFullYear(),now.getMonth(),1);
+    selectedDate=isoDate(now);
+    renderCalendar();
+    const map=itemsByDate();
+    renderSelected(selectedDate,map[selectedDate]||[]);
+  });
+
+  document.getElementById('refreshBtn')?.addEventListener('click',()=>setTimeout(renderCalendar,0));
+
+  window.addEventListener('storage',event=>{
+    if(event.key===STORAGE_KEY)renderCalendar();
+  });
+
+  const originalSetItem=localStorage.setItem;
+  localStorage.setItem=function(key,value){
+    originalSetItem.apply(this,arguments);
+    if(key===STORAGE_KEY)setTimeout(renderCalendar,0);
+  };
+
+  renderCalendar();
+  renderSelected(null,[]);
+})();
+</script><script id="wte-admin-phase2e-js">
+(() => {
+  const STORAGE_KEY='wte_requests_v1';
+
+  function loadItems(){
+    try{
+      const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+      return Array.isArray(data)?data:[];
+    }catch{return[]}
+  }
+
+  function saveItems(items){
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(items));
+  }
+
+  function getSelectedId(){
+    return document.getElementById('detailId')?.textContent?.trim()||null;
+  }
+
+  function formatMoney(value){
+    return `€ ${Number(value||0).toLocaleString('it-IT')}`;
+  }
+
+  function todayIso(){
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function nowLabel(){
+    return new Date().toLocaleString('it-IT');
+  }
+
+  function addTimeline(item,title,detail=''){
+    item.timeline=Array.isArray(item.timeline)?item.timeline:[];
+    item.timeline.unshift({
+      id:`TL-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+      title,
+      detail,
+      createdAt:new Date().toISOString()
+    });
+  }
+
+  function ensureAutomaticTimeline(item){
+    item.timeline=Array.isArray(item.timeline)?item.timeline:[];
+
+    const existingTitles=new Set(item.timeline.map(x=>x.title));
+
+    if(item.createdAt && !existingTitles.has('Richiesta ricevuta')){
+      item.timeline.push({
+        id:`TL-CREATED-${item.id}`,
+        title:'Richiesta ricevuta',
+        detail:item.type||'Pratica creata dal sito',
+        createdAt:item.createdAt
+      });
+    }
+
+    if(item.signedAt && !existingTitles.has('Proposta firmata')){
+      item.timeline.push({
+        id:`TL-SIGNED-${item.id}`,
+        title:'Proposta firmata',
+        detail:`Firmatario: ${item.signedName||item.name||'Cliente'}`,
+        createdAt:item.updatedAt||item.createdAt
+      });
+    }
+
+    if(item.hasPdf && !existingTitles.has('PDF generato')){
+      item.timeline.push({
+        id:`TL-PDF-${item.id}`,
+        title:'PDF generato',
+        detail:'Proposta PDF associata alla pratica',
+        createdAt:item.updatedAt||item.createdAt
+      });
+    }
+
+    item.timeline.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+  }
+
+  function renderOperationalKpis(){
+    const items=loadItems();
+    const now=new Date();
+    const month=now.getMonth();
+    const year=now.getFullYear();
+    const in30=new Date(now);
+    in30.setDate(in30.getDate()+30);
+
+    const deposits=items.reduce((sum,item)=>sum+Number(item.depositPaid||0),0);
+
+    const thisMonth=items.filter(item=>{
+      const date=new Date(item.date);
+      return !Number.isNaN(date.getTime()) &&
+        date.getMonth()===month &&
+        date.getFullYear()===year;
+    }).length;
+
+    const next30=items.filter(item=>{
+      const date=new Date(item.date);
+      return !Number.isNaN(date.getTime()) && date>=now && date<=in30;
+    }).length;
+
+    const noReply=items.filter(item=>{
+      const s=item.status||'';
+      return ['In attesa','Nuova','Nuova richiesta','Preventivo inviato','Proposta inviata'].includes(s);
+    }).length;
+
+    document.getElementById('opsDeposits').textContent=formatMoney(deposits);
+    document.getElementById('opsThisMonth').textContent=thisMonth;
+    document.getElementById('opsNext30').textContent=next30;
+    document.getElementById('opsNoReply').textContent=noReply;
+  }
+
+  function fillCrmFields(item){
+    const set=(id,value)=>{
+      const el=document.getElementById(id);
+      if(el) el.value=value??'';
+    };
+
+    set('detailPhone',item.phone||'');
+    set('detailEmail',item.email||'');
+    set('detailOperator',item.operator||'');
+    set('detailPriority',item.crmPriority||'Normale');
+    set('detailDepositExpected',item.depositExpected||0);
+    set('detailDepositPaid',item.depositPaid||0);
+    set('detailDepositDate',item.depositDate||'');
+    set('detailBalance',item.balance||0);
+
+    const status=document.getElementById('detailStatus');
+    if(status){
+      const preferred=item.status||'Nuova richiesta';
+      const exists=[...status.options].some(o=>o.value===preferred);
+      status.value=exists?preferred:'Nuova richiesta';
+    }
+
+    renderTimeline(item);
+  }
+
+  function renderTimeline(item){
+    ensureAutomaticTimeline(item);
+
+    const wrap=document.getElementById('timelineList');
+    wrap.innerHTML='';
+
+    if(!item.timeline.length){
+      wrap.innerHTML='<div class="timeline-empty">Nessuna attività registrata.</div>';
+      return;
+    }
+
+    item.timeline.forEach(entry=>{
+      const row=document.createElement('article');
+      row.className='timeline-item';
+      row.innerHTML=`
+        <strong>${entry.title||'Attività'}</strong>
+        ${entry.detail?`<span>${entry.detail}</span>`:''}
+        <span>${new Date(entry.createdAt||Date.now()).toLocaleString('it-IT')}</span>
+      `;
+      wrap.appendChild(row);
+    });
+  }
+
+  function getCurrentItem(){
+    const id=getSelectedId();
+    return loadItems().find(x=>x.id===id)||null;
+  }
+
+  function saveCrmFields(item){
+    const val=id=>document.getElementById(id)?.value||'';
+
+    item.phone=val('detailPhone');
+    item.email=val('detailEmail');
+    item.operator=val('detailOperator');
+    item.crmPriority=val('detailPriority')||'Normale';
+    item.depositExpected=Number(val('detailDepositExpected'))||0;
+    item.depositPaid=Number(val('detailDepositPaid'))||0;
+    item.depositDate=val('detailDepositDate');
+    item.balance=Number(val('detailBalance'))||0;
+    item.status=val('detailStatus')||item.status||'Nuova richiesta';
+    item.notes=document.getElementById('detailNotes')?.value||'';
+    item.updatedAt=new Date().toISOString();
+  }
+
+  const drawer=document.getElementById('drawer');
+  const observer=new MutationObserver(()=>{
+    if(!drawer.classList.contains('open')) return;
+    const item=getCurrentItem();
+    if(item) fillCrmFields(item);
+  });
+  observer.observe(drawer,{attributes:true,attributeFilter:['class']});
+
+  // Replace save button again to persist all CRM fields.
+  const oldSave=document.getElementById('saveNotesBtn');
+  if(oldSave){
+    const btn=oldSave.cloneNode(true);
+    btn.textContent='Salva modifiche';
+    oldSave.replaceWith(btn);
+
+    btn.addEventListener('click',()=>{
+      const items=loadItems();
+      const item=items.find(x=>x.id===getSelectedId());
+      if(!item)return;
+
+      const oldStatus=item.status;
+      saveCrmFields(item);
+
+      if(item.status!==oldStatus){
+        addTimeline(item,'Stato aggiornato',`${oldStatus||'—'} → ${item.status}`);
+      }
+
+      saveItems(items);
+      renderOperationalKpis();
+      document.getElementById('refreshBtn')?.click();
+      document.getElementById('closeDetailBtn')?.click();
+    });
+  }
+
+  document.getElementById('registerDepositBtn')?.addEventListener('click',()=>{
+    const items=loadItems();
+    const item=items.find(x=>x.id===getSelectedId());
+    if(!item)return;
+
+    const amount=Number(prompt('Importo acconto ricevuto:',item.depositPaid||item.depositExpected||0));
+    if(!Number.isFinite(amount)||amount<0)return;
+
+    item.depositPaid=amount;
+    item.depositDate=todayIso();
+    item.status='Acconto ricevuto';
+    item.updatedAt=new Date().toISOString();
+
+    const total=Number(String(item.price||'').replace(/[^\d]/g,''))||0;
+    item.balance=Math.max(0,total-amount);
+
+    addTimeline(item,'Acconto ricevuto',`${formatMoney(amount)} registrati`);
+    saveItems(items);
+
+    fillCrmFields(item);
+    renderOperationalKpis();
+    document.getElementById('refreshBtn')?.click();
+  });
+
+  document.getElementById('confirmEventBtn')?.addEventListener('click',()=>{
+    const items=loadItems();
+    const item=items.find(x=>x.id===getSelectedId());
+    if(!item)return;
+
+    item.status='Confermato';
+    item.updatedAt=new Date().toISOString();
+    addTimeline(item,'Evento confermato','La pratica è stata confermata dallo staff');
+    saveItems(items);
+
+    fillCrmFields(item);
+    renderOperationalKpis();
+    document.getElementById('refreshBtn')?.click();
+  });
+
+  document.getElementById('addTimelineBtn')?.addEventListener('click',()=>{
+    const text=prompt('Scrivi la nuova attività o nota:');
+    if(!text)return;
+
+    const items=loadItems();
+    const item=items.find(x=>x.id===getSelectedId());
+    if(!item)return;
+
+    addTimeline(item,'Nota interna',text);
+    item.updatedAt=new Date().toISOString();
+    saveItems(items);
+    renderTimeline(item);
+  });
+
+  document.getElementById('callBtn')?.addEventListener('click',()=>{
+    const item=getCurrentItem();
+    if(!item?.phone){
+      alert('Inserisci prima il numero di telefono.');
+      return;
+    }
+    location.href=`tel:${item.phone.replace(/\s+/g,'')}`;
+  });
+
+  document.getElementById('emailBtn')?.addEventListener('click',()=>{
+    const item=getCurrentItem();
+    if(!item?.email){
+      alert('Inserisci prima l’indirizzo email.');
+      return;
+    }
+
+    const subject=encodeURIComponent(`Wedding Tattoo Experience — ${item.id}`);
+    const body=encodeURIComponent(
+      `Buongiorno ${item.name||''},\n\nin merito alla vostra richiesta per il ${item.date||''}.\n\nCordiali saluti,\nWedding Tattoo Experience`
+    );
+
+    location.href=`mailto:${item.email}?subject=${subject}&body=${body}`;
+  });
+
+  // Add phone to existing WhatsApp action if available.
+  const oldWhatsapp=document.getElementById('whatsappBtn');
+  if(oldWhatsapp){
+    const btn=oldWhatsapp.cloneNode(true);
+    oldWhatsapp.replaceWith(btn);
+
+    btn.addEventListener('click',()=>{
+      const item=getCurrentItem();
+      if(!item)return;
+
+      const phone=(item.phone||'393477050250').replace(/[^\d]/g,'');
+      const message=
+`📋 PRATICA WEDDING TATTOO EXPERIENCE
+
+ID: ${item.id}
+Cliente: ${item.name}
+Data: ${item.date}
+Location: ${item.location}
+Pacchetto: ${item.package}
+Prezzo: ${item.price}
+Acconto: ${formatMoney(item.depositPaid||0)}
+Stato: ${item.status}`;
+
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`,'_blank','noopener');
+    });
+  }
+
+  // Keep new records compatible.
+  const originalSetItem=localStorage.setItem;
+  localStorage.setItem=function(key,value){
+    originalSetItem.apply(this,arguments);
+    if(key===STORAGE_KEY)setTimeout(renderOperationalKpis,0);
+  };
+
+  window.addEventListener('storage',e=>{
+    if(e.key===STORAGE_KEY)renderOperationalKpis();
+  });
+
+  renderOperationalKpis();
+})();
+</script><script>
+(()=>{
+const KEY='wte_requests_v1';
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return[]}}
+function save(v){localStorage.setItem(KEY,JSON.stringify(v))}
+function id(){return document.getElementById('detailId')?.textContent?.trim()}
+document.getElementById('saveFollow')?.addEventListener('click',()=>{
+ const items=load(); const it=items.find(x=>x.id===id()); if(!it)return;
+ it.followup={date:fuDate.value,type:fuType.value,notes:fuNotes.value};
+ save(items); alert('Follow-up salvato');
+});
+document.getElementById('showToday')?.addEventListener('click',()=>{
+ const today=new Date().toISOString().slice(0,10);
+ const list=document.getElementById('todayList'); list.innerHTML='';
+ load().filter(x=>x.followup&&x.followup.date===today).forEach(x=>{
+  const d=document.createElement('div');
+  d.className='today-item';
+  d.innerHTML='<strong>'+x.name+'</strong><br>'+x.followup.type+'<br>'+x.followup.notes;
+  list.appendChild(d);
+ });
+ if(!list.innerHTML)list.innerHTML='<div class="today-item">Nessun follow-up previsto per oggi.</div>';
+});
+})();
+</script><script id="wte-admin-phase2g-js">
+(() => {
+  const STORAGE_KEY='wte_requests_v1';
+  let draggedId=null;
+
+  function loadItems(){
+    try{
+      const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+      return Array.isArray(data)?data:[];
+    }catch{return[]}
+  }
+
+  function saveItems(items){
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(items));
+  }
+
+  function escapeHtml(value){
+    return String(value??'').replace(/[&<>"']/g,ch=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[ch]));
+  }
+
+  function normalizeStatus(status){
+    const map={
+      'Nuova':'Nuova richiesta',
+      'In attesa':'Nuova richiesta',
+      'Proposta inviata':'Preventivo inviato',
+      'Confermata':'Confermato',
+      'Evento concluso':'Evento eseguito'
+    };
+    return map[status]||status||'Nuova richiesta';
+  }
+
+  function priorityClass(priority){
+    const p=String(priority||'Normale').toLowerCase();
+    if(p==='alta')return'high';
+    if(p==='urgente')return'urgent';
+    if(p==='bassa')return'low';
+    return'';
+  }
+
+  function formatDate(value){
+    if(!value)return'—';
+    const p=String(value).split('-');
+    return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:value;
+  }
+
+  function addTimeline(item,title,detail){
+    item.timeline=Array.isArray(item.timeline)?item.timeline:[];
+    item.timeline.unshift({
+      id:`TL-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+      title,
+      detail,
+      createdAt:new Date().toISOString()
+    });
+  }
+
+  function movePractice(id,newStatus){
+    const items=loadItems();
+    const item=items.find(x=>x.id===id);
+    if(!item)return;
+
+    const oldStatus=normalizeStatus(item.status);
+    if(oldStatus===newStatus)return;
+
+    item.status=newStatus;
+    item.updatedAt=new Date().toISOString();
+    addTimeline(item,'Spostamento Kanban',`${oldStatus} → ${newStatus}`);
+    saveItems(items);
+
+    renderKanban();
+    document.getElementById('refreshBtn')?.click();
+  }
+
+  function openPractice(id){
+    const rows=[...document.querySelectorAll('tbody tr,.practice-card')];
+    const target=rows.find(el=>el.textContent.includes(id));
+    if(target){
+      target.click();
+      return;
+    }
+
+    const item=loadItems().find(x=>x.id===id);
+    if(!item)return;
+
+    alert(`Pratica ${item.id}\n${item.name}\n${item.status}`);
+  }
+
+  function cardMarkup(item){
+    const priority=item.crmPriority||'Normale';
+    return `
+      <div class="kanban-card-top">
+        <strong>${escapeHtml(item.name||'Senza nome')}</strong>
+        <span class="kanban-priority ${priorityClass(priority)}">${escapeHtml(priority)}</span>
+      </div>
+      <p>${escapeHtml(item.id||'ID non assegnato')}</p>
+      <p>${formatDate(item.date)} · ${escapeHtml(item.location||'Location da definire')}</p>
+      <p>${escapeHtml(item.package||'Pacchetto da definire')} · ${item.guests||0} invitati</p>
+      <div class="kanban-card-meta">
+        <span>${escapeHtml(item.operator||'Non assegnato')}</span>
+        <strong>${escapeHtml(item.price||'—')}</strong>
+      </div>`;
+  }
+
+  function renderKanban(){
+    const items=loadItems();
+
+    document.querySelectorAll('.kanban-column').forEach(column=>{
+      const status=column.dataset.status;
+      const zone=column.querySelector('[data-dropzone]');
+      const count=column.querySelector('[data-count]');
+      const matching=items.filter(item=>normalizeStatus(item.status)===status);
+
+      count.textContent=matching.length;
+      zone.innerHTML='';
+
+      if(!matching.length){
+        const empty=document.createElement('div');
+        empty.className='kanban-empty';
+        empty.textContent='Nessuna pratica';
+        zone.appendChild(empty);
+      }
+
+      matching
+        .sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0))
+        .forEach(item=>{
+          const card=document.createElement('article');
+          card.className='kanban-card';
+          card.draggable=true;
+          card.dataset.id=item.id;
+          card.innerHTML=cardMarkup(item);
+
+          card.addEventListener('dragstart',event=>{
+            draggedId=item.id;
+            card.classList.add('dragging');
+            event.dataTransfer.effectAllowed='move';
+            event.dataTransfer.setData('text/plain',item.id);
+          });
+
+          card.addEventListener('dragend',()=>{
+            draggedId=null;
+            card.classList.remove('dragging');
+            document.querySelectorAll('.kanban-dropzone').forEach(z=>z.classList.remove('drag-over'));
+          });
+
+          card.addEventListener('click',event=>{
+            if(event.detail===0)return;
+            openPractice(item.id);
+          });
+
+          let touchTimer=null;
+          let touchStartY=0;
+
+          card.addEventListener('touchstart',event=>{
+            touchStartY=event.touches[0]?.clientY||0;
+            touchTimer=setTimeout(()=>{
+              draggedId=item.id;
+              card.classList.add('dragging');
+            },450);
+          },{passive:true});
+
+          card.addEventListener('touchmove',event=>{
+            const y=event.touches[0]?.clientY||0;
+            if(Math.abs(y-touchStartY)>12 && touchTimer){
+              clearTimeout(touchTimer);
+              touchTimer=null;
+            }
+          },{passive:true});
+
+          card.addEventListener('touchend',()=>{
+            if(touchTimer)clearTimeout(touchTimer);
+            touchTimer=null;
+            card.classList.remove('dragging');
+          });
+
+          zone.appendChild(card);
+        });
+    });
+  }
+
+  document.querySelectorAll('.kanban-dropzone').forEach(zone=>{
+    const status=zone.closest('.kanban-column').dataset.status;
+
+    zone.addEventListener('dragover',event=>{
+      event.preventDefault();
+      event.dataTransfer.dropEffect='move';
+      zone.classList.add('drag-over');
+    });
+
+    zone.addEventListener('dragleave',event=>{
+      if(!zone.contains(event.relatedTarget))zone.classList.remove('drag-over');
+    });
+
+    zone.addEventListener('drop',event=>{
+      event.preventDefault();
+      zone.classList.remove('drag-over');
+      const id=event.dataTransfer.getData('text/plain')||draggedId;
+      if(id)movePractice(id,status);
+    });
+
+    zone.addEventListener('click',()=>{
+      if(!draggedId)return;
+      movePractice(draggedId,status);
+      draggedId=null;
+    });
+  });
+
+  document.getElementById('kanbanRefresh')?.addEventListener('click',renderKanban);
+
+  document.getElementById('kanbanCompact')?.addEventListener('click',event=>{
+    const board=document.getElementById('kanbanBoard');
+    board.classList.toggle('compact');
+    event.currentTarget.textContent=board.classList.contains('compact')
+      ?'Vista estesa'
+      :'Vista compatta';
+  });
+
+  document.getElementById('refreshBtn')?.addEventListener('click',()=>setTimeout(renderKanban,0));
+
+  window.addEventListener('storage',event=>{
+    if(event.key===STORAGE_KEY)renderKanban();
+  });
+
+  const originalSetItem=localStorage.setItem;
+  localStorage.setItem=function(key,value){
+    originalSetItem.apply(this,arguments);
+    if(key===STORAGE_KEY)setTimeout(renderKanban,0);
+  };
+
+  renderKanban();
 })();
 </script></body>
 </html>
