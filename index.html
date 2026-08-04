@@ -2918,7 +2918,506 @@
       display:none !important;
     }
   }
-</style><meta content="WTE-SPRINT2-PHASE2" name="version"/></head>
+</style><meta content="WTE-SPRINT2-PHASE2" name="version"/><style id="wte-sprint2-phase3-css">
+.s2p3-doc-meta{margin-top:18px;display:flex;justify-content:center;gap:14px;flex-wrap:wrap}.s2p3-doc-meta span{padding:7px 10px;border:1px solid rgba(120,82,24,.2);color:#755521;font-size:7px;letter-spacing:.08em;text-transform:uppercase}.s2p3-acceptance{margin:18px;padding:20px;border:1px solid rgba(120,82,24,.25);background:linear-gradient(145deg,rgba(255,255,255,.52),rgba(255,255,255,.18)),#eee4d3}.s2p3-acceptance-head span{color:#8a621e;font-size:8px;letter-spacing:.13em;text-transform:uppercase}.s2p3-acceptance-head h3{margin:8px 0 7px;font-family:Georgia,"Times New Roman",serif;font-size:28px;font-weight:400}.s2p3-acceptance-head p{margin:0;color:#625647;font-size:11px;line-height:1.58}.s2p3-check{margin:18px 0;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;color:#403629;font-size:11px;line-height:1.45}.s2p3-check input{width:20px;height:20px;accent-color:#ad7725}.s2p3-signature-box{border:1px solid rgba(70,48,20,.28);background:#fffdf8}.s2p3-signature-toolbar{min-height:46px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(70,48,20,.18)}.s2p3-signature-toolbar span{color:#6d5e4c;font-size:9px}.s2p3-signature-toolbar button{min-height:32px;padding:0 10px;border:1px solid rgba(70,48,20,.2);background:transparent;color:#4b3c2b;font-size:8px;text-transform:uppercase}#s2SignatureCanvas{display:block;width:100%;height:150px;touch-action:none;cursor:crosshair}.s2p3-signed-meta{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.s2p3-signed-meta div{min-height:58px;padding:10px;display:flex;flex-direction:column;justify-content:center;gap:5px;border:1px solid rgba(70,48,20,.16);background:rgba(255,255,255,.32)}.s2p3-signed-meta small{color:#8a621e;font-size:7px;letter-spacing:.1em;text-transform:uppercase}.s2p3-signed-meta strong{font-family:Georgia,"Times New Roman",serif;font-size:15px;font-weight:400}.s2p2-document-footer{grid-template-columns:1fr!important}.s2p2-document-footer button[disabled]{opacity:.36;cursor:not-allowed}#s2ConfirmProposal{background:#181107;color:#f0ddb0;border-color:#181107}#s2SendProposal:not([disabled]){background:linear-gradient(135deg,#e7c782,#b67b27)}.s2p3-confirmed .s2p3-signature-box{box-shadow:0 0 0 2px rgba(156,109,35,.2)}.s2p3-confirmed #s2ConfirmProposal{background:#416d45;color:#fff}@media(min-width:700px){.s2p2-document-footer{grid-template-columns:1fr 1fr 1fr!important}#s2SignatureCanvas{height:180px}}@media print{.s2p3-signature-toolbar,.s2p3-check,.s2p2-document-footer{display:none!important}.s2p3-acceptance{break-inside:avoid}#s2SignatureCanvas{height:130px!important}}
+</style><meta content="WTE-SPRINT2-PHASE3-SIGNATURE" name="version"/><style id="wte-sprint2-phase4-css">
+  /* SPRINT 2 — FASE 4: consulenza adattiva */
+  .s2-form-grid select{
+    min-height:49px;
+    width:100%;
+    border:1px solid var(--line);
+    background:#100d09;
+    color:#fff;
+    padding:0 13px;
+    outline:none;
+    border-radius:0;
+  }
+
+  .s2p4-advisor{
+    margin:16px 0;
+    border:1px solid rgba(240,221,176,.18);
+    background:
+      radial-gradient(circle at 85% 0%,rgba(201,153,66,.13),transparent 34%),
+      #080604;
+    overflow:hidden;
+  }
+
+  .s2p4-advisor-head{
+    padding:22px 18px;
+    text-align:center;
+  }
+
+  .s2p4-advisor-head span{
+    color:var(--gold2);
+    font-size:8px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+
+  .s2p4-advisor-head strong{
+    display:block;
+    margin:8px 0 5px;
+    font-family:var(--serif);
+    font-size:27px;
+    font-weight:400;
+  }
+
+  .s2p4-advisor-head em{
+    color:#bfa66e;
+    font-size:10px;
+    font-style:normal;
+  }
+
+  .s2p4-advisor-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    border-top:1px solid var(--line);
+    border-left:1px solid var(--line);
+  }
+
+  .s2p4-advisor-grid div{
+    min-height:88px;
+    padding:13px 9px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    text-align:center;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+
+  .s2p4-advisor-grid small{
+    color:#a99b87;
+    font-size:7px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .s2p4-advisor-grid strong{
+    color:#f0ddb0;
+    font-family:var(--serif);
+    font-size:18px;
+    font-weight:400;
+  }
+
+  .s2p4-advice-list{
+    padding:18px;
+    display:grid;
+    gap:9px;
+  }
+
+  .s2p4-advice{
+    position:relative;
+    padding:12px 12px 12px 34px;
+    color:#d2c6b6;
+    font-size:11px;
+    line-height:1.5;
+    border:1px solid rgba(240,221,176,.11);
+    background:rgba(255,255,255,.012);
+  }
+
+  .s2p4-advice::before{
+    content:"✓";
+    position:absolute;
+    left:12px;
+    top:12px;
+    color:#d5a64d;
+    font-weight:800;
+  }
+
+  .s2p4-document-advice{
+    margin:18px;
+    padding:18px;
+    border:1px solid rgba(120,82,24,.22);
+    background:rgba(255,255,255,.38);
+  }
+
+  .s2p4-document-advice > span{
+    color:#8a621e;
+    font-size:8px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .s2p4-document-advice p{
+    margin:9px 0;
+    color:#5e5346;
+    font-size:12px;
+    line-height:1.58;
+  }
+
+  .s2p4-document-advice ul{
+    margin:8px 0 0;
+    padding-left:18px;
+    color:#4f4538;
+    font-size:11px;
+    line-height:1.55;
+  }
+
+  @media(min-width:800px){
+    .s2p4-advisor-grid{grid-template-columns:repeat(4,1fr)}
+  }
+
+  @media print{
+    .s2p4-advisor{display:none!important}
+    .s2p4-document-advice{break-inside:avoid}
+  }
+</style><meta content="WTE-SPRINT2-PHASE4-ADAPTIVE" name="version"/><style id="wte-sprint2-phase5-css">
+  /* SPRINT 2 — FASE 5: archivio locale */
+  .s2p5-footer-admin{
+    margin-top:16px;
+    min-height:38px;
+    padding:0 14px;
+    border:1px solid rgba(240,221,176,.18);
+    background:transparent;
+    color:#bcae99;
+    font-size:8px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .s2p5-archive,
+  .s2p5-detail{
+    position:fixed;
+    inset:0;
+    z-index:260;
+    display:none;
+  }
+
+  .s2p5-detail{z-index:270}
+  .s2p5-archive.open,
+  .s2p5-detail.open{display:block}
+
+  .s2p5-archive-backdrop,
+  .s2p5-detail-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.91);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+  }
+
+  .s2p5-archive-shell{
+    position:relative;
+    z-index:1;
+    width:100%;
+    height:100svh;
+    display:grid;
+    grid-template-rows:auto auto auto minmax(0,1fr) auto;
+    background:#060403;
+    overflow:hidden;
+  }
+
+  .s2p5-archive-head,
+  .s2p5-detail-card > header{
+    min-height:76px;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    border-bottom:1px solid var(--line);
+    background:#080604;
+  }
+
+  .s2p5-archive-head div,
+  .s2p5-detail-card > header div{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+
+  .s2p5-archive-head span,
+  .s2p5-detail-card > header span{
+    color:var(--gold2);
+    font-size:8px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+
+  .s2p5-archive-head strong,
+  .s2p5-detail-card > header strong{
+    font-family:var(--serif);
+    font-size:22px;
+    font-weight:400;
+  }
+
+  .s2p5-archive-head button,
+  .s2p5-detail-card > header button{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:transparent;
+    color:#fff;
+    font-size:25px;
+  }
+
+  .s2p5-toolbar{
+    padding:10px 12px;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+    border-bottom:1px solid var(--line);
+  }
+
+  .s2p5-toolbar input,
+  .s2p5-toolbar select,
+  .s2p5-status-editor select,
+  .s2p5-note-editor textarea{
+    width:100%;
+    border:1px solid var(--line);
+    background:#100d09;
+    color:#fff;
+    outline:none;
+  }
+
+  .s2p5-toolbar input,
+  .s2p5-toolbar select,
+  .s2p5-status-editor select{
+    min-height:46px;
+    padding:0 12px;
+  }
+
+  .s2p5-stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    border-bottom:1px solid var(--line);
+  }
+
+  .s2p5-stats div{
+    min-height:76px;
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    text-align:center;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+
+  .s2p5-stats div:nth-child(even){border-right:0}
+  .s2p5-stats small{
+    color:#a99b87;
+    font-size:7px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .s2p5-stats strong{
+    color:#f0ddb0;
+    font-family:var(--serif);
+    font-size:22px;
+    font-weight:400;
+  }
+
+  .s2p5-list{
+    min-height:0;
+    overflow:auto;
+    padding:10px;
+    display:grid;
+    align-content:start;
+    gap:9px;
+  }
+
+  .s2p5-card{
+    padding:14px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:10px;
+    border:1px solid rgba(240,221,176,.14);
+    background:#0b0805;
+    cursor:pointer;
+  }
+
+  .s2p5-card-main strong{
+    display:block;
+    font-family:var(--serif);
+    font-size:18px;
+    font-weight:400;
+  }
+
+  .s2p5-card-main span{
+    display:block;
+    margin-top:5px;
+    color:#b8aa96;
+    font-size:10px;
+    line-height:1.45;
+  }
+
+  .s2p5-card-side{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:8px;
+  }
+
+  .s2p5-badge{
+    padding:6px 8px;
+    border:1px solid rgba(240,221,176,.18);
+    color:#d6c6ac;
+    font-size:7px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+
+  .s2p5-card-side strong{
+    color:#e4bd69;
+    font-size:12px;
+  }
+
+  .s2p5-empty{
+    display:none;
+    padding:42px 20px;
+    text-align:center;
+    color:#b7a893;
+  }
+
+  .s2p5-empty strong{
+    display:block;
+    color:#f1e7d8;
+    font-family:var(--serif);
+    font-size:26px;
+    font-weight:400;
+  }
+
+  .s2p5-empty p{line-height:1.6}
+
+  .s2p5-archive-actions{
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:7px;
+    border-top:1px solid var(--line);
+    background:#080604;
+  }
+
+  .s2p5-archive-actions button{
+    min-height:42px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:#d8c9b3;
+    font-size:7px;
+    text-transform:uppercase;
+  }
+
+  .s2p5-detail-card{
+    position:relative;
+    z-index:1;
+    width:100%;
+    height:100svh;
+    overflow:auto;
+    background:#060403;
+  }
+
+  .s2p5-detail-grid{
+    margin:14px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    border-top:1px solid var(--line);
+    border-left:1px solid var(--line);
+  }
+
+  .s2p5-detail-grid div{
+    min-height:72px;
+    padding:11px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:6px;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+
+  .s2p5-detail-grid small{
+    color:#a99b87;
+    font-size:7px;
+    text-transform:uppercase;
+  }
+
+  .s2p5-detail-grid strong{
+    font-family:var(--serif);
+    font-size:16px;
+    font-weight:400;
+  }
+
+  .s2p5-status-editor,
+  .s2p5-note-editor{
+    margin:14px;
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    color:#dfd1b8;
+    font-size:8px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .s2p5-note-editor textarea{
+    min-height:120px;
+    padding:12px;
+    resize:vertical;
+  }
+
+  .s2p5-detail-card > footer{
+    position:sticky;
+    bottom:0;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:7px;
+    border-top:1px solid var(--line);
+    background:#080604;
+  }
+
+  .s2p5-detail-card > footer button{
+    min-height:44px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:#e0d1b9;
+    font-size:7px;
+    text-transform:uppercase;
+  }
+
+  #s2p5SaveDetail{
+    border:0!important;
+    background:linear-gradient(135deg,#f2dfad,#cc9f48 58%,#a87526)!important;
+    color:#171006!important;
+  }
+
+  #s2p5DeleteDetail{color:#d78e83}
+
+  @media(min-width:800px){
+    .s2p5-archive,
+    .s2p5-detail{
+      padding:22px;
+    }
+
+    .s2p5-archive-shell{
+      width:min(980px,100%);
+      height:min(92svh,850px);
+      margin:auto;
+      border:1px solid var(--line);
+    }
+
+    .s2p5-toolbar{grid-template-columns:1fr 240px}
+    .s2p5-stats{grid-template-columns:repeat(4,1fr)}
+    .s2p5-stats div{border-bottom:0}
+    .s2p5-stats div:nth-child(even){border-right:1px solid var(--line)}
+    .s2p5-stats div:last-child{border-right:0}
+
+    .s2p5-detail-card{
+      width:min(720px,100%);
+      height:min(92svh,820px);
+      margin:auto;
+      border:1px solid var(--line);
+    }
+  }
+</style><meta content="WTE-SPRINT2-PHASE5-ARCHIVE" name="version"/></head>
 <body>
 <div class="grain"></div>
 <header class="header" id="header">
@@ -2926,7 +3425,7 @@
 <button aria-label="Apri menu" class="menu-btn" id="menuBtn"><span></span><span></span></button>
 </header>
 <aside class="menu" id="menu">
-<nav><a href="#home">Home</a><a href="#wedding-book">Wedding Book</a><a href="#experience">Esperienza</a><a href="#gallery">Gallery</a><a href="#packages">Pacchetti</a><a href="#configurator">Configuratore</a><a href="#faq">FAQ</a><a href="#staff">Wedding Concierge</a><a href="#contacts">Contatti</a></nav>
+<nav><a href="#home">Home</a><a href="#wedding-book">Wedding Book</a><a href="#experience">Esperienza</a><a href="#gallery">Gallery</a><a href="#packages">Pacchetti</a><a href="#configurator">Configuratore</a><a href="#faq">FAQ</a><a href="#staff">Wedding Concierge</a><a href="#contacts">Contatti</a><a href="#archive" id="openArchiveFromMenu">Archivio richieste</a></nav>
 </aside>
 <main>
 <section class="hero" id="home">
@@ -3056,7 +3555,7 @@
 <footer>
 <strong>Wedding Tattoo Experience</strong>
 <p>by Tattoo Beauty Saloon<br/>Via Torino 1A · Condove (TO)</p>
-</footer>
+<button class="s2p5-footer-admin" id="openArchive" type="button">Archivio richieste</button></footer>
 <div class="concierge-bar">
 <a href="https://wa.me/393477050250"><span class="bar-main">WhatsApp</span><small>Scrivici ora</small></a>
 <button data-open-booking=""><span class="bar-main">Verifica la data</span><small>Controlla disponibilità</small></button>
@@ -3467,7 +3966,25 @@
 <label>Distanza da Condove
           <input min="0" name="distance" required="" type="number" value="50"/>
 </label>
-</div>
+<label>Orario di inizio desiderato
+  <input name="start_time" required="" type="time" value="18:00"/>
+</label><label>Obiettivo principale
+  <select name="priority" required="">
+<option selected="" value="equilibrio">Esperienza equilibrata</option>
+<option value="coinvolgimento">Coinvolgere più invitati</option>
+<option value="esclusivita">Esperienza più esclusiva</option>
+<option value="budget">Contenere il budget</option>
+</select>
+</label><label>Atmosfera dell’evento
+  <select name="atmosphere" required="">
+<option selected="" value="elegante">Elegante e raffinata</option>
+<option value="intima">Intima e raccolta</option>
+<option value="party">Party e coinvolgente</option>
+<option value="luxury">Luxury / scenografica</option>
+</select>
+</label><label>Quante persone pensate si tatueranno?
+  <input min="0" name="interested" placeholder="Stima facoltativa" type="number"/>
+</label></div>
 <div class="s2-form-result"><div class="s2p2-result-head">
 <span>La formula più adatta</span>
 <strong id="s2SuggestedPackage">Silver</strong>
@@ -3492,8 +4009,32 @@
 </div><div class="s2p2-reason">
 <span>Perché è la scelta giusta</span>
 <p id="s2Reason">Equilibra durata dell’evento, numero di invitati e distanza della location.</p>
-</div></div>
-
+</div></div><section class="s2p4-advisor" id="s2p4Advisor">
+<div class="s2p4-advisor-head">
+<span>Consulenza automatica</span>
+<strong id="s2p4Verdict">Configurazione equilibrata</strong>
+<em id="s2p4Score">Compatibilità 92%</em>
+</div>
+<div class="s2p4-advisor-grid">
+<div>
+<small>Ore extra previste</small>
+<strong id="s2p4ExtraHours">0</strong>
+</div>
+<div>
+<small>Capacità stimata</small>
+<strong id="s2p4Capacity">15 tatuaggi</strong>
+</div>
+<div>
+<small>Richiesta stimata</small>
+<strong id="s2p4Demand">Da definire</strong>
+</div>
+<div>
+<small>Copertura evento</small>
+<strong id="s2p4Coverage">Ottimale</strong>
+</div>
+</div>
+<div class="s2p4-advice-list" id="s2p4AdviceList"></div>
+</section>
 <div class="s2p2-actions">
 <button class="s2p2-proposal" id="s2CreateProposal" type="button">
     Ricevi proposta professionale
@@ -3859,7 +4400,7 @@ Vorrei verificare la disponibilità e ricevere una proposta dallo staff.`;
 <small>LOVE. MARKED. FOREVER.</small>
 <h2 id="s2DocNames">La vostra esperienza</h2>
 <p id="s2DocDate">Data da definire</p>
-</section>
+<div class="s2p3-doc-meta"><span id="s2ProposalNumber">Proposta in preparazione</span><span>Validità: 7 giorni</span></div></section>
 <section class="s2p2-document-package">
 <span>Pacchetto consigliato</span>
 <strong id="s2DocPackage">Silver</strong>
@@ -3872,10 +4413,14 @@ Vorrei verificare la disponibilità e ricevere una proposta dallo staff.`;
 <div><small>Tatuaggi stimati</small><strong id="s2DocTattoos">—</strong></div>
 <div><small>Distanza</small><strong id="s2DocDistance">—</strong></div>
 <div><small>Trasferta</small><strong id="s2DocTravel">Da confermare</strong></div>
-</section>
+<div><small>Orario previsto</small><strong id="s2DocStartTime">—</strong></div><div><small>Ore extra stimate</small><strong id="s2DocExtraHours">0</strong></div><div><small>Compatibilità</small><strong id="s2DocScore">—</strong></div><div><small>Obiettivo</small><strong id="s2DocPriority">—</strong></div></section>
 <section class="s2p2-document-note">
 <span>Perché questa formula</span>
 <p id="s2DocReason"></p>
+</section><section class="s2p4-document-advice">
+<span>Analisi del Wedding Concierge</span>
+<p id="s2DocAdvisorText"></p>
+<ul id="s2DocAdviceList"></ul>
 </section>
 <section class="s2p2-document-legal">
 <p>
@@ -3883,10 +4428,12 @@ Vorrei verificare la disponibilità e ricevere una proposta dallo staff.`;
         definizione della trasferta e sottoscrizione del contratto.
       </p>
 </section>
-<footer class="s2p2-document-footer">
-<button id="s2PrintProposal" type="button">Salva / stampa PDF</button>
-<button id="s2SendProposal" type="button">Invia allo staff</button>
-</footer>
+<section class="s2p3-acceptance">
+<div class="s2p3-acceptance-head"><span>Accettazione preliminare</span><h3>Firma della proposta</h3><p>La firma conferma l’interesse per la proposta. La prenotazione diventa effettiva solo dopo verifica della data, contratto definitivo e versamento dell’acconto.</p></div>
+<label class="s2p3-check"><input id="s2AcceptTerms" type="checkbox"/><span>Ho letto e accetto le condizioni preliminari indicate nella proposta.</span></label>
+<div class="s2p3-signature-box"><div class="s2p3-signature-toolbar"><span>Firma qui con il dito o con il mouse</span><button id="s2ClearSignature" type="button">Cancella firma</button></div><canvas height="420" id="s2SignatureCanvas" width="1200"></canvas><input id="s2SignatureData" type="hidden"/></div>
+<div class="s2p3-signed-meta"><div><small>Firmatario</small><strong id="s2SignedName">—</strong></div><div><small>Data e ora</small><strong id="s2SignedAt">—</strong></div></div>
+</section><footer class="s2p2-document-footer"><button id="s2PrintProposal" type="button">Salva / stampa PDF</button><button disabled="" id="s2SendProposal" type="button">Invia allo staff</button></footer>
 </article>
 </div><script id="wte-sprint2-phase2-js">
 (() => {
@@ -4084,6 +4631,550 @@ Chiedo allo staff di verificare la data e indicarmi come procedere con acconto e
   }, true);
 
   updateResult();
+})();
+</script><script id="wte-sprint2-phase3-js">(()=>{const PHONE='393477050250',canvas=document.getElementById('s2SignatureCanvas'),clear=document.getElementById('s2ClearSignature'),accept=document.getElementById('s2AcceptTerms'),confirm=document.getElementById('s2ConfirmProposal'),send=document.getElementById('s2SendProposal'),doc=document.getElementById('s2ProposalDocument'),form=document.getElementById('s2AvailabilityForm');if(!canvas||!confirm||!send||!form)return;const ctx=canvas.getContext('2d');let drawing=false,has=false,confirmed=false,payload=null;
+function setup(){const r=Math.max(devicePixelRatio||1,1),rect=canvas.getBoundingClientRect();canvas.width=Math.max(1,Math.round(rect.width*r));canvas.height=Math.max(1,Math.round(rect.height*r));ctx.setTransform(r,0,0,r,0,0);ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#17110b'}
+function pos(e){const rect=canvas.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:p.clientX-rect.left,y:p.clientY-rect.top}}function start(e){e.preventDefault();drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)}function move(e){if(!drawing)return;e.preventDefault();const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();has=true;confirmed=false;send.disabled=true;doc.classList.remove('s2p3-confirmed')}function stop(e){if(!drawing)return;e&&e.preventDefault();drawing=false;ctx.closePath()}canvas.addEventListener('pointerdown',start);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointerleave',stop);canvas.addEventListener('pointercancel',stop);
+function reset(){ctx.clearRect(0,0,canvas.width,canvas.height);has=false;confirmed=false;payload=null;send.disabled=true;accept.checked=false;doc.classList.remove('s2p3-confirmed');document.getElementById('s2SignedName').textContent='—';document.getElementById('s2SignedAt').textContent='—';document.getElementById('s2ProposalNumber').textContent='Proposta in preparazione';confirm.textContent='Firma e prepara invio'}clear&&clear.addEventListener('click',reset);
+function data(){const f=new FormData(form);return{name:f.get('name')||'',date:f.get('date')||'',location:f.get('location')||'',guests:f.get('guests')||'',hours:f.get('hours')||'',distance:f.get('distance')||'',pack:document.getElementById('s2DocPackage')?.textContent||'',price:document.getElementById('s2DocPrice')?.textContent||'',tattoos:document.getElementById('s2DocTattoos')?.textContent||'',travel:document.getElementById('s2DocTravel')?.textContent||''}}function number(){const n=new Date();return`WTE-${String(n.getFullYear()).slice(-2)}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}-${Math.floor(Math.random()*900)+100}`}
+confirm.addEventListener('click',()=>{if(!accept.checked){alert('Accetta prima le condizioni preliminari.');return}if(!has){alert('Inserisci la firma nel riquadro.');canvas.scrollIntoView({behavior:'smooth',block:'center'});return}const d=data(),now=new Date(),proposal=number();document.getElementById('s2ProposalNumber').textContent=`Proposta ${proposal}`;document.getElementById('s2SignedName').textContent=d.name||'Firmatario';document.getElementById('s2SignedAt').textContent=now.toLocaleString('it-IT');document.getElementById('s2SignatureData').value=canvas.toDataURL('image/png');payload={...d,proposal,signedAt:now.toISOString()};confirmed=true;send.disabled=false;doc.classList.add('s2p3-confirmed');confirm.textContent='Proposta firmata ✓'});
+send.addEventListener('click',e=>{if(!confirmed||!payload){e.preventDefault();alert('Firma e conferma prima la proposta.');return}e.stopImmediatePropagation();const d=payload,msg=`✍️ PROPOSTA PRELIMINARE FIRMATA\n\nNumero: ${d.proposal}\nFirmatario: ${d.name}\nFirma registrata: ${new Date(d.signedAt).toLocaleString('it-IT')}\n\nData matrimonio: ${d.date}\nLocation: ${d.location}\nInvitati: ${d.guests}\nOre richieste: ${d.hours}\nDistanza: ${d.distance} km\n\nPacchetto: ${d.pack}\nPrezzo base: ${d.price}\nTatuaggi stimati: ${d.tattoos}\nTrasferta: ${d.travel}\n\nIl cliente ha accettato le condizioni preliminari e firmato la proposta sul sito.\nLa prenotazione resta soggetta a verifica, contratto definitivo e acconto.`;open(`https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`,'_blank','noopener')},true);
+document.getElementById('s2CreateProposal')?.addEventListener('click',()=>setTimeout(()=>{setup();reset()},100));window.addEventListener('resize',()=>{if(document.getElementById('s2ProposalModal')?.classList.contains('open'))setup()});setup()})();</script><script id="wte-sprint2-phase4-js">
+(() => {
+  const form = document.getElementById('s2AvailabilityForm');
+  if (!form) return;
+
+  const PACKAGE_HOURS = { Bronze:3, Silver:5, Gold:7, Luxury:9 };
+
+  const priorityLabels = {
+    equilibrio:'Esperienza equilibrata',
+    coinvolgimento:'Coinvolgere più invitati',
+    esclusivita:'Esperienza esclusiva',
+    budget:'Contenimento del budget'
+  };
+
+  function numeric(fd, key) {
+    return Number(fd.get(key)) || 0;
+  }
+
+  function currentPackage() {
+    return document.getElementById('s2SuggestedPackage')?.textContent?.trim() || 'Silver';
+  }
+
+  function analyse() {
+    const fd = new FormData(form);
+    const guests = numeric(fd, 'guests');
+    const requestedHours = numeric(fd, 'hours');
+    const distance = numeric(fd, 'distance');
+    const interested = numeric(fd, 'interested');
+    const priority = fd.get('priority') || 'equilibrio';
+    const atmosphere = fd.get('atmosphere') || 'elegante';
+    const startTime = fd.get('start_time') || '18:00';
+    const pack = currentPackage();
+    const included = PACKAGE_HOURS[pack] || requestedHours || 0;
+    const extraHours = Math.max(0, requestedHours - included);
+    const effectiveHours = Math.max(requestedHours, included);
+    const capacity = effectiveHours * 3;
+    const estimatedDemand = interested || Math.max(3, Math.round(guests * 0.12));
+    const coverageRatio = capacity / Math.max(estimatedDemand, 1);
+
+    let score = 92;
+    if (coverageRatio < .8) score -= 22;
+    else if (coverageRatio < 1) score -= 10;
+    else if (coverageRatio > 2.2) score -= 6;
+    if (distance > 180 && pack !== 'Luxury') score -= 12;
+    if (priority === 'budget' && ['Gold','Luxury'].includes(pack)) score -= 9;
+    if (priority === 'coinvolgimento' && coverageRatio < 1.15) score -= 9;
+    if (atmosphere === 'luxury' && pack === 'Bronze') score -= 14;
+    score = Math.max(55, Math.min(98, score));
+
+    let verdict = 'Configurazione equilibrata';
+    if (score >= 95) verdict = 'Configurazione ideale';
+    else if (score < 75) verdict = 'Configurazione da ottimizzare';
+    else if (score < 88) verdict = 'Buona base, con qualche adeguamento';
+
+    let coverage = 'Ottimale';
+    if (coverageRatio < .8) coverage = 'Insufficiente';
+    else if (coverageRatio < 1) coverage = 'Al limite';
+    else if (coverageRatio > 1.9) coverage = 'Molto ampia';
+
+    const advice = [];
+    if (coverageRatio < 1) {
+      advice.push(`La capacità stimata è inferiore alla richiesta: valuta almeno ${Math.ceil((estimatedDemand - capacity) / 3)} ora/e aggiuntiva/e.`);
+    } else {
+      advice.push(`La capacità stimata copre la richiesta prevista con un margine ${coverageRatio > 1.5 ? 'confortevole' : 'adeguato'}.`);
+    }
+
+    if (extraHours > 0) {
+      advice.push(`Sono previste ${extraHours} ora/e extra rispetto alle ore incluse nella formula ${pack}.`);
+    } else {
+      advice.push(`Le ore richieste rientrano nella durata operativa stimata della formula ${pack}.`);
+    }
+
+    if (distance > 100) {
+      advice.push('La trasferta richiede conferma dello staff per tempi, logistica ed eventuali costi aggiuntivi.');
+    }
+
+    if (priority === 'coinvolgimento') {
+      advice.push('Per coinvolgere più invitati conviene predisporre flash rapidi e una gestione rigorosa delle prenotazioni in location.');
+    } else if (priority === 'esclusivita') {
+      advice.push('Per un risultato più esclusivo consigliamo personalizzazione grafica e allestimento coordinato con il matrimonio.');
+    } else if (priority === 'budget') {
+      advice.push('Per contenere il budget mantieni la durata entro le ore incluse e limita la selezione a flash rapidi.');
+    } else {
+      advice.push('La configurazione mantiene un buon equilibrio tra esperienza, durata e partecipazione degli ospiti.');
+    }
+
+    if (startTime >= '21:00') {
+      advice.push('L’orario è serale: lo staff dovrà verificare illuminazione, accesso alla location e tempi di allestimento.');
+    }
+
+    const summary = `${pack} è coerente con ${guests} invitati, ${requestedHours} ore richieste e una domanda stimata di circa ${estimatedDemand} tatuaggi.`;
+
+    return {
+      pack, guests, requestedHours, distance, interested, estimatedDemand,
+      included, extraHours, effectiveHours, capacity, coverage, score,
+      verdict, advice, summary, priority, atmosphere, startTime
+    };
+  }
+
+  function render() {
+    const a = analyse();
+
+    document.getElementById('s2p4Verdict').textContent = a.verdict;
+    document.getElementById('s2p4Score').textContent = `Compatibilità ${a.score}%`;
+    document.getElementById('s2p4ExtraHours').textContent = String(a.extraHours);
+    document.getElementById('s2p4Capacity').textContent = `${a.capacity} tatuaggi`;
+    document.getElementById('s2p4Demand').textContent = `circa ${a.estimatedDemand}`;
+    document.getElementById('s2p4Coverage').textContent = a.coverage;
+
+    const list = document.getElementById('s2p4AdviceList');
+    list.innerHTML = '';
+    a.advice.forEach(text => {
+      const div = document.createElement('div');
+      div.className = 's2p4-advice';
+      div.textContent = text;
+      list.appendChild(div);
+    });
+
+    // Professional proposal fields
+    const set = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+    set('s2DocStartTime', a.startTime);
+    set('s2DocExtraHours', `${a.extraHours}`);
+    set('s2DocScore', `${a.score}%`);
+    set('s2DocPriority', priorityLabels[a.priority] || a.priority);
+    set('s2DocAdvisorText', a.summary);
+
+    const docList = document.getElementById('s2DocAdviceList');
+    if (docList) {
+      docList.innerHTML = '';
+      a.advice.forEach(text => {
+        const li = document.createElement('li');
+        li.textContent = text;
+        docList.appendChild(li);
+      });
+    }
+
+    window.WTE_PHASE4_ANALYSIS = a;
+    return a;
+  }
+
+  form.addEventListener('input', () => setTimeout(render, 0));
+  form.addEventListener('change', () => setTimeout(render, 0));
+
+  // Ensure the proposal is refreshed immediately before opening/signing/sending.
+  ['s2CreateProposal','s2ConfirmProposal','s2SendProposal'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', render, {capture:true});
+  });
+
+  render();
+})();
+</script><div aria-hidden="true" class="s2p5-archive" id="s2p5Archive">
+<div class="s2p5-archive-backdrop" data-s2p5-close=""></div>
+<section class="s2p5-archive-shell">
+<header class="s2p5-archive-head">
+<div>
+<span>Wedding Tattoo Experience</span>
+<strong>Archivio richieste</strong>
+</div>
+<button aria-label="Chiudi" data-s2p5-close="" type="button">×</button>
+</header>
+<div class="s2p5-toolbar">
+<input id="s2p5Search" placeholder="Cerca nome, data, location..." type="search"/>
+<select id="s2p5StatusFilter">
+<option value="">Tutti gli stati</option>
+<option value="Nuova">Nuova</option>
+<option value="Contattata">Contattata</option>
+<option value="Proposta inviata">Proposta inviata</option>
+<option value="In attesa">In attesa</option>
+<option value="Confermata">Confermata</option>
+<option value="Annullata">Annullata</option>
+</select>
+</div>
+<div class="s2p5-stats">
+<div><small>Totale</small><strong id="s2p5Total">0</strong></div>
+<div><small>Nuove</small><strong id="s2p5New">0</strong></div>
+<div><small>Confermate</small><strong id="s2p5Confirmed">0</strong></div>
+<div><small>Valore stimato</small><strong id="s2p5Value">€ 0</strong></div>
+</div>
+<div class="s2p5-list" id="s2p5List"></div>
+<div class="s2p5-empty" id="s2p5Empty">
+<strong>Nessuna richiesta salvata</strong>
+<p>Le richieste inviate, le proposte create e quelle firmate compariranno qui.</p>
+</div>
+<footer class="s2p5-archive-actions">
+<button id="s2p5ExportJson" type="button">Esporta JSON</button>
+<button id="s2p5ExportCsv" type="button">Esporta CSV</button>
+<button id="s2p5ClearArchive" type="button">Svuota archivio</button>
+</footer>
+</section>
+</div><div aria-hidden="true" class="s2p5-detail" id="s2p5Detail">
+<div class="s2p5-detail-backdrop" data-s2p5-detail-close=""></div>
+<article class="s2p5-detail-card">
+<header>
+<div>
+<span id="s2p5DetailCode">Richiesta</span>
+<strong id="s2p5DetailName">Dettaglio</strong>
+</div>
+<button data-s2p5-detail-close="" type="button">×</button>
+</header>
+<div class="s2p5-detail-grid" id="s2p5DetailGrid"></div>
+<label class="s2p5-status-editor">
+      Stato
+      <select id="s2p5DetailStatus">
+<option>Nuova</option>
+<option>Contattata</option>
+<option>Proposta inviata</option>
+<option>In attesa</option>
+<option>Confermata</option>
+<option>Annullata</option>
+</select>
+</label>
+<label class="s2p5-note-editor">
+      Note interne
+      <textarea id="s2p5DetailNotes" placeholder="Aggiungi una nota..."></textarea>
+</label>
+<footer>
+<button id="s2p5SaveDetail" type="button">Salva modifiche</button>
+<button id="s2p5SendDetail" type="button">Apri su WhatsApp</button>
+<button id="s2p5DeleteDetail" type="button">Elimina</button>
+</footer>
+</article>
+</div><script id="wte-sprint2-phase5-js">
+(() => {
+  const STORAGE_KEY = 'wte_requests_v1';
+  const PHONE = '393477050250';
+
+  const archive = document.getElementById('s2p5Archive');
+  const detail = document.getElementById('s2p5Detail');
+  const list = document.getElementById('s2p5List');
+  const empty = document.getElementById('s2p5Empty');
+  const search = document.getElementById('s2p5Search');
+  const statusFilter = document.getElementById('s2p5StatusFilter');
+  let selectedId = null;
+
+  function load() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  function save(items) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }
+
+  function uid() {
+    return 'WTE-' + Date.now().toString(36).toUpperCase() + '-' +
+      Math.random().toString(36).slice(2,6).toUpperCase();
+  }
+
+  function priceNumber(value) {
+    if (!value || value === 'Su misura') return 0;
+    return Number(String(value).replace(/[^\d]/g,'')) || 0;
+  }
+
+  function formatDate(value) {
+    if (!value) return '—';
+    const parts = String(value).split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return value;
+  }
+
+  function collectCurrent(type = 'Richiesta') {
+    const form = document.getElementById('s2AvailabilityForm');
+    if (!form) return null;
+    const fd = new FormData(form);
+    const analysis = window.WTE_PHASE4_ANALYSIS || {};
+    return {
+      id: uid(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      type,
+      status: 'Nuova',
+      name: fd.get('name') || '',
+      date: fd.get('date') || '',
+      location: fd.get('location') || '',
+      guests: Number(fd.get('guests')) || 0,
+      hours: Number(fd.get('hours')) || 0,
+      distance: Number(fd.get('distance')) || 0,
+      startTime: fd.get('start_time') || '',
+      priority: fd.get('priority') || '',
+      atmosphere: fd.get('atmosphere') || '',
+      interested: Number(fd.get('interested')) || 0,
+      package: document.getElementById('s2SuggestedPackage')?.textContent?.trim() || '',
+      price: document.getElementById('s2Price')?.textContent?.trim() || '',
+      tattoos: document.getElementById('s2TattooEstimate')?.textContent?.trim() || '',
+      travel: document.getElementById('s2Travel')?.textContent?.trim() || '',
+      score: analysis.score || '',
+      extraHours: analysis.extraHours || 0,
+      advice: analysis.advice || [],
+      notes: ''
+    };
+  }
+
+  function upsertCurrent(type) {
+    const item = collectCurrent(type);
+    if (!item || !item.name || !item.date) return null;
+    const items = load();
+    const same = items.find(x =>
+      x.name.toLowerCase() === item.name.toLowerCase() &&
+      x.date === item.date &&
+      x.location.toLowerCase() === item.location.toLowerCase()
+    );
+    if (same) {
+      Object.assign(same, item, {id:same.id, createdAt:same.createdAt, updatedAt:new Date().toISOString()});
+      save(items);
+      render();
+      return same;
+    }
+    items.unshift(item);
+    save(items);
+    render();
+    return item;
+  }
+
+  function openArchive() {
+    archive.classList.add('open');
+    archive.setAttribute('aria-hidden','false');
+    document.body.classList.add('lock');
+    render();
+  }
+
+  function closeArchive() {
+    archive.classList.remove('open');
+    archive.setAttribute('aria-hidden','true');
+    document.body.classList.remove('lock');
+  }
+
+  function filteredItems() {
+    const q = (search.value || '').toLowerCase().trim();
+    const status = statusFilter.value;
+    return load().filter(item => {
+      const haystack = [
+        item.name,item.date,item.location,item.package,item.type,item.id
+      ].join(' ').toLowerCase();
+      return (!q || haystack.includes(q)) && (!status || item.status === status);
+    });
+  }
+
+  function renderStats(items) {
+    document.getElementById('s2p5Total').textContent = items.length;
+    document.getElementById('s2p5New').textContent =
+      items.filter(x => x.status === 'Nuova').length;
+    document.getElementById('s2p5Confirmed').textContent =
+      items.filter(x => x.status === 'Confermata').length;
+    const value = items
+      .filter(x => x.status !== 'Annullata')
+      .reduce((sum,x) => sum + priceNumber(x.price),0);
+    document.getElementById('s2p5Value').textContent =
+      value ? `€ ${value.toLocaleString('it-IT')}` : '€ 0';
+  }
+
+  function render() {
+    const all = load();
+    const items = filteredItems();
+    renderStats(all);
+    list.innerHTML = '';
+    empty.style.display = items.length ? 'none' : 'block';
+
+    items.forEach(item => {
+      const card = document.createElement('article');
+      card.className = 's2p5-card';
+      card.innerHTML = `
+        <div class="s2p5-card-main">
+          <strong>${escapeHtml(item.name || 'Senza nome')}</strong>
+          <span>${formatDate(item.date)} · ${escapeHtml(item.location || 'Location da definire')}</span>
+          <span>${escapeHtml(item.package || 'Pacchetto da definire')} · ${item.guests || 0} invitati · ${item.hours || 0} ore</span>
+        </div>
+        <div class="s2p5-card-side">
+          <span class="s2p5-badge">${escapeHtml(item.status)}</span>
+          <strong>${escapeHtml(item.price || '—')}</strong>
+        </div>`;
+      card.addEventListener('click', () => openDetail(item.id));
+      list.appendChild(card);
+    });
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[char]));
+  }
+
+  function openDetail(id) {
+    const item = load().find(x => x.id === id);
+    if (!item) return;
+    selectedId = id;
+    document.getElementById('s2p5DetailCode').textContent = item.id;
+    document.getElementById('s2p5DetailName').textContent = item.name || 'Dettaglio';
+    document.getElementById('s2p5DetailStatus').value = item.status || 'Nuova';
+    document.getElementById('s2p5DetailNotes').value = item.notes || '';
+
+    const fields = [
+      ['Tipo',item.type],['Data matrimonio',formatDate(item.date)],
+      ['Location',item.location],['Invitati',item.guests],
+      ['Orario',item.startTime],['Ore',item.hours],
+      ['Distanza',`${item.distance || 0} km`],['Pacchetto',item.package],
+      ['Prezzo',item.price],['Tatuaggi',item.tattoos],
+      ['Trasferta',item.travel],['Compatibilità',item.score ? `${item.score}%` : '—']
+    ];
+    const grid = document.getElementById('s2p5DetailGrid');
+    grid.innerHTML = '';
+    fields.forEach(([label,value]) => {
+      const div = document.createElement('div');
+      div.innerHTML = `<small>${escapeHtml(label)}</small><strong>${escapeHtml(value || '—')}</strong>`;
+      grid.appendChild(div);
+    });
+
+    detail.classList.add('open');
+    detail.setAttribute('aria-hidden','false');
+  }
+
+  function closeDetail() {
+    detail.classList.remove('open');
+    detail.setAttribute('aria-hidden','true');
+    selectedId = null;
+  }
+
+  function download(filename, content, type) {
+    const blob = new Blob([content], {type});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function csvCell(value) {
+    return `"${String(value ?? '').replace(/"/g,'""')}"`;
+  }
+
+  document.getElementById('openArchive')?.addEventListener('click', openArchive);
+  document.getElementById('openArchiveFromMenu')?.addEventListener('click', e => {
+    e.preventDefault();
+    document.getElementById('menu')?.classList.remove('open');
+    document.getElementById('menuBtn')?.classList.remove('open');
+    openArchive();
+  });
+  document.querySelectorAll('[data-s2p5-close]').forEach(x => x.addEventListener('click', closeArchive));
+  document.querySelectorAll('[data-s2p5-detail-close]').forEach(x => x.addEventListener('click', closeDetail));
+  search.addEventListener('input', render);
+  statusFilter.addEventListener('change', render);
+
+  document.getElementById('s2p5SaveDetail').addEventListener('click', () => {
+    const items = load();
+    const item = items.find(x => x.id === selectedId);
+    if (!item) return;
+    item.status = document.getElementById('s2p5DetailStatus').value;
+    item.notes = document.getElementById('s2p5DetailNotes').value;
+    item.updatedAt = new Date().toISOString();
+    save(items);
+    render();
+    closeDetail();
+  });
+
+  document.getElementById('s2p5DeleteDetail').addEventListener('click', () => {
+    if (!selectedId || !confirm('Eliminare questa richiesta?')) return;
+    save(load().filter(x => x.id !== selectedId));
+    render();
+    closeDetail();
+  });
+
+  document.getElementById('s2p5SendDetail').addEventListener('click', () => {
+    const item = load().find(x => x.id === selectedId);
+    if (!item) return;
+    const message =
+`📋 RICHIESTA ARCHIVIATA — WEDDING TATTOO EXPERIENCE
+
+Nome: ${item.name}
+Data: ${formatDate(item.date)}
+Location: ${item.location}
+Invitati: ${item.guests}
+Ore: ${item.hours}
+Pacchetto: ${item.package}
+Prezzo: ${item.price}
+Stato: ${item.status}
+
+Note:
+${item.notes || 'Nessuna nota'}`;
+    window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(message)}`,'_blank','noopener');
+  });
+
+  document.getElementById('s2p5ExportJson').addEventListener('click', () => {
+    download('wte-archivio.json', JSON.stringify(load(), null, 2), 'application/json');
+  });
+
+  document.getElementById('s2p5ExportCsv').addEventListener('click', () => {
+    const items = load();
+    const headers = ['ID','Nome','Data','Location','Invitati','Ore','Pacchetto','Prezzo','Stato','Note'];
+    const rows = items.map(x => [
+      x.id,x.name,x.date,x.location,x.guests,x.hours,x.package,x.price,x.status,x.notes
+    ]);
+    const csv = [headers,...rows].map(row => row.map(csvCell).join(';')).join('\n');
+    download('wte-archivio.csv', '\ufeff' + csv, 'text/csv;charset=utf-8');
+  });
+
+  document.getElementById('s2p5ClearArchive').addEventListener('click', () => {
+    if (!confirm('Svuotare completamente l’archivio locale?')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    render();
+  });
+
+  // Save at meaningful workflow points.
+  document.getElementById('s2CreateProposal')?.addEventListener('click', () => {
+    setTimeout(() => upsertCurrent('Proposta creata'), 0);
+  }, {capture:true});
+
+  document.getElementById('s2ConfirmProposal')?.addEventListener('click', () => {
+    setTimeout(() => {
+      const item = upsertCurrent('Proposta firmata');
+      if (!item) return;
+      const items = load();
+      const target = items.find(x => x.id === item.id);
+      if (target) {
+        target.status = 'Proposta inviata';
+        target.updatedAt = new Date().toISOString();
+        save(items);
+      }
+      render();
+    }, 120);
+  }, {capture:true});
+
+  document.getElementById('s2SendProposal')?.addEventListener('click', () => {
+    setTimeout(() => upsertCurrent('Proposta inviata'), 0);
+  }, {capture:true});
+
+  document.getElementById('s2AvailabilityForm')?.addEventListener('submit', () => {
+    setTimeout(() => upsertCurrent('Blocco data richiesto'), 0);
+  }, {capture:true});
+
+  render();
 })();
 </script></body>
 </html>
