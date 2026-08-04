@@ -1041,7 +1041,397 @@
       margin-bottom:32px !important;
     }
   }
-</style><meta content="WTE-PHOTOREAL-WEDDING-BOOK" name="version"/></head>
+</style><meta content="WTE-PHOTOREAL-WEDDING-BOOK" name="version"/><style id="wte-phase-a-hero-final-css">
+  /* =========================================================
+     SPRINT 1 — FASE A
+     HERO CINEMATOGRAFICA DEFINITIVA
+     ========================================================= */
+
+  .hero{
+    position:relative !important;
+    min-height:100svh !important;
+    height:100svh !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    overflow:hidden !important;
+    isolation:isolate;
+    background:#030201;
+  }
+
+  .hero-video-phase-a{
+    position:absolute !important;
+    inset:-3% !important;
+    z-index:-6 !important;
+    width:106% !important;
+    height:106% !important;
+    object-fit:cover !important;
+    object-position:center center !important;
+    filter:
+      brightness(.63)
+      contrast(1.10)
+      saturate(.78)
+      sepia(.05) !important;
+    transform:scale(1.035);
+    animation:wteHeroSlowZoom 22s ease-in-out infinite alternate;
+    will-change:transform;
+  }
+
+  .hero-overlay-phase-a{
+    position:absolute;
+    inset:0;
+    z-index:-5;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(3,2,1,.20) 0%,
+        rgba(3,2,1,.06) 24%,
+        rgba(3,2,1,.18) 49%,
+        rgba(3,2,1,.70) 79%,
+        #030201 100%
+      ),
+      linear-gradient(
+        90deg,
+        rgba(3,2,1,.25),
+        transparent 42%,
+        rgba(3,2,1,.18)
+      );
+    pointer-events:none;
+  }
+
+  .hero-gold-light-phase-a{
+    position:absolute;
+    z-index:-4;
+    top:10%;
+    left:50%;
+    width:min(100vw,760px);
+    height:min(100vw,760px);
+    border-radius:50%;
+    transform:translateX(-50%);
+    background:
+      radial-gradient(
+        circle,
+        rgba(213,166,72,.19) 0%,
+        rgba(213,166,72,.08) 30%,
+        transparent 68%
+      );
+    filter:blur(34px);
+    opacity:.75;
+    animation:wteHeroGoldFloat 10s ease-in-out infinite;
+    pointer-events:none;
+  }
+
+  .hero-vignette-phase-a{
+    position:absolute;
+    inset:0;
+    z-index:-3;
+    pointer-events:none;
+    box-shadow:
+      inset 0 0 120px rgba(0,0,0,.25),
+      inset 0 -120px 120px rgba(0,0,0,.24);
+  }
+
+  .hero-content-phase-a{
+    position:relative !important;
+    z-index:3 !important;
+    width:min(100%,720px) !important;
+    padding:
+      max(104px,calc(70px + env(safe-area-inset-top)))
+      20px
+      max(132px,calc(100px + env(safe-area-inset-bottom))) !important;
+    text-align:center !important;
+  }
+
+  .hero-kicker-phase-a{
+    margin:0 0 18px !important;
+    color:#ead7a5 !important;
+    font-size:clamp(8px,2.5vw,11px) !important;
+    font-weight:600;
+    letter-spacing:.34em !important;
+    text-transform:uppercase;
+    opacity:0;
+    animation:wteHeroReveal .85s ease .12s forwards;
+  }
+
+  .hero-title-phase-a{
+    max-width:700px !important;
+    margin:0 auto !important;
+    font-family:Georgia,"Times New Roman",serif !important;
+    font-size:clamp(56px,16vw,88px) !important;
+    line-height:.84 !important;
+    font-weight:400 !important;
+    letter-spacing:-.065em !important;
+    background:
+      linear-gradient(
+        180deg,
+        #fffaf0 0%,
+        #f3e2bd 45%,
+        #c88f37 100%
+      ) !important;
+    -webkit-background-clip:text !important;
+    background-clip:text !important;
+    color:transparent !important;
+    text-shadow:
+      0 16px 44px rgba(0,0,0,.44) !important;
+    opacity:0;
+    transform:translateY(28px);
+    animation:wteHeroReveal 1.10s cubic-bezier(.2,.75,.2,1) .20s forwards;
+  }
+
+  .hero-copy-phase-a{
+    max-width:460px !important;
+    margin:24px auto 0 !important;
+    color:#ede3d5 !important;
+    font-size:clamp(14px,4vw,18px) !important;
+    line-height:1.62 !important;
+    text-shadow:0 4px 18px rgba(0,0,0,.52);
+    opacity:0;
+    transform:translateY(18px);
+    animation:wteHeroReveal .95s ease .48s forwards;
+  }
+
+  .hero-actions{
+    margin-top:28px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    gap:17px !important;
+  }
+
+  .hero-cta-phase-a{
+    width:min(100%,470px) !important;
+    min-height:66px !important;
+    border:1px solid rgba(255,255,255,.38) !important;
+    border-radius:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    background:
+      linear-gradient(
+        118deg,
+        #f5e5b9 0%,
+        #d8ae59 48%,
+        #ad7123 100%
+      ) !important;
+    color:#171006 !important;
+    font-size:11px !important;
+    font-weight:800 !important;
+    letter-spacing:.09em !important;
+    text-transform:uppercase;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.46),
+      0 18px 44px rgba(171,119,38,.27),
+      0 0 36px rgba(210,162,69,.12) !important;
+    position:relative;
+    overflow:hidden;
+    opacity:0;
+    transform:translateY(18px);
+    animation:wteHeroReveal .95s ease .68s forwards;
+  }
+
+  .hero-cta-phase-a::after{
+    content:"";
+    position:absolute;
+    top:-40%;
+    left:-36%;
+    width:30%;
+    height:180%;
+    transform:skewX(-20deg);
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.50),
+        transparent
+      );
+    animation:wteHeroButtonShine 6.2s ease-in-out infinite;
+  }
+
+  .hero-cta-phase-a:active{
+    transform:scale(.985) !important;
+  }
+
+  .hero-link-phase-a{
+    padding:7px 0 !important;
+    color:#f0ddb0 !important;
+    border-bottom:1px solid rgba(240,221,176,.38) !important;
+    text-decoration:none !important;
+    font-size:9px !important;
+    font-weight:700 !important;
+    letter-spacing:.15em !important;
+    text-transform:uppercase;
+    opacity:0;
+    animation:wteHeroReveal .9s ease .82s forwards;
+  }
+
+  .hero-scroll-phase-a{
+    position:absolute;
+    z-index:4;
+    left:50%;
+    bottom:calc(88px + env(safe-area-inset-bottom));
+    width:26px;
+    height:44px;
+    transform:translateX(-50%);
+    display:flex;
+    justify-content:center;
+    text-decoration:none;
+    opacity:.70;
+  }
+
+  .hero-scroll-phase-a span{
+    display:block;
+    width:1px;
+    height:32px;
+    background:
+      linear-gradient(
+        180deg,
+        #f0ddb0,
+        transparent
+      );
+    animation:wteScrollLine 2.2s ease-in-out infinite;
+  }
+
+  @keyframes wteHeroSlowZoom{
+    from{
+      transform:scale(1.035) translate3d(-.4%,0,0);
+    }
+    to{
+      transform:scale(1.115) translate3d(.5%,-.4%,0);
+    }
+  }
+
+  @keyframes wteHeroGoldFloat{
+    0%,100%{
+      transform:translateX(-50%) translate(-24px,-14px) scale(.96);
+      opacity:.58;
+    }
+    50%{
+      transform:translateX(-50%) translate(26px,22px) scale(1.06);
+      opacity:.84;
+    }
+  }
+
+  @keyframes wteHeroReveal{
+    to{
+      opacity:1;
+      transform:translateY(0);
+    }
+  }
+
+  @keyframes wteHeroButtonShine{
+    0%,73%{
+      left:-36%;
+      opacity:0;
+    }
+    79%{
+      opacity:1;
+    }
+    92%{
+      left:122%;
+      opacity:0;
+    }
+    100%{
+      left:122%;
+      opacity:0;
+    }
+  }
+
+  @keyframes wteScrollLine{
+    0%,100%{
+      transform:scaleY(.55);
+      transform-origin:top;
+      opacity:.40;
+    }
+    50%{
+      transform:scaleY(1);
+      transform-origin:top;
+      opacity:1;
+    }
+  }
+
+  @media(max-width:430px){
+    .hero-content-phase-a{
+      padding-left:16px !important;
+      padding-right:16px !important;
+    }
+
+    .hero-title-phase-a{
+      font-size:clamp(53px,15.4vw,72px) !important;
+    }
+
+    .hero-copy-phase-a{
+      max-width:355px !important;
+      font-size:14.5px !important;
+    }
+
+    .hero-cta-phase-a{
+      min-height:62px !important;
+    }
+
+    .hero-scroll-phase-a{
+      display:none;
+    }
+  }
+
+  @media(min-width:800px){
+    .hero{
+      align-items:center !important;
+      justify-content:flex-start !important;
+    }
+
+    .hero-content-phase-a{
+      width:min(760px,62vw) !important;
+      margin-left:6vw;
+      padding-top:130px !important;
+      padding-bottom:80px !important;
+      text-align:left !important;
+    }
+
+    .hero-title-phase-a,
+    .hero-copy-phase-a{
+      margin-left:0 !important;
+      margin-right:0 !important;
+    }
+
+    .hero-title-phase-a{
+      font-size:clamp(82px,9vw,138px) !important;
+    }
+
+    .hero-actions{
+      align-items:flex-start !important;
+    }
+
+    .hero-cta-phase-a{
+      width:430px !important;
+    }
+
+    .hero-gold-light-phase-a{
+      left:34%;
+    }
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    .hero-video-phase-a,
+    .hero-gold-light-phase-a,
+    .hero-title-phase-a,
+    .hero-kicker-phase-a,
+    .hero-copy-phase-a,
+    .hero-cta-phase-a,
+    .hero-link-phase-a,
+    .hero-scroll-phase-a span{
+      animation:none !important;
+    }
+
+    .hero-title-phase-a,
+    .hero-kicker-phase-a,
+    .hero-copy-phase-a,
+    .hero-cta-phase-a,
+    .hero-link-phase-a{
+      opacity:1 !important;
+      transform:none !important;
+    }
+  }
+</style><meta content="WTE-SPRINT1-PHASE-A-HERO" name="version"/></head>
 <body>
 <div class="grain"></div>
 <header class="header" id="header">
@@ -1053,19 +1443,19 @@
 </aside>
 <main>
 <section class="hero" id="home">
-<video autoplay="" loop="" muted="" playsinline="" preload="auto">
-<source src="hero.mp4" type="video/mp4"/>
+<div class="hero-overlay-phase-a"></div><div class="hero-gold-light-phase-a"></div><div class="hero-vignette-phase-a"></div><video autoplay="" class="hero-video-phase-a" loop="" muted="" playsinline="" preload="auto">
+<source src="hero.mp4?v=phase-a-1" type="video/mp4"/>
 </video>
-<div class="hero-content">
-<p class="kicker">Wedding Tattoo Experience</p>
-<h1>LOVE.<br/>MARKED.<br/>FOREVER.</h1>
-<p>Un’esperienza esclusiva che trasforma il vostro matrimonio in un ricordo indelebile.</p>
+<div class="hero-content hero-content-phase-a">
+<p class="kicker hero-kicker-phase-a">Wedding Tattoo Experience</p>
+<h1 class="hero-title-phase-a">LOVE.<br/>MARKED.<br/>FOREVER.</h1>
+<p class="hero-copy-phase-a">Un’esperienza esclusiva che trasforma il vostro matrimonio in un ricordo indelebile.</p>
 <div class="hero-actions">
-<button class="primary" data-open-booking="">Verifica disponibilità</button>
-<a class="hero-link" href="#wedding-book">Scopri il Wedding Book</a>
+<button class="primary hero-cta-phase-a" data-open-booking="">Verifica disponibilità</button>
+<a class="hero-link hero-link-phase-a" href="#wedding-book">Scopri il Wedding Book</a>
 </div>
 </div>
-</section>
+<a aria-label="Scorri verso il Wedding Book" class="hero-scroll-phase-a" href="#wedding-book"><span></span></a></section>
 <section class="manifesto">
 <p>Non è un semplice tatuaggio</p>
 <h2>È un ricordo che continua a vivere oltre il matrimonio.</h2>
@@ -1363,6 +1753,30 @@
       }
     );
   }, {capture:true});
+})();
+</script><script id="wte-phase-a-hero-final-js">
+(() => {
+  const video = document.querySelector('.hero-video-phase-a');
+  if (!video) return;
+
+  video.muted = true;
+  video.playsInline = true;
+  video.setAttribute('muted','');
+  video.setAttribute('playsinline','');
+
+  const playVideo = () => {
+    const promise = video.play();
+    if (promise && typeof promise.catch === 'function') {
+      promise.catch(() => {});
+    }
+  };
+
+  if (video.readyState >= 2) playVideo();
+  else video.addEventListener('canplay', playVideo, {once:true});
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && video.paused) playVideo();
+  });
 })();
 </script></body>
 </html>
