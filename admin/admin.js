@@ -1720,3 +1720,434 @@ document.getElementById('showToday')?.addEventListener('click',()=>{
 
   renderKanban();
 })();
+
+
+
+(() => {
+  const REQUEST_KEY='wte_requests_v1';
+  const PIN_KEY='wte_admin_pin_hash_v1';
+  const INSTALL_KEY='wte_admin_installed_at_v1';
+  const LAST_BACKUP_KEY='wte_admin_last_backup_v1';
+  const COUNTER_KEY='wte_progressive_counter_v1';
+  const DB_NAME='wte_documents';
+  const STORE_NAME='pdfs';
+
+  const settings=document.getElementById('settingsModal');
+  const resetModal=document.getElementById('confirmResetModal');
+  const pinModal=document.getElementById('pinChangeModal');
+  const toast=document.getElementById('settingsToast');
+
+  if(!localStorage.getItem(INSTALL_KEY))localStorage.setItem(INSTALL_KEY,new Date().toISOString());
+
+  function loadItems(){try{const d=JSON.parse(localStorage.getItem(REQUEST_KEY)||'[]');return Array.isArray(d)?d:[]}catch{return[]}}
+  function showToast(msg){toast.textContent=msg;toast.classList.add('show');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove('show'),2600)}
+  function download(filename,content,type='application/json'){const blob=content instanceof Blob?content:new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+  function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME,{keyPath:'id'})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+  async function countPdfs(){try{const db=await openDb();return await new Promise(resolve=>{const tx=db.transaction(STORE_NAME,'readonly');const req=tx.objectStore(STORE_NAME).count();req.onsuccess=()=>resolve(req.result||0);req.onerror=()=>resolve(0)})}catch{return 0}}
+  async function clearPdfs(){try{const db=await openDb();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE_NAME,'readwrite');tx.objectStore(STORE_NAME).clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}catch(e){console.error(e)}}
+  function formatDate(v){if(!v)return'—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('it-IT')}
+  async function refreshSystemInfo(){document.getElementById('systemPracticeCount').textContent=loadItems().length;document.getElementById('systemPdfCount').textContent=await countPdfs();document.getElementById('systemInstalledAt').textContent=formatDate(localStorage.getItem(INSTALL_KEY));document.getElementById('systemLastBackup').textContent=formatDate(localStorage.getItem(LAST_BACKUP_KEY))}
+  function openSettings(){settings.classList.add('open');settings.setAttribute('aria-hidden','false');document.body.classList.add('lock');refreshSystemInfo()}
+  function closeSettings(){settings.classList.remove('open');settings.setAttribute('aria-hidden','true');document.body.classList.remove('lock')}
+
+  document.getElementById('settingsBtn')?.addEventListener('click',openSettings);
+  document.querySelectorAll('[data-close-settings]').forEach(el=>el.addEventListener('click',closeSettings));
+  document.getElementById('resetArchiveBtn')?.addEventListener('click',()=>{resetModal.classList.add('open');resetModal.setAttribute('aria-hidden','false')});
+  document.querySelectorAll('[data-cancel-reset]').forEach(el=>el.addEventListener('click',()=>{resetModal.classList.remove('open');resetModal.setAttribute('aria-hidden','true')}));
+
+  document.getElementById('confirmResetBtn')?.addEventListener('click',async()=>{
+    localStorage.removeItem(REQUEST_KEY);
+    localStorage.removeItem(COUNTER_KEY);
+    await clearPdfs();
+    resetModal.classList.remove('open');
+    resetModal.setAttribute('aria-hidden','true');
+    await refreshSystemInfo();
+    document.getElementById('refreshBtn')?.click();
+    showToast('Archivio azzerato. Il PIN è stato mantenuto.');
+  });
+
+  document.getElementById('settingsExportBtn')?.addEventListener('click',()=>{
+    const backup={format:'WTE_BACKUP',version:'1.1',createdAt:new Date().toISOString(),practices:loadItems(),settings:{installedAt:localStorage.getItem(INSTALL_KEY),progressiveCounter:localStorage.getItem(COUNTER_KEY)}};
+    const date=new Date().toISOString().slice(0,10);
+    download(`WTE_backup_${date}.json`,JSON.stringify(backup,null,2));
+    localStorage.setItem(LAST_BACKUP_KEY,new Date().toISOString());
+    refreshSystemInfo();
+    showToast('Backup esportato.');
+  });
+
+  document.getElementById('settingsImportInput')?.addEventListener('change',async event=>{
+    const file=event.target.files?.[0];
+    if(!file)return;
+    try{
+      const parsed=JSON.parse(await file.text());
+      const practices=Array.isArray(parsed)?parsed:parsed.practices;
+      if(!Array.isArray(practices))throw new Error();
+      if(!confirm(`Importare ${practices.length} pratiche e sostituire l’archivio attuale?`)){event.target.value='';return}
+      localStorage.setItem(REQUEST_KEY,JSON.stringify(practices));
+      if(parsed.settings?.progressiveCounter)localStorage.setItem(COUNTER_KEY,parsed.settings.progressiveCounter);
+      await refreshSystemInfo();
+      document.getElementById('refreshBtn')?.click();
+      showToast('Backup importato correttamente.');
+    }catch{alert('Il file selezionato non è un backup WTE valido.')}
+    finally{event.target.value=''}
+  });
+
+  async function hash(value){const bytes=new TextEncoder().encode(value);const digest=await crypto.subtle.digest('SHA-256',bytes);return[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+  document.getElementById('changePinBtn')?.addEventListener('click',()=>{['currentPin','newPin','confirmNewPin'].forEach(id=>document.getElementById(id).value='');document.getElementById('pinChangeError').textContent='';pinModal.classList.add('open');pinModal.setAttribute('aria-hidden','false')});
+  document.querySelectorAll('[data-close-pin]').forEach(el=>el.addEventListener('click',()=>{pinModal.classList.remove('open');pinModal.setAttribute('aria-hidden','true')}));
+  document.getElementById('pinChangeForm')?.addEventListener('submit',async event=>{
+    event.preventDefault();
+    const current=document.getElementById('currentPin').value.trim();
+    const next=document.getElementById('newPin').value.trim();
+    const confirmNext=document.getElementById('confirmNewPin').value.trim();
+    const error=document.getElementById('pinChangeError');
+    error.textContent='';
+    if(next.length<4){error.textContent='Il nuovo PIN deve avere almeno 4 caratteri.';return}
+    if(next!==confirmNext){error.textContent='I due nuovi PIN non coincidono.';return}
+    const savedHash=localStorage.getItem(PIN_KEY);
+    if(!savedHash||await hash(current)!==savedHash){error.textContent='Il PIN attuale non è corretto.';return}
+    localStorage.setItem(PIN_KEY,await hash(next));
+    pinModal.classList.remove('open');
+    pinModal.setAttribute('aria-hidden','true');
+    showToast('PIN gestore aggiornato.');
+  });
+
+  refreshSystemInfo();
+})();
+
+
+
+
+/* =========================================================
+   WTE v1.1 — FASE 2 PULIZIA COMPLETA
+   Esegue una sola volta la pulizia dei dati di prova.
+   Mantiene il PIN gestore.
+   ========================================================= */
+(() => {
+  const MIGRATION_KEY = 'wte_v11_phase2_cleaned';
+  const REQUEST_KEY = 'wte_requests_v1';
+  const COUNTER_KEY = 'wte_progressive_counter_v1';
+  const DB_NAME = 'wte_documents';
+  const STORE_NAME = 'pdfs';
+  const BANNER_KEY = 'wte_v11_clean_banner_hidden';
+
+  async function clearPdfStore() {
+    try {
+      await new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+
+        request.onupgradeneeded = event => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, {keyPath:'id'});
+          }
+        };
+
+        request.onsuccess = () => {
+          const db = request.result;
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).clear();
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        };
+
+        request.onerror = () => reject(request.error);
+      });
+    } catch (error) {
+      console.error('WTE pulizia PDF:', error);
+    }
+  }
+
+  async function runOneTimeClean() {
+    if (localStorage.getItem(MIGRATION_KEY) === '1') return;
+
+    // Deliberately preserve:
+    // - wte_admin_pin_hash_v1
+    // - wte_admin_installed_at_v1
+    // - wte_admin_unlocked_v1 in sessionStorage
+    localStorage.removeItem(REQUEST_KEY);
+    localStorage.removeItem(COUNTER_KEY);
+
+    // Remove any legacy/test keys without touching the PIN.
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      const isTestData =
+        key.startsWith('wte_test_') ||
+        key.startsWith('wte_demo_') ||
+        key === 'wte_followups_v1' ||
+        key === 'wte_statistics_v1' ||
+        key === 'wte_drafts_v1';
+
+      if (isTestData) keysToRemove.push(key);
+    }
+
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    await clearPdfStore();
+
+    localStorage.setItem(MIGRATION_KEY, '1');
+
+    setTimeout(() => {
+      document.getElementById('refreshBtn')?.click();
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: REQUEST_KEY,
+        newValue: '[]'
+      }));
+    }, 150);
+  }
+
+  function manageBanner() {
+    const banner = document.getElementById('cleanStateBanner');
+    if (!banner) return;
+
+    if (localStorage.getItem(BANNER_KEY) === '1') {
+      banner.classList.add('hidden');
+    }
+
+    document.getElementById('dismissCleanBanner')?.addEventListener('click', () => {
+      localStorage.setItem(BANNER_KEY, '1');
+      banner.classList.add('hidden');
+    });
+  }
+
+  async function start() {
+    await runOneTimeClean();
+    manageBanner();
+
+    // Ensure visible KPI values are refreshed immediately.
+    setTimeout(() => {
+      document.getElementById('refreshBtn')?.click();
+    }, 250);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+
+
+
+
+/* =========================================================
+   WTE v1.1 — FASE 3 BACKUP AUTOMATICI
+   ========================================================= */
+(() => {
+  const REQUEST_KEY='wte_requests_v1';
+  const BACKUP_KEY='wte_auto_backups_v1';
+  const LAST_BACKUP_KEY='wte_admin_last_backup_v1';
+  const MAX_BACKUPS=10;
+  const AUTO_DELAY=1200;
+
+  let saveTimer=null;
+  let lastSnapshotHash='';
+
+  function loadItems(){
+    try{
+      const data=JSON.parse(localStorage.getItem(REQUEST_KEY)||'[]');
+      return Array.isArray(data)?data:[];
+    }catch{
+      return [];
+    }
+  }
+
+  function loadBackups(){
+    try{
+      const data=JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]');
+      return Array.isArray(data)?data:[];
+    }catch{
+      return [];
+    }
+  }
+
+  function saveBackups(backups){
+    localStorage.setItem(BACKUP_KEY,JSON.stringify(backups.slice(0,MAX_BACKUPS)));
+  }
+
+  function simpleHash(value){
+    let hash=0;
+    const text=JSON.stringify(value);
+    for(let i=0;i<text.length;i++){
+      hash=((hash<<5)-hash)+text.charCodeAt(i);
+      hash|=0;
+    }
+    return String(hash);
+  }
+
+  function makeSnapshot(reason='Backup automatico'){
+    const practices=loadItems();
+    const hash=simpleHash(practices);
+
+    if(reason==='Backup automatico' && hash===lastSnapshotHash){
+      return null;
+    }
+
+    const snapshot={
+      id:`BKP-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+      reason,
+      createdAt:new Date().toISOString(),
+      practices,
+      count:practices.length,
+      hash
+    };
+
+    const backups=loadBackups();
+    backups.unshift(snapshot);
+    saveBackups(backups);
+
+    lastSnapshotHash=hash;
+    localStorage.setItem(LAST_BACKUP_KEY,snapshot.createdAt);
+    updateBackupStatus();
+    renderBackupHistory();
+
+    return snapshot;
+  }
+
+  function scheduleAutoBackup(){
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>makeSnapshot('Backup automatico'),AUTO_DELAY);
+  }
+
+  function formatDateTime(value){
+    if(!value)return'—';
+    const date=new Date(value);
+    return Number.isNaN(date.getTime())
+      ?'—'
+      :date.toLocaleString('it-IT');
+  }
+
+  function escapeHtml(value){
+    return String(value??'').replace(/[&<>"']/g,ch=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[ch]));
+  }
+
+  function updateBackupStatus(){
+    const panel=document.getElementById('backupStatusPanel');
+    const title=document.getElementById('backupStatusTitle');
+    const copy=document.getElementById('backupStatusCopy');
+    const backups=loadBackups();
+
+    panel?.classList.remove('warning','error');
+
+    if(!backups.length){
+      if(title)title.textContent='Nessun backup disponibile';
+      if(copy)copy.textContent='Crea il primo snapshot per proteggere l’archivio.';
+      panel?.classList.add('warning');
+      return;
+    }
+
+    const last=new Date(backups[0].createdAt);
+    const ageHours=(Date.now()-last.getTime())/(1000*60*60);
+
+    if(ageHours>72){
+      if(title)title.textContent='Backup da aggiornare';
+      if(copy)copy.textContent=`Ultimo backup: ${formatDateTime(backups[0].createdAt)}.`;
+      panel?.classList.add('warning');
+    }else{
+      if(title)title.textContent='Backup automatico attivo';
+      if(copy)copy.textContent=`Ultimo backup: ${formatDateTime(backups[0].createdAt)} · ${backups[0].count} pratiche.`;
+    }
+  }
+
+  function renderBackupHistory(){
+    const backups=loadBackups();
+    const wrap=document.getElementById('backupHistoryList');
+    const count=document.getElementById('backupHistoryCount');
+    const last=document.getElementById('backupHistoryLast');
+
+    if(count)count.textContent=backups.length;
+    if(last)last.textContent=backups[0]?formatDateTime(backups[0].createdAt):'—';
+    if(!wrap)return;
+
+    wrap.innerHTML='';
+
+    if(!backups.length){
+      const empty=document.createElement('div');
+      empty.className='backup-history-empty';
+      empty.textContent='Nessun backup salvato.';
+      wrap.appendChild(empty);
+      return;
+    }
+
+    backups.forEach(snapshot=>{
+      const card=document.createElement('article');
+      card.className='backup-history-item';
+      card.innerHTML=`
+        <div>
+          <strong>${escapeHtml(snapshot.reason||'Backup')}</strong>
+          <p>${formatDateTime(snapshot.createdAt)} · ${snapshot.count||0} pratiche</p>
+        </div>
+        <div class="backup-history-item-actions">
+          <button type="button" data-restore="${snapshot.id}">Ripristina</button>
+          <button type="button" data-delete="${snapshot.id}">Elimina</button>
+        </div>
+      `;
+
+      card.querySelector('[data-restore]').addEventListener('click',()=>{
+        if(!confirm(`Ripristinare il backup del ${formatDateTime(snapshot.createdAt)}?`))return;
+        localStorage.setItem(REQUEST_KEY,JSON.stringify(snapshot.practices||[]));
+        document.getElementById('refreshBtn')?.click();
+        scheduleAutoBackup();
+        alert('Backup ripristinato correttamente.');
+      });
+
+      card.querySelector('[data-delete]').addEventListener('click',()=>{
+        if(!confirm('Eliminare questo backup?'))return;
+        saveBackups(loadBackups().filter(x=>x.id!==snapshot.id));
+        updateBackupStatus();
+        renderBackupHistory();
+      });
+
+      wrap.appendChild(card);
+    });
+  }
+
+  function openHistory(){
+    const modal=document.getElementById('backupHistoryModal');
+    modal?.classList.add('open');
+    modal?.setAttribute('aria-hidden','false');
+    document.body.classList.add('lock');
+    renderBackupHistory();
+  }
+
+  function closeHistory(){
+    const modal=document.getElementById('backupHistoryModal');
+    modal?.classList.remove('open');
+    modal?.setAttribute('aria-hidden','true');
+    document.body.classList.remove('lock');
+  }
+
+  document.getElementById('createSnapshotBtn')?.addEventListener('click',()=>{
+    makeSnapshot('Snapshot manuale');
+    alert('Snapshot creato.');
+  });
+
+  document.getElementById('openBackupHistoryBtn')?.addEventListener('click',openHistory);
+  document.querySelectorAll('[data-close-backup-history]').forEach(el=>
+    el.addEventListener('click',closeHistory)
+  );
+
+  window.addEventListener('storage',event=>{
+    if(event.key===REQUEST_KEY)scheduleAutoBackup();
+  });
+
+  const originalSetItem=localStorage.setItem;
+  localStorage.setItem=function(key,value){
+    originalSetItem.apply(this,arguments);
+    if(key===REQUEST_KEY)scheduleAutoBackup();
+  };
+
+  const current=loadItems();
+  lastSnapshotHash=simpleHash(current);
+
+  if(!loadBackups().length){
+    makeSnapshot('Backup iniziale');
+  }else{
+    updateBackupStatus();
+    renderBackupHistory();
+  }
+})();

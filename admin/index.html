@@ -3,11 +3,11 @@
 <html lang="it">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport"/><base href="/admin/"/>
+<meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport"/>
 <meta content="#050403" name="theme-color"/>
 <meta content="noindex,nofollow" name="robots"/>
 <title>WTE Admin — Archivio pratiche</title>
-<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="/admin/admin.css?v=1.0.1" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="1.0.1-path-fix" name="wte-admin-build"/></head>
+<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="admin.css?v=1.0.0" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="1.1-phase3-auto-backup" name="wte-version"/></head>
 <body><div class="admin-lock" id="adminLock">
 <form class="admin-lock-card" id="adminLockForm">
 <div class="admin-lock-mark">W</div>
@@ -30,15 +30,32 @@
 </div>
 </div>
 <div class="top-actions">
-<a href="/">Apri sito clienti</a>
+<a href="../">Apri sito clienti</a>
 <button id="refreshBtn">Aggiorna</button>
-<button id="adminLogout" type="button">Esci</button></div>
+<button id="settingsBtn" type="button">Impostazioni</button><button id="adminLogout" type="button">Esci</button></div>
 </header>
 <main>
 <section class="intro">
 <p>Dashboard staff</p>
 <h1>Archivio pratiche</h1>
 <span>Gestisci richieste, proposte e clienti salvati da questo browser.</span>
+</section><section class="clean-state-banner" id="cleanStateBanner">
+<div>
+<span>Stato sistema</span>
+<strong>CRM pronto per uso reale</strong>
+<p>L’archivio è stato azzerato e il PIN gestore è stato mantenuto.</p>
+</div>
+<button id="dismissCleanBanner" type="button">Chiudi</button>
+</section><section class="backup-status-panel" id="backupStatusPanel">
+<div>
+<span>Protezione dati</span>
+<strong id="backupStatusTitle">Backup automatico attivo</strong>
+<p id="backupStatusCopy">Le modifiche all’archivio vengono salvate automaticamente sul dispositivo.</p>
+</div>
+<div class="backup-status-actions">
+<button id="createSnapshotBtn" type="button">Crea snapshot</button>
+<button id="openBackupHistoryBtn" type="button">Storico backup</button>
+</div>
 </section>
 <section class="kpi-grid">
 <article class="kpi">
@@ -401,5 +418,84 @@
 <footer class="drawer-actions"><button id="openPdfBtn" type="button">Apri PDF</button><button id="whatsappBtn" type="button">WhatsApp</button><button id="duplicateBtn" type="button">Duplica</button><button class="danger" id="deleteBtn" type="button">Elimina</button><button id="saveNotesBtn" type="button">Salva modifiche</button><button class="gold" id="closeDetailBtn" type="button">Chiudi</button></footer>
 </aside>
 </div>
-<script defer="" src="/admin/admin.js?v=1.0.1"></script></body>
+<script defer="True" src="admin.js?v=1.0.0"></script><div aria-hidden="true" class="settings-modal" id="settingsModal">
+<div class="settings-backdrop" data-close-settings=""></div>
+<section class="settings-panel">
+<header class="settings-head">
+<div><span>WTE Admin CRM</span><strong>Impostazioni</strong></div>
+<button aria-label="Chiudi" data-close-settings="" type="button">×</button>
+</header>
+<div class="settings-content">
+<article class="settings-card danger-zone">
+<div><span>Archivio</span><strong>Azzera dati di prova</strong>
+<p>Elimina pratiche, follow-up, PDF locali, grafici e statistiche. Il PIN gestore rimane invariato.</p></div>
+<button id="resetArchiveBtn" type="button">Azzera archivio</button>
+</article>
+<article class="settings-card">
+<div><span>Backup</span><strong>Esporta archivio</strong>
+<p>Scarica un backup JSON delle pratiche e delle impostazioni operative.</p></div>
+<button id="settingsExportBtn" type="button">Esporta backup</button>
+</article>
+<article class="settings-card">
+<div><span>Ripristino</span><strong>Importa backup</strong>
+<p>Sostituisce l’archivio locale con un backup WTE precedentemente esportato.</p></div>
+<label class="settings-upload">Importa backup
+          <input accept=".json,application/json" id="settingsImportInput" type="file"/>
+</label>
+</article>
+<article class="settings-card">
+<div><span>Sicurezza locale</span><strong>Cambia PIN gestore</strong>
+<p>Il nuovo PIN sarà valido su questo browser e dispositivo.</p></div>
+<button id="changePinBtn" type="button">Cambia PIN</button>
+</article>
+<article class="settings-card system-card">
+<div><span>Informazioni sistema</span><strong>WTE v1.1 — Fase 3</strong></div>
+<div class="system-grid">
+<div><small>Pratiche</small><strong id="systemPracticeCount">0</strong></div>
+<div><small>PDF locali</small><strong id="systemPdfCount">0</strong></div>
+<div><small>Installazione</small><strong id="systemInstalledAt">—</strong></div>
+<div><small>Ultimo backup</small><strong id="systemLastBackup">—</strong></div>
+</div>
+</article>
+</div>
+</section>
+</div><div aria-hidden="true" class="confirm-modal" id="confirmResetModal">
+<div class="settings-backdrop" data-cancel-reset=""></div>
+<section class="confirm-card">
+<span>Operazione irreversibile</span>
+<h2>Eliminare tutte le pratiche?</h2>
+<p>Verranno cancellati archivio, PDF locali, follow-up, grafici e statistiche. Il PIN gestore sarà mantenuto.</p>
+<div><button data-cancel-reset="" type="button">Annulla</button>
+<button id="confirmResetBtn" type="button">Elimina archivio</button></div>
+</section>
+</div><div aria-hidden="true" class="pin-modal" id="pinChangeModal">
+<div class="settings-backdrop" data-close-pin=""></div>
+<form class="pin-card" id="pinChangeForm">
+<span>Sicurezza locale</span><h2>Cambia PIN</h2>
+<input id="currentPin" inputmode="numeric" placeholder="PIN attuale" required="" type="password"/>
+<input id="newPin" inputmode="numeric" minlength="4" placeholder="Nuovo PIN" required="" type="password"/>
+<input id="confirmNewPin" inputmode="numeric" minlength="4" placeholder="Conferma nuovo PIN" required="" type="password"/>
+<small id="pinChangeError"></small>
+<div><button data-close-pin="" type="button">Annulla</button>
+<button type="submit">Salva nuovo PIN</button></div>
+</form>
+</div><div class="toast" id="settingsToast"></div><div aria-hidden="true" class="backup-history-modal" id="backupHistoryModal">
+<div class="settings-backdrop" data-close-backup-history=""></div>
+<section class="backup-history-panel">
+<header>
+<div>
+<span>Protezione dati</span>
+<strong>Storico backup</strong>
+</div>
+<button data-close-backup-history="" type="button">×</button>
+</header>
+<div class="backup-history-content">
+<div class="backup-history-summary">
+<div><small>Backup salvati</small><strong id="backupHistoryCount">0</strong></div>
+<div><small>Ultimo backup</small><strong id="backupHistoryLast">—</strong></div>
+</div>
+<div class="backup-history-list" id="backupHistoryList"></div>
+</div>
+</section>
+</div></body>
 </html>
