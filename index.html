@@ -3,7 +3,7 @@
 <html lang="it">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+<meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport"/>
 <meta content="#050403" name="theme-color"/>
 <meta content="Wedding Tattoo Experience — Love. Marked. Forever. Un’esperienza esclusiva per il vostro matrimonio." name="description"/>
 <meta content="Wedding Tattoo Experience" property="og:title"/>
@@ -791,7 +791,376 @@
     width:4px;height:4px;border-radius:50%;
     margin:7px auto 0;background:var(--gold);
   }
+</style><style id="wte-20-10-final">
+  html,body{
+    touch-action:pan-y;
+    overscroll-behavior-x:none;
+    -webkit-text-size-adjust:100%;
+  }
+
+  body{
+    background:#030201;
+  }
+
+  .hero{
+    min-height:100svh;
+  }
+
+  .hero-frame{
+    inset:94px 20px 30px;
+    border-color:rgba(239,220,169,.13);
+  }
+
+  .hero-bg{
+    filter:saturate(.72) contrast(1.11) brightness(.93);
+  }
+
+  .hero::after{
+    background:
+      linear-gradient(90deg,rgba(3,2,1,.90) 0%,rgba(3,2,1,.44) 46%,rgba(3,2,1,.12) 100%),
+      linear-gradient(180deg,rgba(3,2,1,.02) 0%,rgba(3,2,1,.14) 58%,#030201 100%);
+  }
+
+  .header{
+    min-height:86px;
+    padding:18px clamp(18px,4vw,66px);
+  }
+
+  .header.scrolled{
+    min-height:72px;
+    background:rgba(3,2,1,.74);
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+    border-bottom:1px solid rgba(239,220,169,.12);
+  }
+
+  .logo{
+    width:clamp(86px,7.8vw,116px);
+  }
+
+  .hero-content-premium{
+    width:min(760px,100%);
+    padding-top:152px;
+    padding-bottom:116px;
+  }
+
+  .hero-content-premium h1{
+    font-size:clamp(72px,9.4vw,140px);
+    line-height:.83;
+    letter-spacing:-.06em;
+  }
+
+  .hero-content-premium .hero-copy{
+    max-width:500px;
+    font-size:18px;
+    color:#d8cec0;
+  }
+
+  .hero-content-premium .actions{
+    align-items:center;
+    gap:20px;
+    margin-top:38px;
+  }
+
+  .hero-content-premium .btn-primary{
+    min-width:260px;
+    min-height:60px;
+    border-radius:0;
+  }
+
+  .hero-text-link{
+    min-height:auto;
+    padding:8px 0;
+    color:#f1e2bd;
+    background:none;
+    border:0;
+    border-bottom:1px solid rgba(239,220,169,.34);
+    text-decoration:none;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    transition:.25s ease;
+  }
+
+  .hero-text-link:hover{
+    color:#fff5df;
+    border-color:#f0dca7;
+    transform:translateY(-1px);
+  }
+
+  .scroll-cue{
+    bottom:26px;
+  }
+
+  .trust article,
+  .pillar,
+  .card,
+  .config-panel,
+  .feature,
+  .modal-card{
+    box-shadow:none;
+  }
+
+  .trust article{
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.012),transparent),
+      #070604;
+  }
+
+  .trust-icon{
+    filter:drop-shadow(0 0 18px rgba(196,149,53,.14));
+  }
+
+  .brand-divider{
+    background:#040302;
+    color:rgba(239,220,169,.60);
+  }
+
+  .experience,
+  .process,
+  .faq{
+    background:#040302;
+  }
+
+  .section{
+    padding-top:clamp(120px,14vw,190px);
+    padding-bottom:clamp(120px,14vw,190px);
+  }
+
+  .feature,
+  .config-panel{
+    border-color:rgba(239,220,169,.14);
+  }
+
+  .feature-copy,
+  .config-result{
+    background:
+      radial-gradient(circle at 18% 10%,rgba(208,170,97,.075),transparent 36%),
+      #080604;
+  }
+
+  .visual-break{
+    min-height:92svh;
+  }
+
+  .visual-break::after{
+    background:
+      linear-gradient(90deg,rgba(3,2,1,.10),rgba(3,2,1,.74)),
+      linear-gradient(180deg,rgba(3,2,1,.04),rgba(3,2,1,.34));
+  }
+
+  .card{
+    border-color:rgba(239,220,169,.14);
+    background:
+      linear-gradient(160deg,rgba(255,255,255,.014),rgba(255,255,255,.002)),
+      #070604;
+  }
+
+  .card.featured{
+    border-color:rgba(239,220,169,.32);
+  }
+
+  .sticky{
+    left:14px;
+    right:14px;
+    bottom:calc(12px + env(safe-area-inset-bottom));
+    padding:7px;
+    gap:7px;
+    border-radius:16px;
+    background:rgba(5,4,3,.86);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    border-color:rgba(239,220,169,.18);
+  }
+
+  .sticky button{
+    min-height:46px;
+    border-radius:10px;
+    letter-spacing:.08em;
+    font-size:9px;
+  }
+
+  .sticky button:first-child{
+    background:rgba(255,255,255,.02);
+  }
+
+  .modal-card{
+    background:
+      radial-gradient(circle at 85% 5%,rgba(196,149,53,.08),transparent 30%),
+      #080604;
+  }
+
+  @media(max-width:700px){
+    body{
+      padding-bottom:72px;
+    }
+
+    .header{
+      min-height:74px;
+      padding:12px 14px;
+    }
+
+    .header.scrolled{
+      min-height:66px;
+    }
+
+    .logo{
+      width:76px;
+    }
+
+    .hero-frame{
+      inset:80px 12px 20px;
+    }
+
+    .hero-bg{
+      background-position:62% center;
+    }
+
+    .hero::after{
+      background:
+        linear-gradient(180deg,rgba(3,2,1,.00) 0%,rgba(3,2,1,.16) 30%,rgba(3,2,1,.90) 68%,#030201 100%);
+    }
+
+    .hero-content-premium{
+      padding:112px 20px 120px;
+    }
+
+    .hero-content-premium .eyebrow{
+      margin-bottom:17px;
+      font-size:8px;
+      letter-spacing:.30em;
+    }
+
+    .hero-content-premium h1{
+      font-size:clamp(52px,15vw,76px);
+      line-height:.88;
+      letter-spacing:-.055em;
+    }
+
+    .hero-content-premium .hero-copy{
+      max-width:390px;
+      margin-top:22px;
+      font-size:15px;
+      line-height:1.58;
+    }
+
+    .hero-content-premium .actions{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      margin-top:28px;
+    }
+
+    .hero-content-premium .btn-primary{
+      width:100%;
+      min-width:0;
+      min-height:56px;
+    }
+
+    .hero-text-link{
+      width:auto;
+      align-self:center;
+      padding:7px 0;
+    }
+
+    .scroll-cue{
+      bottom:20px;
+    }
+
+    .trust article{
+      padding:40px 24px;
+    }
+
+    .section{
+      padding-top:104px;
+      padding-bottom:104px;
+    }
+
+    .feature-image{
+      min-height:66svh;
+    }
+
+    .visual-break{
+      min-height:70svh;
+    }
+
+    .visual-break-copy{
+      padding-bottom:64px;
+    }
+
+    .sticky{
+      left:8px;
+      right:8px;
+      bottom:calc(8px + env(safe-area-inset-bottom));
+    }
+
+    .sticky button{
+      min-height:45px;
+      font-size:8.5px;
+    }
+
+    footer{
+      padding-bottom:96px;
+    }
+  }
+
+  @media(max-width:390px){
+    .hero-content-premium h1{
+      font-size:clamp(49px,14.6vw,66px);
+    }
+
+    .hero-content-premium .hero-copy{
+      font-size:14.5px;
+    }
+  }
+</style><meta content="WTE-20-10-super-luxury" name="version"/><style id="hero-video-css">
+  .hero-video{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center;
+    z-index:-4;
+    filter:saturate(.76) contrast(1.08) brightness(.88);
+    opacity:0;
+    transition:opacity 1.2s ease;
+  }
+
+  .hero-video.ready{
+    opacity:1;
+  }
+
+  .hero-bg{
+    z-index:-5;
+  }
+
+  .hero.video-active .hero-bg{
+    opacity:.22;
+  }
+
+  .hero::after{
+    z-index:-2;
+    background:
+      linear-gradient(90deg,rgba(3,2,1,.91) 0%,rgba(3,2,1,.46) 46%,rgba(3,2,1,.18) 100%),
+      linear-gradient(180deg,rgba(3,2,1,.05) 0%,rgba(3,2,1,.15) 55%,#030201 100%);
+  }
+
+  @media(max-width:700px){
+    .hero-video{
+      object-position:58% center;
+      filter:saturate(.74) contrast(1.08) brightness(.82);
+    }
+
+    .hero::after{
+      background:
+        linear-gradient(180deg,rgba(3,2,1,.03) 0%,rgba(3,2,1,.18) 34%,rgba(3,2,1,.91) 70%,#030201 100%);
+    }
+  }
 </style></head>
+
+&lt;!-- Carica hero.mp4 nella root del repository, accanto a index.html --&gt;
 <body>
 <div class="grain"></div>
 <div class="scroll-progress" id="scrollProgress"></div>
@@ -819,14 +1188,14 @@
 </aside>
 <main>
 <section class="hero" id="home">
-<div class="hero-frame"></div><div class="hero-bg"></div>
+<div class="hero-frame"></div><video autoplay="" class="hero-video" loop="" muted="" playsinline="" poster="" preload="metadata"><source src="hero.mp4" type="video/mp4"/></video><div class="hero-bg"></div>
 <div class="hero-content hero-content-premium">
 <p class="eyebrow">Wedding Tattoo Experience</p>
 <h1>LOVE.<br/>MARKED.<br/>FOREVER.</h1>
 <p class="hero-copy">Un’esperienza esclusiva che trasforma il giorno del vostro matrimonio in un ricordo autentico, condiviso e indelebile.</p>
 <div class="actions">
 <button class="btn btn-primary" data-open-booking="">Richiedi disponibilità</button>
-<a class="btn btn-secondary" href="#configurator">Trova il pacchetto perfetto</a>
+<a class="hero-text-link" href="#configurator">Scopri il pacchetto perfetto</a>
 </div>
 </div>
 <a class="scroll-cue" href="#experience"><i></i>Scopri</a>
@@ -945,8 +1314,8 @@
 </form>
 </div>
 </div>
-<div class="sticky">
-<button onclick="document.getElementById('configurator').scrollIntoView({behavior:'smooth'})">Trova il pacchetto</button>
+<div aria-label="Azioni rapide" class="sticky">
+<button onclick="document.getElementById('configurator').scrollIntoView({behavior:'smooth'})">Pacchetto</button>
 <button data-open-booking="">Disponibilità</button>
 </div>
 <script>
@@ -1066,6 +1435,46 @@ Vorrei verificare la disponibilità della data.`);
   document.querySelectorAll('.reveal').forEach((el, index) => {
     el.style.transitionDelay = Math.min(index % 4, 3) * 70 + 'ms';
   });
+})();
+</script><script id="wte-20-10-final-js">
+(() => {
+  document.documentElement.classList.add('wte-ready');
+
+  // Prevent accidental double-tap zoom on interactive controls.
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', event => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) event.preventDefault();
+    lastTouchEnd = now;
+  }, {passive:false});
+
+  // Prevent browser gesture zoom where supported.
+  document.addEventListener('gesturestart', event => event.preventDefault(), {passive:false});
+})();
+</script><script id="hero-video-js">
+(() => {
+  const hero = document.querySelector('.hero');
+  const video = document.querySelector('.hero-video');
+
+  if (!hero || !video) return;
+
+  const activateVideo = () => {
+    video.classList.add('ready');
+    hero.classList.add('video-active');
+  };
+
+  video.addEventListener('canplay', activateVideo, { once: true });
+  video.addEventListener('playing', activateVideo, { once: true });
+
+  video.addEventListener('error', () => {
+    video.remove();
+    hero.classList.remove('video-active');
+  });
+
+  const promise = video.play();
+  if (promise && typeof promise.catch === 'function') {
+    promise.catch(() => {});
+  }
 })();
 </script></body>
 </html>
