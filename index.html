@@ -1867,7 +1867,296 @@
       font-size:7.5px;
     }
   }
-</style><meta content="WTE-FINAL-PREMIUM-HERO-BAR" name="version"/></head><body class="cinematic-v3">
+</style><meta content="WTE-FINAL-PREMIUM-HERO-BAR" name="version"/><style id="wte-jump-20-10">
+  html,body{
+    touch-action:pan-y;
+    overscroll-behavior-x:none;
+    -webkit-text-size-adjust:100%;
+  }
+
+  body{
+    background:#020201;
+    padding-bottom:86px;
+  }
+
+  .header{
+    min-height:62px;
+    padding:8px 12px;
+    background:linear-gradient(180deg,rgba(2,2,1,.42),transparent);
+  }
+
+  .header.scrolled{
+    min-height:58px;
+    background:rgba(2,2,1,.74);
+    backdrop-filter:blur(24px);
+    -webkit-backdrop-filter:blur(24px);
+    border-bottom:1px solid rgba(239,220,169,.10);
+  }
+
+  .logo{
+    width:58px;
+    opacity:.96;
+    filter:drop-shadow(0 8px 22px rgba(0,0,0,.56));
+  }
+
+  .menu-btn{
+    width:42px;
+    height:42px;
+    border-color:rgba(239,220,169,.25);
+    background:rgba(0,0,0,.15);
+    backdrop-filter:blur(12px);
+  }
+
+  .hero{
+    min-height:100svh;
+    height:100svh;
+    align-items:flex-end;
+    overflow:hidden;
+  }
+
+  .hero-video{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:52% center;
+    z-index:-4;
+    filter:saturate(.74) contrast(1.11) brightness(.76);
+  }
+
+  .hero-bg{
+    opacity:.07;
+  }
+
+  .hero::after{
+    background:
+      linear-gradient(180deg,
+        rgba(2,2,1,.28) 0%,
+        rgba(2,2,1,.04) 25%,
+        rgba(2,2,1,.10) 46%,
+        rgba(2,2,1,.74) 72%,
+        #020201 100%);
+  }
+
+  .hero-content{
+    width:100%;
+    max-width:none;
+    align-self:flex-end;
+    padding:92px 18px 130px;
+    text-align:center;
+  }
+
+  .hero-content .eyebrow{
+    margin-bottom:13px;
+    font-size:7.5px;
+    letter-spacing:.34em;
+    color:#efdca9;
+  }
+
+  .hero-content h1{
+    max-width:660px;
+    margin-inline:auto;
+    font-size:clamp(56px,16vw,82px);
+    line-height:.85;
+    letter-spacing:-.065em;
+    text-shadow:0 18px 46px rgba(0,0,0,.38);
+  }
+
+  .hero-copy{
+    max-width:365px;
+    margin:18px auto 0;
+    color:#ded3c4;
+    font-size:14px;
+    line-height:1.55;
+  }
+
+  .hero-content .actions{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:15px;
+    margin-top:24px;
+  }
+
+  .hero-content .btn-primary{
+    width:min(100%,420px);
+    min-height:62px;
+    border-radius:0;
+    background:
+      linear-gradient(120deg,#f5e4b5 0%,#d2a753 42%,#b97b25 100%);
+    color:#171006;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.44),
+      0 20px 48px rgba(171,119,38,.24);
+    position:relative;
+    overflow:hidden;
+  }
+
+  .hero-content .btn-primary::after{
+    content:"";
+    position:absolute;
+    top:-30%;
+    left:-25%;
+    width:35%;
+    height:160%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent);
+    transform:skewX(-20deg);
+    animation:ctaShine 5.6s ease-in-out infinite;
+  }
+
+  .hero-discover-link{
+    color:#f2e3bd;
+    text-decoration:none;
+    border-bottom:1px solid rgba(239,220,169,.38);
+    padding:6px 0;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+
+  .scroll-cue{
+    display:none;
+  }
+
+  .concierge-bar{
+    position:fixed;
+    left:8px;
+    right:8px;
+    bottom:calc(8px + env(safe-area-inset-bottom));
+    z-index:95;
+    min-height:68px;
+    display:grid;
+    grid-template-columns:.8fr 1.4fr .8fr;
+    gap:7px;
+    padding:7px;
+    border:1px solid rgba(239,220,169,.18);
+    border-radius:18px;
+    background:rgba(4,3,2,.88);
+    backdrop-filter:blur(24px);
+    -webkit-backdrop-filter:blur(24px);
+    box-shadow:0 18px 50px rgba(0,0,0,.46);
+  }
+
+  .concierge-bar a,
+  .concierge-bar button{
+    min-width:0;
+    min-height:54px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    font-size:8.5px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .concierge-side{
+    color:#f0dfb4;
+    border:1px solid rgba(239,220,169,.22);
+    background:rgba(255,255,255,.015);
+  }
+
+  .concierge-main{
+    border:0;
+    color:#171006;
+    background:linear-gradient(135deg,#f2dfad,#cc9f48 58%,#a87526);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.34);
+  }
+
+  footer{
+    padding-bottom:110px;
+  }
+
+  @keyframes ctaShine{
+    0%,72%{left:-35%;opacity:0}
+    78%{opacity:1}
+    92%{left:120%;opacity:0}
+    100%{left:120%;opacity:0}
+  }
+
+  @media(min-width:701px){
+    body{padding-bottom:0}
+
+    .header{
+      min-height:78px;
+      padding:12px clamp(20px,4vw,64px);
+    }
+
+    .logo{width:82px}
+
+    .hero{
+      align-items:center;
+    }
+
+    .hero::after{
+      background:
+        linear-gradient(90deg,rgba(2,2,1,.88) 0%,rgba(2,2,1,.38) 48%,rgba(2,2,1,.10) 100%),
+        linear-gradient(180deg,rgba(2,2,1,.05),rgba(2,2,1,.62));
+    }
+
+    .hero-content{
+      width:min(700px,100%);
+      padding:120px 24px 88px clamp(28px,6vw,88px);
+      text-align:left;
+      align-self:center;
+    }
+
+    .hero-content h1,
+    .hero-copy{
+      margin-left:0;
+      margin-right:0;
+    }
+
+    .hero-content h1{
+      font-size:clamp(76px,9vw,136px);
+    }
+
+    .hero-content .actions{
+      align-items:flex-start;
+    }
+
+    .concierge-bar{
+      left:auto;
+      right:22px;
+      bottom:22px;
+      width:520px;
+      min-height:72px;
+    }
+
+    footer{
+      padding-bottom:34px;
+    }
+  }
+
+  @media(max-width:390px){
+    .hero-content{
+      padding-left:14px;
+      padding-right:14px;
+      padding-bottom:126px;
+    }
+
+    .hero-content h1{
+      font-size:clamp(50px,14.9vw,67px);
+    }
+
+    .hero-copy{
+      font-size:13.6px;
+    }
+
+    .concierge-bar{
+      grid-template-columns:.72fr 1.56fr .72fr;
+    }
+
+    .concierge-bar a,
+    .concierge-bar button{
+      font-size:8px;
+    }
+  }
+</style><meta content="WTE-JUMP-20-10" name="version"/></head><body class="cinematic-v3">
 <div class="grain"></div>
 <div class="scroll-progress" id="scrollProgress"></div>
 <header class="header" id="header">
@@ -2019,7 +2308,6 @@
 </form>
 </div>
 </div>
-
 <script>
     const header=document.getElementById('header');
     const menuBtn=document.getElementById('menuBtn');
@@ -2231,7 +2519,39 @@ Vorrei verificare la disponibilità della data.`);
 
   document.addEventListener('gesturestart', event => event.preventDefault(), {passive:false});
 })();
-</script><nav aria-label="Azioni rapide" class="luxury-action-bar"><a href="https://wa.me/393477050250" rel="noopener" target="_blank"><span class="action-icon">WA</span><span class="action-label">WhatsApp</span></a><a href="#contacts"><span class="action-icon">▣</span><span class="action-label">Prenota</span></a><a href="tel:+393477050250"><span class="action-icon">☎</span><span class="action-label">Chiama</span></a><a href="https://www.instagram.com/tattoo.beautysalooncondove/" rel="noopener" target="_blank"><span class="action-icon">◎</span><span class="action-label">Instagram</span></a></nav><script id="wte-final-premium-js">
+</script><script id="wte-final-premium-js">
+(() => {
+  const video = document.querySelector('.hero-video');
+
+  if (video) {
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute('muted','');
+    video.setAttribute('playsinline','');
+
+    const startVideo = () => {
+      const p = video.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    };
+
+    if (video.readyState >= 2) startVideo();
+    else video.addEventListener('canplay', startVideo, {once:true});
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && video.paused) startVideo();
+    });
+  }
+
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', event => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) event.preventDefault();
+    lastTouchEnd = now;
+  }, {passive:false});
+
+  document.addEventListener('gesturestart', event => event.preventDefault(), {passive:false});
+})();
+</script><div aria-label="Azioni rapide" class="concierge-bar"><a class="concierge-side" href="https://wa.me/393477050250" rel="noopener" target="_blank">WhatsApp</a><button class="concierge-main" data-open-booking="" type="button">Verifica disponibilità</button><a class="concierge-side" href="tel:+393477050250">Chiama</a></div><script id="wte-jump-20-10-js">
 (() => {
   const video = document.querySelector('.hero-video');
 
