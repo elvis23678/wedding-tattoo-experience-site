@@ -1382,7 +1382,234 @@
       align-items:flex-start;
     }
   }
-</style><meta content="WTE-CINEMATIC-HERO-V3" name="version"/></head>
+</style><meta content="WTE-CINEMATIC-HERO-V3" name="version"/><style id="hero-final-video-first">
+  html,body{
+    touch-action:pan-y;
+    overscroll-behavior-x:none;
+    -webkit-text-size-adjust:100%;
+  }
+
+  body{
+    background:#020201;
+  }
+
+  .header{
+    min-height:64px;
+    padding:8px 12px;
+    background:linear-gradient(180deg,rgba(2,2,1,.48),transparent);
+  }
+
+  .header.scrolled{
+    min-height:60px;
+    background:rgba(2,2,1,.70);
+    border-bottom:1px solid rgba(239,220,169,.10);
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+  }
+
+  .logo{
+    width:78px;
+  }
+
+  .menu-btn{
+    width:42px;
+    height:42px;
+    border-color:rgba(239,220,169,.26);
+    background:rgba(0,0,0,.18);
+    backdrop-filter:blur(10px);
+  }
+
+  .hero{
+    min-height:100svh;
+    height:100svh;
+    display:flex;
+    align-items:flex-end;
+    overflow:hidden;
+  }
+
+  .hero-video{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center center;
+    z-index:-4;
+    filter:saturate(.78) contrast(1.07) brightness(.79);
+  }
+
+  .hero-bg{
+    opacity:.12;
+    z-index:-5;
+  }
+
+  .hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:-2;
+    background:
+      linear-gradient(180deg,
+        rgba(2,2,1,.20) 0%,
+        rgba(2,2,1,.06) 26%,
+        rgba(2,2,1,.10) 44%,
+        rgba(2,2,1,.72) 72%,
+        #020201 100%);
+  }
+
+  .hero-content{
+    width:100%;
+    max-width:none;
+    padding:110px 20px 94px;
+    text-align:center;
+    align-self:flex-end;
+  }
+
+  .hero-content .eyebrow{
+    margin:0 0 14px;
+    font-size:8px;
+    letter-spacing:.32em;
+    color:#efdca9;
+  }
+
+  .hero-content h1{
+    margin:0 auto;
+    max-width:620px;
+    font-size:clamp(52px,15.5vw,78px);
+    line-height:.87;
+    letter-spacing:-.06em;
+    text-shadow:0 16px 42px rgba(0,0,0,.34);
+  }
+
+  .hero-copy{
+    max-width:370px;
+    margin:20px auto 0;
+    color:#ddd1c1;
+    font-size:14.5px;
+    line-height:1.56;
+  }
+
+  .hero-content .actions{
+    margin-top:26px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .hero-content .btn-primary{
+    width:min(100%,420px);
+    min-height:56px;
+    border-radius:0;
+    background:linear-gradient(135deg,#f1dfad 0%,#cc9f48 56%,#a87526 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.36),
+      0 18px 42px rgba(171,119,38,.20);
+  }
+
+  .scroll-cue{
+    bottom:14px;
+    font-size:8px;
+  }
+
+  .package-entry{
+    margin:-18px auto 54px;
+    text-align:center;
+  }
+
+  .package-entry a{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:48px;
+    padding:0 22px;
+    border:1px solid rgba(239,220,169,.28);
+    color:#f0dfb4;
+    text-decoration:none;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    background:rgba(255,255,255,.01);
+  }
+
+  .sticky{
+    left:8px;
+    right:8px;
+    bottom:calc(8px + env(safe-area-inset-bottom));
+    border-radius:14px;
+    padding:7px;
+    gap:7px;
+    background:rgba(4,3,2,.84);
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+  }
+
+  .sticky button{
+    min-height:45px;
+    border-radius:9px;
+    font-size:8.5px;
+  }
+
+  @media(min-width:701px){
+    .header{
+      min-height:78px;
+      padding:12px clamp(20px,4vw,64px);
+    }
+
+    .logo{
+      width:104px;
+    }
+
+    .hero{
+      align-items:center;
+    }
+
+    .hero-video{
+      object-position:center center;
+    }
+
+    .hero::after{
+      background:
+        linear-gradient(90deg,rgba(2,2,1,.86) 0%,rgba(2,2,1,.38) 48%,rgba(2,2,1,.10) 100%),
+        linear-gradient(180deg,rgba(2,2,1,.06),rgba(2,2,1,.62));
+    }
+
+    .hero-content{
+      width:min(690px,100%);
+      padding:132px 24px 90px clamp(28px,6vw,88px);
+      text-align:left;
+      align-self:center;
+    }
+
+    .hero-content h1,
+    .hero-copy{
+      margin-left:0;
+      margin-right:0;
+    }
+
+    .hero-content h1{
+      font-size:clamp(72px,8.8vw,132px);
+    }
+
+    .hero-content .actions{
+      justify-content:flex-start;
+    }
+  }
+
+  @media(max-width:390px){
+    .hero-content{
+      padding-left:16px;
+      padding-right:16px;
+    }
+
+    .hero-content h1{
+      font-size:clamp(49px,14.7vw,66px);
+    }
+
+    .hero-copy{
+      font-size:14px;
+    }
+  }
+</style><meta content="WTE-HERO-VIDEO-FIRST-FINAL" name="version"/></head>
 
 &lt;!-- Carica hero.mp4 nella root del repository, accanto a index.html --&gt;
 <body class="cinematic-v3">
@@ -1412,14 +1639,14 @@
 </aside>
 <main>
 <section class="hero" id="home">
-<div class="hero-frame"></div><video autoplay="" class="hero-video" loop="" muted="" playsinline="" poster="" preload="metadata"><source src="hero.mp4" type="video/mp4"/></video><div class="hero-bg"></div>
+<div class="hero-frame"></div><video autoplay="" class="hero-video" loop="" muted="" playsinline="" poster="" preload="auto"><source src="hero.mp4" type="video/mp4"/></video><div class="hero-bg"></div>
 <div class="hero-content hero-content-premium">
 <p class="eyebrow">Wedding Tattoo Experience</p>
 <h1>LOVE.<br/>MARKED.<br/>FOREVER.</h1>
-<p class="hero-copy">Un’esperienza esclusiva che trasforma il giorno del vostro matrimonio in un ricordo autentico, condiviso e indelebile.</p>
+<p class="hero-copy">Un’esperienza esclusiva che trasforma il vostro matrimonio in un ricordo indelebile.</p>
 <div class="actions">
-<button class="btn btn-primary" data-open-booking="">Richiedi disponibilità</button>
-<a class="hero-secondary-link" href="#configurator">Scopri il pacchetto perfetto</a>
+<button class="btn btn-primary" data-open-booking="">Verifica disponibilità</button>
+
 </div>
 </div>
 <a class="scroll-cue" href="#experience"><i></i>Scopri</a>
@@ -1435,7 +1662,7 @@
 <p class="section-kicker">Non è un semplice tatuaggio</p>
 <h2>Un ricordo che vive oltre il matrimonio.</h2>
 <p class="intro">Una postazione elegante e professionale, integrata nell’atmosfera del vostro matrimonio.</p>
-</div>
+</div><div class="package-entry reveal"><a href="#configurator">Trova il pacchetto perfetto</a></div>
 <div class="pillars">
 <article class="pillar reveal"><span>01</span><h3>Emozione</h3><p>Un gesto simbolico che racconta il vostro giorno in modo autentico.</p></article>
 <article class="pillar reveal"><span>02</span><h3>Esclusività</h3><p>Un servizio pensato esclusivamente per matrimoni ed eventi speciali.</p></article>
@@ -1720,6 +1947,38 @@ Vorrei verificare la disponibilità della data.`);
     const p = video.play();
     if (p && typeof p.catch === 'function') p.catch(() => {});
   }
+})();
+</script><script id="hero-final-video-js">
+(() => {
+  const video = document.querySelector('.hero-video');
+
+  if (video) {
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute('muted','');
+    video.setAttribute('playsinline','');
+
+    const start = () => {
+      const promise = video.play();
+      if (promise && typeof promise.catch === 'function') promise.catch(() => {});
+    };
+
+    if (video.readyState >= 2) start();
+    else video.addEventListener('canplay', start, {once:true});
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && video.paused) start();
+    });
+  }
+
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', event => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) event.preventDefault();
+    lastTouchEnd = now;
+  }, {passive:false});
+
+  document.addEventListener('gesturestart', event => event.preventDefault(), {passive:false});
 })();
 </script></body>
 </html>
