@@ -3417,104 +3417,91 @@
       border:1px solid var(--line);
     }
   }
-</style><meta content="WTE-SPRINT2-PHASE5-ARCHIVE" name="version"/><style id="wte-pdf-one-page-css">
-  #s2PrintProposal::after{
-    content:" · 1 pagina A4";
-    opacity:.72;
-  }
-
-  @media print{
-    /* Prevent the original page from being used for printing. */
-    html, body{
-      display:none !important;
-    }
-  }
-</style><meta content="WTE-PDF-SINGLE-A4" name="version"/><script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script><script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><style id="wte-mobile-sign-pdf-fix-css">
+</style><meta content="WTE-SPRINT2-PHASE5-ARCHIVE" name="version"/><script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script><script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><style id="wte-release-stable-css">
   /* =========================================================
-     FIX DEFINITIVO
-     - data larga
-     - firma touch Android/iPhone
-     - vero download PDF
+     WTE RELEASE STABILE
+     Firma touch + PDF download + campi mobile
      ========================================================= */
 
   #s2AvailabilityForm .s2-form-grid{
+    display:grid !important;
     grid-template-columns:minmax(0,1fr) !important;
+    gap:12px !important;
   }
 
-  #s2AvailabilityForm .s2-form-grid label{
-    width:100% !important;
-    min-width:0 !important;
-  }
-
-  #s2AvailabilityForm input,
-  #s2AvailabilityForm select{
+  #s2AvailabilityForm .s2-form-grid label,
+  #s2AvailabilityForm .s2-form-grid input,
+  #s2AvailabilityForm .s2-form-grid select{
     width:100% !important;
     min-width:0 !important;
     max-width:100% !important;
     box-sizing:border-box !important;
   }
 
-  #s2AvailabilityForm input[type="date"],
-  #s2AvailabilityForm input[type="time"]{
-    display:block !important;
+  #s2AvailabilityForm .s2-form-grid input,
+  #s2AvailabilityForm .s2-form-grid select{
     min-height:52px !important;
     padding:0 14px !important;
     font-size:16px !important;
+  }
+
+  #s2AvailabilityForm input[type="date"],
+  #s2AvailabilityForm input[type="time"]{
+    display:block !important;
+    width:100% !important;
+    min-width:100% !important;
+    -webkit-appearance:none !important;
+    appearance:none !important;
     color-scheme:dark;
-    -webkit-appearance:none;
-    appearance:none;
   }
 
   #s2AvailabilityForm input[type="date"]::-webkit-date-and-time-value,
   #s2AvailabilityForm input[type="time"]::-webkit-date-and-time-value{
+    min-width:100%;
     text-align:left;
-    min-height:1.2em;
   }
 
   .s2p3-signature-box{
     position:relative;
     overflow:hidden;
+    background:#fffdf8 !important;
   }
 
   #s2SignatureCanvas{
     display:block !important;
     width:100% !important;
-    height:190px !important;
-    min-height:190px !important;
+    height:210px !important;
+    min-height:210px !important;
     background:#fffdf8 !important;
     touch-action:none !important;
     -ms-touch-action:none !important;
+    overscroll-behavior:contain !important;
     user-select:none !important;
     -webkit-user-select:none !important;
-    cursor:crosshair;
-    overscroll-behavior:contain;
   }
 
-  .s2-signing-active{
+  body.wte-signing{
     overflow:hidden !important;
     touch-action:none !important;
   }
 
-  #s2PrintProposal::after{
-    content:"" !important;
+  #s2PrintProposal{
+    border:1px solid rgba(50,35,16,.22) !important;
+    background:#f7f0e3 !important;
+    color:#1d150b !important;
   }
 
-  .s2-pdf-loading{
+  #s2PrintProposal.wte-working{
     opacity:.55;
     pointer-events:none;
   }
 
-  @media(min-width:700px){
+  @media(min-width:760px){
     #s2AvailabilityForm .s2-form-grid{
       grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
     }
-
-    #s2SignatureCanvas{
-      height:210px !important;
-      min-height:210px !important;
-    }
   }
-</style><meta content="WTE-MOBILE-SIGNATURE-PDF-FIX" name="version"/></head>
+</style><meta content="WTE-RELEASE-STABLE-1.0" name="version"/></head>
 <body>
 <div class="grain"></div>
 <header class="header" id="header">
@@ -4729,14 +4716,7 @@ Chiedo allo staff di verificare la data e indicarmi come procedere con acconto e
 
   updateResult();
 })();
-</script><script id="wte-sprint2-phase3-js">(()=>{const PHONE='393477050250',canvas=document.getElementById('s2SignatureCanvas'),clear=document.getElementById('s2ClearSignature'),accept=document.getElementById('s2AcceptTerms'),confirm=document.getElementById('s2ConfirmProposal'),send=document.getElementById('s2SendProposal'),doc=document.getElementById('s2ProposalDocument'),form=document.getElementById('s2AvailabilityForm');if(!canvas||!confirm||!send||!form)return;const ctx=canvas.getContext('2d');let drawing=false,has=false,confirmed=false,payload=null;
-function setup(){const r=Math.max(devicePixelRatio||1,1),rect=canvas.getBoundingClientRect();canvas.width=Math.max(1,Math.round(rect.width*r));canvas.height=Math.max(1,Math.round(rect.height*r));ctx.setTransform(r,0,0,r,0,0);ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#17110b'}
-function pos(e){const rect=canvas.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:p.clientX-rect.left,y:p.clientY-rect.top}}function start(e){e.preventDefault();drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)}function move(e){if(!drawing)return;e.preventDefault();const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();has=true;confirmed=false;send.disabled=true;doc.classList.remove('s2p3-confirmed')}function stop(e){if(!drawing)return;e&&e.preventDefault();drawing=false;ctx.closePath()}canvas.addEventListener('pointerdown',start);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointerleave',stop);canvas.addEventListener('pointercancel',stop);
-function reset(){ctx.clearRect(0,0,canvas.width,canvas.height);has=false;confirmed=false;payload=null;send.disabled=true;accept.checked=false;doc.classList.remove('s2p3-confirmed');document.getElementById('s2SignedName').textContent='—';document.getElementById('s2SignedAt').textContent='—';document.getElementById('s2ProposalNumber').textContent='Proposta in preparazione';confirm.textContent='Firma e prepara invio'}clear&&clear.addEventListener('click',reset);
-function data(){const f=new FormData(form);return{name:f.get('name')||'',date:f.get('date')||'',location:f.get('location')||'',guests:f.get('guests')||'',hours:f.get('hours')||'',distance:f.get('distance')||'',pack:document.getElementById('s2DocPackage')?.textContent||'',price:document.getElementById('s2DocPrice')?.textContent||'',tattoos:document.getElementById('s2DocTattoos')?.textContent||'',travel:document.getElementById('s2DocTravel')?.textContent||''}}function number(){const n=new Date();return`WTE-${String(n.getFullYear()).slice(-2)}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}-${Math.floor(Math.random()*900)+100}`}
-confirm.addEventListener('click',()=>{if(!accept.checked){alert('Accetta prima le condizioni preliminari.');return}if(!has){alert('Inserisci la firma nel riquadro.');canvas.scrollIntoView({behavior:'smooth',block:'center'});return}const d=data(),now=new Date(),proposal=number();document.getElementById('s2ProposalNumber').textContent=`Proposta ${proposal}`;document.getElementById('s2SignedName').textContent=d.name||'Firmatario';document.getElementById('s2SignedAt').textContent=now.toLocaleString('it-IT');document.getElementById('s2SignatureData').value=canvas.toDataURL('image/png');payload={...d,proposal,signedAt:now.toISOString()};confirmed=true;send.disabled=false;doc.classList.add('s2p3-confirmed');confirm.textContent='Proposta firmata ✓'});
-send.addEventListener('click',e=>{if(!confirmed||!payload){e.preventDefault();alert('Firma e conferma prima la proposta.');return}e.stopImmediatePropagation();const d=payload,msg=`✍️ PROPOSTA PRELIMINARE FIRMATA\n\nNumero: ${d.proposal}\nFirmatario: ${d.name}\nFirma registrata: ${new Date(d.signedAt).toLocaleString('it-IT')}\n\nData matrimonio: ${d.date}\nLocation: ${d.location}\nInvitati: ${d.guests}\nOre richieste: ${d.hours}\nDistanza: ${d.distance} km\n\nPacchetto: ${d.pack}\nPrezzo base: ${d.price}\nTatuaggi stimati: ${d.tattoos}\nTrasferta: ${d.travel}\n\nIl cliente ha accettato le condizioni preliminari e firmato la proposta sul sito.\nLa prenotazione resta soggetta a verifica, contratto definitivo e acconto.`;open(`https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`,'_blank','noopener')},true);
-document.getElementById('s2CreateProposal')?.addEventListener('click',()=>setTimeout(()=>{setup();reset()},100));window.addEventListener('resize',()=>{if(document.getElementById('s2ProposalModal')?.classList.contains('open'))setup()});setup()})();</script><script id="wte-sprint2-phase4-js">
+</script><script id="wte-sprint2-phase4-js">
 (() => {
   const form = document.getElementById('s2AvailabilityForm');
   if (!form) return;
@@ -5273,516 +5253,145 @@ ${item.notes || 'Nessuna nota'}`;
 
   render();
 })();
-</script><script id="wte-pdf-one-page-js">
-(() => {
-  const oldButton = document.getElementById('s2PrintProposal');
-  const documentNode = document.getElementById('s2ProposalDocument');
-  const signatureCanvas = document.getElementById('s2SignatureCanvas');
-
-  if (!oldButton || !documentNode) return;
-
-  // Remove all older window.print listeners.
-  const printButton = oldButton.cloneNode(true);
-  printButton.textContent = 'Scarica / stampa PDF';
-  oldButton.parentNode.replaceChild(printButton, oldButton);
-
-  function escapeClosingScript(value) {
-    return String(value).replace(/<\/script/gi, '<\\/script');
-  }
-
-  printButton.addEventListener('click', event => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-
-    const clone = documentNode.cloneNode(true);
-
-    // Remove interactive controls from the printable document.
-    clone.querySelectorAll(
-      '.s2p2-document-head button, .s2p2-document-footer, ' +
-      '.s2p3-signature-toolbar, .s2p3-check, button, input, select, textarea'
-    ).forEach(el => el.remove());
-
-    // Convert the live signature canvas to a printable image.
-    const clonedCanvas = clone.querySelector('#s2SignatureCanvas');
-    if (clonedCanvas && signatureCanvas) {
-      const image = document.createElement('img');
-      image.className = 'print-signature-image';
-      image.alt = 'Firma';
-      try {
-        image.src = signatureCanvas.toDataURL('image/png');
-      } catch {
-        image.src = '';
-      }
-      clonedCanvas.replaceWith(image);
-    }
-
-    // Remove duplicate IDs from the clone.
-    clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-    clone.className = 'print-document';
-
-    const popup = window.open('', '_blank');
-    if (!popup) {
-      alert('Consenti l’apertura delle finestre popup per generare il PDF.');
-      return;
-    }
-
-    const printableHtml = escapeClosingScript(clone.outerHTML);
-
-    popup.document.open();
-    popup.document.write(`<!doctype html>
-<html lang="it">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Proposta Wedding Tattoo Experience</title>
-<style>
-  @page {
-    size: A4 portrait;
-    margin: 8mm;
-  }
-
-  * {
-    box-sizing: border-box;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: #fff;
-    color: #1d150b;
-    font-family: Arial, sans-serif;
-  }
-
-  .print-page {
-    width: 194mm;
-    height: 281mm;
-    margin: 0 auto;
-    overflow: hidden;
-    position: relative;
-    background: #f4efe5;
-  }
-
-  .print-scale {
-    width: 194mm;
-    transform-origin: top left;
-  }
-
-  .print-document {
-    width: 100%;
-    max-height: none !important;
-    overflow: visible !important;
-    background:
-      radial-gradient(circle at 20% 8%, rgba(201,153,66,.14), transparent 28%),
-      #f4efe5;
-  }
-
-  .s2p2-document-head {
-    min-height: 16mm;
-    padding: 3mm 5mm;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: .3mm solid rgba(50,35,16,.16);
-  }
-
-  .s2p2-document-head div {
-    display: flex;
-    flex-direction: column;
-    gap: 1mm;
-  }
-
-  .s2p2-document-head span,
-  .s2p2-document-package span,
-  .s2p2-document-grid small,
-  .s2p2-document-note span,
-  .s2p4-document-advice > span,
-  .s2p3-acceptance-head span,
-  .s2p3-signed-meta small {
-    color: #8a621e;
-    font-size: 7pt;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-  }
-
-  .s2p2-document-head strong {
-    font-family: Georgia, serif;
-    font-size: 14pt;
-    font-weight: 400;
-  }
-
-  .s2p2-document-hero {
-    padding: 8mm 5mm 5mm;
-    text-align: center;
-  }
-
-  .s2p2-document-hero small {
-    color: #9b6e23;
-    font-size: 6pt;
-    letter-spacing: .16em;
-  }
-
-  .s2p2-document-hero h2 {
-    margin: 3mm 0 1.5mm;
-    font-family: Georgia, serif;
-    font-size: 24pt;
-    line-height: 1;
-    font-weight: 400;
-  }
-
-  .s2p2-document-hero p {
-    margin: 0;
-    color: #6e6254;
-    font-size: 9pt;
-  }
-
-  .s2p3-doc-meta {
-    margin-top: 3mm;
-    display: flex;
-    justify-content: center;
-    gap: 2mm;
-  }
-
-  .s2p3-doc-meta span {
-    padding: 1.5mm 2mm;
-    border: .3mm solid rgba(120,82,24,.20);
-    color: #755521;
-    font-size: 5.5pt;
-  }
-
-  .s2p2-document-package {
-    margin: 0 5mm;
-    padding: 4mm;
-    text-align: center;
-    border: .3mm solid rgba(120,82,24,.25);
-    background: rgba(255,255,255,.46);
-  }
-
-  .s2p2-document-package strong {
-    display: block;
-    margin: 1.5mm 0;
-    font-family: Georgia, serif;
-    font-size: 25pt;
-    font-weight: 400;
-  }
-
-  .s2p2-document-package em {
-    font-style: normal;
-    font-size: 10pt;
-    font-weight: 700;
-  }
-
-  .s2p2-document-grid {
-    margin: 4mm 5mm;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    border-top: .3mm solid rgba(50,35,16,.16);
-    border-left: .3mm solid rgba(50,35,16,.16);
-  }
-
-  .s2p2-document-grid div {
-    min-height: 14mm;
-    padding: 2.5mm;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 1.3mm;
-    border-right: .3mm solid rgba(50,35,16,.16);
-    border-bottom: .3mm solid rgba(50,35,16,.16);
-  }
-
-  .s2p2-document-grid strong {
-    font-family: Georgia, serif;
-    font-size: 10pt;
-    font-weight: 400;
-  }
-
-  .s2p2-document-note,
-  .s2p4-document-advice,
-  .s2p2-document-legal {
-    margin: 3mm 5mm;
-    padding: 3mm;
-    border-left: .7mm solid #b37a26;
-    background: rgba(255,255,255,.36);
-  }
-
-  .s2p2-document-note p,
-  .s2p4-document-advice p,
-  .s2p2-document-legal p,
-  .s2p3-acceptance-head p {
-    margin: 1.5mm 0 0;
-    color: #5e5346;
-    font-size: 7.5pt;
-    line-height: 1.38;
-  }
-
-  .s2p4-document-advice ul {
-    margin: 1.5mm 0 0;
-    padding-left: 5mm;
-    color: #4f4538;
-    font-size: 7pt;
-    line-height: 1.35;
-  }
-
-  .s2p3-acceptance {
-    margin: 3mm 5mm 5mm;
-    padding: 3mm;
-    border: .3mm solid rgba(120,82,24,.25);
-    background: rgba(255,255,255,.34);
-  }
-
-  .s2p3-acceptance-head h3 {
-    margin: 1.5mm 0 1mm;
-    font-family: Georgia, serif;
-    font-size: 17pt;
-    font-weight: 400;
-  }
-
-  .s2p3-signature-box {
-    margin-top: 3mm;
-    border: .3mm solid rgba(70,48,20,.28);
-    background: #fffdf8;
-    min-height: 27mm;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .print-signature-image {
-    display: block;
-    width: 100%;
-    height: 25mm;
-    object-fit: contain;
-  }
-
-  .s2p3-signed-meta {
-    margin-top: 2mm;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2mm;
-  }
-
-  .s2p3-signed-meta div {
-    min-height: 11mm;
-    padding: 2mm;
-    border: .3mm solid rgba(70,48,20,.16);
-  }
-
-  .s2p3-signed-meta strong {
-    display: block;
-    margin-top: 1mm;
-    font-family: Georgia, serif;
-    font-size: 9pt;
-    font-weight: 400;
-  }
-
-  @media print {
-    html, body {
-      width: 210mm;
-      height: 297mm;
-      overflow: hidden;
-    }
-
-    .print-page {
-      page-break-after: avoid;
-      page-break-inside: avoid;
-    }
-  }
-</style>
-</head>
-<body>
-<div class="print-page">
-  <div class="print-scale" id="printScale">
-    ${printableHtml}
-  </div>
-</div>
-<script>
-  (() => {
-    const page = document.querySelector('.print-page');
-    const content = document.getElementById('printScale');
-
-    function fitAndPrint() {
-      const available = page.clientHeight;
-      const actual = content.scrollHeight;
-      const scale = Math.min(1, available / Math.max(actual, 1));
-
-      content.style.transform = 'scale(' + scale + ')';
-      content.style.width = (100 / scale) + '%';
-
-      setTimeout(() => window.print(), 250);
-    }
-
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(fitAndPrint);
-    } else {
-      window.addEventListener('load', fitAndPrint);
-    }
-  })();
-<\/script>
-</body>
-</html>`);
-    popup.document.close();
-  });
-})();
-</script><script id="wte-mobile-sign-pdf-fix-js">
+</script><script id="wte-release-stable-js">
 (() => {
   const PHONE = '393477050250';
 
-  function waitForDom() {
+  function initialise() {
     const originalCanvas = document.getElementById('s2SignatureCanvas');
-    const originalClear = document.getElementById('s2ClearSignature');
     const originalConfirm = document.getElementById('s2ConfirmProposal');
+    const originalClear = document.getElementById('s2ClearSignature');
     const originalSend = document.getElementById('s2SendProposal');
     const originalPdf = document.getElementById('s2PrintProposal');
     const proposal = document.getElementById('s2ProposalDocument');
     const form = document.getElementById('s2AvailabilityForm');
 
     if (!originalCanvas || !originalConfirm || !originalPdf || !proposal || !form) {
-      setTimeout(waitForDom, 150);
+      setTimeout(initialise, 150);
       return;
     }
 
-    /* ---------- FIRMA: rimuove i vecchi listener ---------- */
+    /* Replace controls: this removes every older click/touch listener. */
     const canvas = originalCanvas.cloneNode(false);
-    originalCanvas.parentNode.replaceChild(canvas, originalCanvas);
-
-    const clearButton = originalClear ? originalClear.cloneNode(true) : null;
-    if (originalClear && clearButton) {
-      originalClear.parentNode.replaceChild(clearButton, originalClear);
-    }
+    originalCanvas.replaceWith(canvas);
 
     const confirmButton = originalConfirm.cloneNode(true);
-    originalConfirm.parentNode.replaceChild(confirmButton, originalConfirm);
+    originalConfirm.replaceWith(confirmButton);
+
+    const clearButton = originalClear ? originalClear.cloneNode(true) : null;
+    if (originalClear && clearButton) originalClear.replaceWith(clearButton);
 
     const sendButton = originalSend ? originalSend.cloneNode(true) : null;
-    if (originalSend && sendButton) {
-      originalSend.parentNode.replaceChild(sendButton, originalSend);
-    }
+    if (originalSend && sendButton) originalSend.replaceWith(sendButton);
 
     const pdfButton = originalPdf.cloneNode(true);
-    pdfButton.textContent = 'Scarica PDF';
-    originalPdf.parentNode.replaceChild(pdfButton, originalPdf);
+    pdfButton.textContent = 'SCARICA PDF';
+    originalPdf.replaceWith(pdfButton);
 
-    const ctx = canvas.getContext('2d', {alpha:true});
-    let drawing = false;
-    let signed = false;
-    let confirmed = false;
-    let lastPoint = null;
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let hasInk = false;
+    let isConfirmed = false;
+    let previous = null;
 
-    function resizeCanvas(keep = true) {
-      const previous = keep && signed ? canvas.toDataURL('image/png') : null;
-      const rect = canvas.getBoundingClientRect();
-      const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 3));
+    function configureCanvas(keepImage = true) {
+      const oldImage = keepImage && hasInk ? canvas.toDataURL('image/png') : null;
+      const box = canvas.getBoundingClientRect();
+      const ratio = Math.max(1, Math.min(window.devicePixelRatio || 1, 3));
 
-      canvas.width = Math.max(1, Math.round(rect.width * dpr));
-      canvas.height = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = Math.round(Math.max(box.width, 1) * ratio);
+      canvas.height = Math.round(Math.max(box.height, 1) * ratio);
 
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.lineWidth = 2.4;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.strokeStyle = '#17110b';
+      ctx.lineWidth = 2.6;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.strokeStyle = '#17110b';
 
-      if (previous) {
+      if (oldImage) {
         const image = new Image();
-        image.onload = () => {
-          ctx.drawImage(image, 0, 0, rect.width, rect.height);
-        };
-        image.src = previous;
+        image.onload = () => ctx.drawImage(image, 0, 0, box.width, box.height);
+        image.src = oldImage;
       }
     }
 
-    function coordinates(clientX, clientY) {
-      const rect = canvas.getBoundingClientRect();
+    function getPoint(clientX, clientY) {
+      const box = canvas.getBoundingClientRect();
       return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
+        x: clientX - box.left,
+        y: clientY - box.top
       };
     }
 
-    function begin(clientX, clientY, event) {
-      event?.preventDefault();
-      drawing = true;
-      confirmed = false;
-      sendButton && (sendButton.disabled = true);
+    function startLine(clientX, clientY, event) {
+      event.preventDefault();
+      event.stopPropagation();
+      isDrawing = true;
+      isConfirmed = false;
+      if (sendButton) sendButton.disabled = true;
       proposal.classList.remove('s2p3-confirmed');
-      document.body.classList.add('s2-signing-active');
+      document.body.classList.add('wte-signing');
 
-      lastPoint = coordinates(clientX, clientY);
+      previous = getPoint(clientX, clientY);
       ctx.beginPath();
-      ctx.moveTo(lastPoint.x, lastPoint.y);
+      ctx.moveTo(previous.x, previous.y);
     }
 
-    function draw(clientX, clientY, event) {
-      if (!drawing) return;
-      event?.preventDefault();
+    function continueLine(clientX, clientY, event) {
+      if (!isDrawing) return;
+      event.preventDefault();
+      event.stopPropagation();
 
-      const point = coordinates(clientX, clientY);
-      const middleX = (lastPoint.x + point.x) / 2;
-      const middleY = (lastPoint.y + point.y) / 2;
+      const point = getPoint(clientX, clientY);
+      const midX = (previous.x + point.x) / 2;
+      const midY = (previous.y + point.y) / 2;
 
-      ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, middleX, middleY);
+      ctx.quadraticCurveTo(previous.x, previous.y, midX, midY);
       ctx.stroke();
-
-      lastPoint = point;
-      signed = true;
+      previous = point;
+      hasInk = true;
     }
 
-    function end(event) {
-      if (!drawing) return;
+    function finishLine(event) {
+      if (!isDrawing) return;
       event?.preventDefault();
-      drawing = false;
-      lastPoint = null;
+      event?.stopPropagation();
+      isDrawing = false;
+      previous = null;
       ctx.closePath();
-      document.body.classList.remove('s2-signing-active');
+      document.body.classList.remove('wte-signing');
     }
 
-    if (window.PointerEvent) {
-      canvas.addEventListener('pointerdown', event => {
-        canvas.setPointerCapture?.(event.pointerId);
-        begin(event.clientX, event.clientY, event);
-      }, {passive:false});
+    /* Explicit touch events are kept even when PointerEvent exists:
+       this is more reliable in Samsung Internet / Android WebView. */
+    canvas.addEventListener('touchstart', event => {
+      const touch = event.touches[0];
+      if (touch) startLine(touch.clientX, touch.clientY, event);
+    }, {passive:false});
 
-      canvas.addEventListener('pointermove', event => {
-        draw(event.clientX, event.clientY, event);
-      }, {passive:false});
+    canvas.addEventListener('touchmove', event => {
+      const touch = event.touches[0];
+      if (touch) continueLine(touch.clientX, touch.clientY, event);
+    }, {passive:false});
 
-      ['pointerup','pointercancel','pointerleave'].forEach(type => {
-        canvas.addEventListener(type, end, {passive:false});
-      });
-    } else {
-      canvas.addEventListener('touchstart', event => {
-        const touch = event.changedTouches[0];
-        begin(touch.clientX, touch.clientY, event);
-      }, {passive:false});
+    canvas.addEventListener('touchend', finishLine, {passive:false});
+    canvas.addEventListener('touchcancel', finishLine, {passive:false});
 
-      canvas.addEventListener('touchmove', event => {
-        const touch = event.changedTouches[0];
-        draw(touch.clientX, touch.clientY, event);
-      }, {passive:false});
-
-      canvas.addEventListener('touchend', end, {passive:false});
-      canvas.addEventListener('touchcancel', end, {passive:false});
-
-      canvas.addEventListener('mousedown', event => {
-        begin(event.clientX, event.clientY, event);
-      });
-
-      window.addEventListener('mousemove', event => {
-        draw(event.clientX, event.clientY, event);
-      });
-
-      window.addEventListener('mouseup', end);
-    }
+    canvas.addEventListener('mousedown', event => {
+      startLine(event.clientX, event.clientY, event);
+    });
+    window.addEventListener('mousemove', event => {
+      if (isDrawing) continueLine(event.clientX, event.clientY, event);
+    });
+    window.addEventListener('mouseup', finishLine);
 
     clearButton?.addEventListener('click', event => {
       event.preventDefault();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      signed = false;
-      confirmed = false;
-      sendButton && (sendButton.disabled = true);
+      hasInk = false;
+      isConfirmed = false;
       confirmButton.textContent = 'Firma e prepara invio';
+      if (sendButton) sendButton.disabled = true;
       proposal.classList.remove('s2p3-confirmed');
       document.getElementById('s2SignedName').textContent = '—';
       document.getElementById('s2SignedAt').textContent = '—';
@@ -5796,30 +5405,28 @@ ${item.notes || 'Nessuna nota'}`;
 
       const accepted = document.getElementById('s2AcceptTerms');
       if (!accepted?.checked) {
-        alert('Seleziona prima la casella di accettazione.');
+        alert('Seleziona la casella di accettazione.');
         accepted?.focus();
         return;
       }
-
-      if (!signed) {
-        alert('Firma nel riquadro bianco con il dito.');
+      if (!hasInk) {
+        alert('Inserisci la firma nel riquadro bianco.');
         canvas.scrollIntoView({behavior:'smooth', block:'center'});
         return;
       }
 
-      const fd = new FormData(form);
-      const name = fd.get('name') || 'Firmatario';
+      const data = new FormData(form);
       const now = new Date();
-
-      document.getElementById('s2SignedName').textContent = name;
+      document.getElementById('s2SignedName').textContent =
+        data.get('name') || 'Firmatario';
       document.getElementById('s2SignedAt').textContent =
         now.toLocaleString('it-IT');
 
       const hidden = document.getElementById('s2SignatureData');
       if (hidden) hidden.value = canvas.toDataURL('image/png');
 
-      confirmed = true;
-      sendButton && (sendButton.disabled = false);
+      isConfirmed = true;
+      if (sendButton) sendButton.disabled = false;
       confirmButton.textContent = 'Proposta firmata ✓';
       proposal.classList.add('s2p3-confirmed');
     }, true);
@@ -5828,26 +5435,26 @@ ${item.notes || 'Nessuna nota'}`;
       event.preventDefault();
       event.stopImmediatePropagation();
 
-      if (!confirmed) {
+      if (!isConfirmed) {
         alert('Firma e conferma prima la proposta.');
         return;
       }
 
-      const fd = new FormData(form);
+      const data = new FormData(form);
       const message =
 `✍️ PROPOSTA PRELIMINARE FIRMATA
 
-Firmatario: ${fd.get('name') || ''}
-Data matrimonio: ${fd.get('date') || ''}
-Location: ${fd.get('location') || ''}
-Invitati: ${fd.get('guests') || ''}
-Ore richieste: ${fd.get('hours') || ''}
-Distanza: ${fd.get('distance') || ''} km
+Firmatario: ${data.get('name') || ''}
+Data matrimonio: ${data.get('date') || ''}
+Location: ${data.get('location') || ''}
+Invitati: ${data.get('guests') || ''}
+Ore: ${data.get('hours') || ''}
+Distanza: ${data.get('distance') || ''} km
 
 Pacchetto: ${document.getElementById('s2DocPackage')?.textContent || ''}
-Prezzo base: ${document.getElementById('s2DocPrice')?.textContent || ''}
+Prezzo: ${document.getElementById('s2DocPrice')?.textContent || ''}
 
-Il cliente ha accettato le condizioni preliminari e firmato la proposta sul sito.`;
+La proposta è stata accettata e firmata sul sito.`;
 
       window.open(
         `https://wa.me/${PHONE}?text=${encodeURIComponent(message)}`,
@@ -5856,134 +5463,127 @@ Il cliente ha accettato le condizioni preliminari e firmato la proposta sul sito
       );
     }, true);
 
-    /* ---------- VERO DOWNLOAD PDF ---------- */
     pdfButton.addEventListener('click', async event => {
       event.preventDefault();
       event.stopImmediatePropagation();
 
       if (!window.html2canvas || !window.jspdf?.jsPDF) {
-        alert('Il generatore PDF si sta caricando. Riprova tra qualche secondo.');
+        alert('Attendi qualche secondo e riprova: il generatore PDF si sta caricando.');
         return;
       }
 
-      pdfButton.classList.add('s2-pdf-loading');
-      pdfButton.textContent = 'Creazione PDF...';
+      pdfButton.classList.add('wte-working');
+      pdfButton.textContent = 'CREAZIONE PDF...';
 
+      let holder = null;
       try {
         const clone = proposal.cloneNode(true);
 
         clone.querySelectorAll(
           '.s2p2-document-head button, .s2p2-document-footer, ' +
-          '.s2p3-signature-toolbar, .s2p3-check, button'
-        ).forEach(el => el.remove());
+          '.s2p3-signature-toolbar, .s2p3-check, button, input, select, textarea'
+        ).forEach(element => element.remove());
 
-        const clonedCanvas = clone.querySelector('#s2SignatureCanvas');
-        if (clonedCanvas) {
-          const image = document.createElement('img');
-          image.src = signed ? canvas.toDataURL('image/png') : '';
-          image.alt = 'Firma';
-          image.style.cssText =
+        const cloneCanvas = clone.querySelector('#s2SignatureCanvas');
+        if (cloneCanvas) {
+          const signature = document.createElement('img');
+          signature.src = hasInk ? canvas.toDataURL('image/png') : '';
+          signature.alt = 'Firma';
+          signature.style.cssText =
             'display:block;width:100%;height:150px;object-fit:contain;background:#fffdf8;';
-          clonedCanvas.replaceWith(image);
+          cloneCanvas.replaceWith(signature);
         }
 
-        clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+        clone.querySelectorAll('[id]').forEach(element => element.removeAttribute('id'));
         clone.style.cssText =
           'position:relative;width:794px;max-height:none;overflow:visible;' +
           'background:#f4efe5;color:#1d150b;';
 
-        const holder = document.createElement('div');
+        holder = document.createElement('div');
         holder.style.cssText =
-          'position:fixed;left:-10000px;top:0;width:794px;background:#f4efe5;z-index:-1;';
+          'position:fixed;left:-10000px;top:0;width:794px;background:#f4efe5;';
         holder.appendChild(clone);
         document.body.appendChild(holder);
 
-        const rendered = await html2canvas(clone, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#f4efe5',
-          logging: false,
-          windowWidth: 794
+        const screenshot = await html2canvas(clone, {
+          scale:2,
+          backgroundColor:'#f4efe5',
+          useCORS:true,
+          logging:false,
+          windowWidth:794
         });
-
-        holder.remove();
 
         const {jsPDF} = window.jspdf;
         const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4',
-          compress: true
+          orientation:'portrait',
+          unit:'mm',
+          format:'a4',
+          compress:true
         });
 
-        const pageWidth = 210;
-        const pageHeight = 297;
-        const margin = 7;
-        const usableWidth = pageWidth - margin * 2;
-        const usableHeight = pageHeight - margin * 2;
+        const margin = 6;
+        const maxWidth = 210 - margin * 2;
+        const maxHeight = 297 - margin * 2;
+        const ratio = screenshot.width / screenshot.height;
 
-        const imageRatio = rendered.width / rendered.height;
-        let drawWidth = usableWidth;
-        let drawHeight = drawWidth / imageRatio;
-
-        if (drawHeight > usableHeight) {
-          drawHeight = usableHeight;
-          drawWidth = drawHeight * imageRatio;
+        let width = maxWidth;
+        let height = width / ratio;
+        if (height > maxHeight) {
+          height = maxHeight;
+          width = height * ratio;
         }
 
-        const x = (pageWidth - drawWidth) / 2;
-        const y = (pageHeight - drawHeight) / 2;
-
         pdf.addImage(
-          rendered.toDataURL('image/jpeg', 0.94),
+          screenshot.toDataURL('image/jpeg', .94),
           'JPEG',
-          x,
-          y,
-          drawWidth,
-          drawHeight,
+          (210 - width) / 2,
+          (297 - height) / 2,
+          width,
+          height,
           undefined,
           'FAST'
         );
 
-        const fd = new FormData(form);
-        const safeName = String(fd.get('name') || 'cliente')
+        const data = new FormData(form);
+        const filename = String(data.get('name') || 'Cliente')
           .trim()
           .replace(/[^a-zA-Z0-9À-ÿ_-]+/g, '_');
 
-        pdf.save(`Proposta_Wedding_Tattoo_${safeName}.pdf`);
+        pdf.save(`Proposta_Wedding_Tattoo_${filename}.pdf`);
       } catch (error) {
         console.error(error);
-        alert('Non sono riuscito a creare il PDF. Ricarica la pagina e riprova.');
+        alert('Errore durante la creazione del PDF. Ricarica la pagina e riprova.');
       } finally {
-        pdfButton.classList.remove('s2-pdf-loading');
-        pdfButton.textContent = 'Scarica PDF';
+        holder?.remove();
+        pdfButton.classList.remove('wte-working');
+        pdfButton.textContent = 'SCARICA PDF';
       }
     }, true);
+
+    /* Reconfigure the canvas only once the proposal is visible. */
+    document.getElementById('s2CreateProposal')?.addEventListener('click', () => {
+      setTimeout(() => {
+        configureCanvas(false);
+        hasInk = false;
+        isConfirmed = false;
+        confirmButton.textContent = 'Firma e prepara invio';
+        if (sendButton) sendButton.disabled = true;
+      }, 350);
+    }, {capture:true});
 
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => resizeCanvas(true), 180);
+      resizeTimer = setTimeout(() => configureCanvas(true), 220);
     });
 
-    // Resize whenever the proposal opens.
-    document.getElementById('s2CreateProposal')?.addEventListener('click', () => {
-      setTimeout(() => {
-        resizeCanvas(false);
-        signed = false;
-        confirmed = false;
-        sendButton && (sendButton.disabled = true);
-        confirmButton.textContent = 'Firma e prepara invio';
-      }, 250);
-    }, {capture:true});
-
-    setTimeout(() => resizeCanvas(false), 250);
+    setTimeout(() => configureCanvas(false), 300);
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', waitForDom);
+    document.addEventListener('DOMContentLoaded', initialise);
   } else {
-    waitForDom();
+    initialise();
   }
 })();
 </script></body>
