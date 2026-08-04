@@ -803,7 +803,120 @@
       width:78vw;
     }
   }
-</style><meta content="WTE-BOOK-IDENTICAL-VISUAL" name="version"/></head>
+</style><meta content="WTE-BOOK-IDENTICAL-VISUAL" name="version"/><style id="wte-book-compact-fix-css">
+  /* Correzione definitiva del solo blocco Wedding Book */
+  #wedding-book .book-hero-card{
+    min-height:auto !important;
+    padding:64px 22px 58px !important;
+  }
+
+  #wedding-book .book-hero-card::before{
+    inset:14px !important;
+  }
+
+  #wedding-book .book-hero-card h2{
+    max-width:620px;
+    font-size:clamp(46px,12.6vw,72px);
+    line-height:.96;
+  }
+
+  #wedding-book .book-subtitle{
+    font-size:17px;
+    line-height:1.42;
+  }
+
+  #wedding-book .book-hero-button{
+    width:min(100%,560px);
+    min-height:68px;
+    margin:30px auto 22px;
+  }
+
+  #wedding-book .book-3d{
+    width:min(88vw,410px) !important;
+    margin:0 auto -10px !important;
+    transform:
+      perspective(1100px)
+      rotateX(48deg)
+      rotateZ(-12deg)
+      translateY(-2%) !important;
+    transform-origin:center center !important;
+  }
+
+  #wedding-book .book-cover-front{
+    padding:34px 22px;
+  }
+
+  #wedding-book .book-cover-small{
+    margin-bottom:22px;
+  }
+
+  #wedding-book .book-cover-front i{
+    margin:22px 0 18px;
+  }
+
+  /* Elimina qualsiasi spazio residuo tra Wedding Book e la sezione successiva */
+  #wedding-book + .values-section{
+    margin-top:0 !important;
+    padding-top:92px !important;
+  }
+
+  @media(max-width:430px){
+    #wedding-book .book-hero-card{
+      padding:58px 16px 44px !important;
+    }
+
+    #wedding-book .book-hero-card::before{
+      inset:11px !important;
+    }
+
+    #wedding-book .book-hero-card h2{
+      font-size:clamp(44px,12.2vw,62px);
+    }
+
+    #wedding-book .book-subtitle{
+      font-size:15.5px;
+    }
+
+    #wedding-book .book-hero-button{
+      min-height:62px;
+      margin-top:26px;
+      margin-bottom:16px;
+      padding:0 16px;
+      gap:12px;
+    }
+
+    #wedding-book .book-hero-button strong{
+      font-size:10.5px;
+    }
+
+    #wedding-book .book-3d{
+      width:min(92vw,390px) !important;
+      margin-top:-2px !important;
+      margin-bottom:-18px !important;
+      transform:
+        perspective(1000px)
+        rotateX(44deg)
+        rotateZ(-10deg)
+        translateY(-1%) !important;
+    }
+
+    #wedding-book + .values-section{
+      padding-top:74px !important;
+    }
+  }
+
+  @media(min-width:800px){
+    #wedding-book .book-hero-card{
+      min-height:auto !important;
+      padding:86px 38px 78px !important;
+    }
+
+    #wedding-book .book-3d{
+      width:430px !important;
+      margin-bottom:0 !important;
+    }
+  }
+</style><meta content="WTE-BOOK-COMPACT-FIX" name="version"/></head>
 <body>
 <div class="grain"></div>
 <header class="header" id="header">
