@@ -463,7 +463,164 @@
       min-height:58px;
     }
   }
-</style><meta content="WTE-V5-CHIEDI-A-NOI" name="version"/></head>
+</style><meta content="WTE-V5-CHIEDI-A-NOI" name="version"/><style id="wte-book-button-final-css">
+  .book-strip-final{
+    display:flex !important;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:26px;
+    min-height:auto;
+    padding:38px 24px 42px;
+    text-align:center;
+    overflow:hidden;
+  }
+
+  .book-strip-final .book-strip-copy{
+    width:100%;
+    max-width:620px;
+    text-align:center;
+  }
+
+  .book-strip-final .book-strip-copy h2{
+    margin-inline:auto;
+  }
+
+  .book-strip-final .book-strip-copy p:not(.kicker){
+    margin-inline:auto;
+    max-width:520px;
+  }
+
+  .book-strip-final .book-strip-cover{
+    width:150px;
+    height:205px;
+    margin:4px auto 8px;
+    transform:
+      perspective(900px)
+      rotateX(4deg)
+      rotateY(-8deg)
+      rotateZ(-1deg);
+    box-shadow:
+      0 28px 70px rgba(0,0,0,.54),
+      0 0 0 1px rgba(240,221,176,.10);
+  }
+
+  .book-simple-button{
+    width:min(100%,520px);
+    min-height:66px;
+    margin:0 auto;
+    padding:0 24px;
+    border:1px solid rgba(255,255,255,.34);
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+    background:
+      linear-gradient(120deg,#f4e4b8 0%,#d2a750 50%,#ad7325 100%);
+    color:#171006;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.44),
+      0 20px 44px rgba(171,119,38,.25);
+    position:relative;
+    overflow:hidden;
+    transition:
+      transform .22s ease,
+      box-shadow .22s ease;
+  }
+
+  .book-simple-button::after{
+    content:"";
+    position:absolute;
+    top:-35%;
+    left:-38%;
+    width:30%;
+    height:175%;
+    transform:skewX(-20deg);
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.48),
+        transparent
+      );
+    animation:bookFinalShine 6s ease-in-out infinite;
+  }
+
+  .book-simple-button:active{
+    transform:scale(.985);
+  }
+
+  .book-simple-icon{
+    flex:0 0 auto;
+    font-size:28px;
+    line-height:1;
+  }
+
+  .book-simple-label{
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+  }
+
+  @keyframes bookFinalShine{
+    0%,72%{
+      left:-38%;
+      opacity:0;
+    }
+    79%{
+      opacity:1;
+    }
+    92%{
+      left:120%;
+      opacity:0;
+    }
+    100%{
+      left:120%;
+      opacity:0;
+    }
+  }
+
+  @media(min-width:800px){
+    .book-strip-final{
+      padding:58px 44px 62px;
+    }
+
+    .book-strip-final .book-strip-cover{
+      width:190px;
+      height:260px;
+    }
+
+    .book-simple-button{
+      min-height:70px;
+    }
+
+    .book-simple-label{
+      font-size:12px;
+    }
+  }
+
+  @media(max-width:390px){
+    .book-strip-final{
+      padding-left:18px;
+      padding-right:18px;
+    }
+
+    .book-simple-button{
+      min-height:62px;
+      gap:12px;
+    }
+
+    .book-simple-icon{
+      font-size:25px;
+    }
+
+    .book-simple-label{
+      font-size:10px;
+    }
+  }
+</style><meta content="WTE-V5-BOOK-BUTTON-CENTERED" name="version"/></head>
 <body>
 <div class="grain"></div>
 <header class="header" id="header">
@@ -492,7 +649,7 @@
 <p>Non è un semplice tatuaggio</p>
 <h2>È un ricordo che continua a vivere oltre il matrimonio.</h2>
 </section>
-<section class="section alt" id="wedding-book"><div class="book-strip">
+<section class="section alt" id="wedding-book"><div class="book-strip book-strip-final">
 <div class="book-strip-copy">
 <p class="kicker">Wedding Book</p>
 <h2>Sfoglia la nostra presentazione.</h2>
@@ -502,14 +659,8 @@
 <span>W</span>
 <strong>LOVE.<br/>MARKED.<br/>FOREVER.</strong>
 </div>
-<button class="book-strip-button" id="openBook"><span class="book-btn-icon">▤</span><span class="book-btn-text">Apri il Wedding Book</span><span class="book-btn-arrow">›</span></button>
+<button class="book-simple-button" id="openBook"><span class="book-simple-icon">▤</span><span class="book-simple-label">Apri il Wedding Book</span></button>
 
-<div class="book-features">
-<span>20 tavole</span>
-<span>Fullscreen</span>
-<span>Swipe</span>
-<span>Miniature</span>
-</div>
 </div></section><section class="section values-section" id="experience">
 <div class="section-head">
 <p class="kicker">Perché sceglierci</p>
@@ -617,7 +768,6 @@
 <div class="book-thumbs" id="bookThumbs"></div>
 <footer class="book-footer"><span id="bookCounter">1 / 20</span><button data-open-booking="">Verifica disponibilità</button></footer>
 </div>
-
 <div class="ask-us-note">
 <strong>Siamo qui per te</strong>
 <span>Scrivici, ti rispondiamo subito in chat.</span>
