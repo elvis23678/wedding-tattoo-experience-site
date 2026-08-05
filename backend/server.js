@@ -97,7 +97,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'9.0.0', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'10.0.0', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -289,23 +289,32 @@ app.post('/api/public/practices', publicRateLimit, async (req,res) => {
     updatedAt: new Date().toISOString()
   };
 
-  await pool.query(
+  const saved = await pool.query(
     `INSERT INTO wte_practices (id, data, updated_at)
      VALUES ($1, $2::jsonb, NOW())
      ON CONFLICT (id)
-     DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()`,
+     DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
+     RETURNING (xmax = 0) AS inserted`,
     [practice.id, JSON.stringify(practice)]
   );
 
-  await createNotification(
-    'new_practice',
-    'Nuova richiesta Wedding',
-    `${practice.name || 'Un cliente'} ha inviato una richiesta per il ${practice.date || 'data da definire'}.`,
-    practice.id,
-    null
-  );
+  const inserted = Boolean(saved.rows[0]?.inserted);
 
-  res.status(201).json({ok:true, id:practice.id});
+  if (inserted) {
+    await createNotification(
+      'new_practice',
+      'Nuova richiesta Wedding',
+      `${practice.name || 'Un cliente'} ha inviato una richiesta per il ${practice.date || 'data da definire'}.`,
+      practice.id,
+      null
+    );
+  }
+
+  res.status(inserted ? 201 : 200).json({
+    ok:true,
+    id:practice.id,
+    duplicate:!inserted
+  });
 });
 
 
