@@ -2859,3 +2859,75 @@ textarea{width:100%;min-height:90px}
 @media(max-width:390px){
   .flash-upload-grid,.flash-catalog-summary,.flash-manager-grid{grid-template-columns:1fr}
 }
+
+
+/* =========================================================
+   WTE V8 - MULTIUTENTE
+   ========================================================= */
+
+.account-login{position:fixed;inset:0;z-index:12000;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at 50% 12%,rgba(214,170,85,.09),transparent 28%),#030201}
+.account-login.hidden{display:none}
+.account-login-card{width:min(580px,100%);padding:30px;border:1px solid rgba(214,170,85,.30);background:#090604;box-shadow:0 35px 110px #000}
+.account-login-brand{display:flex;align-items:center;gap:13px;margin-bottom:28px}
+.account-login-monogram{width:56px;height:56px;display:grid;place-items:center;border:1px solid rgba(214,170,85,.32);font-family:var(--serif);font-size:31px;color:#f2dfad}
+.account-login-brand span{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#d5c29e}
+.account-login-card>small:first-of-type{color:var(--gold2);font-size:8px;letter-spacing:.17em}
+.account-login-card h1{margin:8px 0 9px;font-family:var(--serif);font-size:46px;font-weight:400}
+.account-login-card p{color:#a99a84;font-size:11px;line-height:1.55}
+.account-login-card label{display:flex;flex-direction:column;gap:7px;margin-top:13px;color:#cbbb9f;font-size:8px;text-transform:uppercase;letter-spacing:.08em}
+.account-login-card input{width:100%;min-height:57px;padding:0 14px;border:1px solid var(--line);background:#100d09;color:#fff;font-size:17px}
+.account-login-card .account-remember{display:flex;flex-direction:row;align-items:center;text-transform:none;font-size:10px}
+.account-login-card .account-remember input{width:18px;min-height:18px}
+.account-login-card>button{width:100%;min-height:58px;margin-top:18px;border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48 58%,#a87526);color:#171006;font-size:11px;font-weight:800;text-transform:uppercase}
+.account-login-error{display:block;min-height:20px;margin-top:10px;color:#d98c84}
+.account-login-help{font-size:9px!important;text-align:center}
+
+.account-locked .app-shell{visibility:hidden}
+
+.current-user-badge{min-width:100px;padding:6px 9px;border:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.current-user-badge span{font-size:8px;color:#f0e4d3}
+.current-user-badge small{font-size:6px;color:#aa956f;text-transform:uppercase}
+
+.account-password-modal{position:fixed;inset:0;z-index:13000;display:none}
+.account-password-modal.open{display:block}
+.account-password-modal form{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100% - 28px));padding:25px;border:1px solid rgba(214,170,85,.35);background:#090604}
+.account-password-modal form>small:first-child{color:var(--gold2);font-size:8px;letter-spacing:.14em}
+.account-password-modal h2{margin:8px 0;font-family:var(--serif);font-size:32px;font-weight:400}
+.account-password-modal p{color:#a99a84;font-size:10px}
+.account-password-modal label{display:flex;flex-direction:column;gap:6px;margin-top:10px;color:#cbbb9f;font-size:8px;text-transform:uppercase}
+.account-password-modal input{min-height:50px;padding:0 11px;border:1px solid var(--line);background:#100d09;color:#fff}
+.account-password-modal button,#personalChangePasswordBtn{min-height:46px;margin-top:12px;border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;font-weight:800}
+#accountPasswordError{display:block;margin-top:9px;color:#d98c84}
+
+.user-row-v8{margin-top:10px;padding:13px;border:1px solid var(--line);background:#0b0805}
+.user-row-v8 header{display:flex;justify-content:space-between;gap:10px}
+.user-row-v8 header strong{font-family:var(--serif);font-size:22px;font-weight:400}
+.user-row-v8 header span{display:block;margin-top:4px;color:#9f907c;font-size:8px}
+.user-row-v8 header b{height:max-content;padding:5px 8px;border:1px solid var(--line);font-size:7px;text-transform:uppercase}
+.user-row-v8 header b.active{color:#9ac7a0;border-color:rgba(127,180,134,.35)}
+.user-row-v8 header b.disabled{color:#d98c84;border-color:rgba(196,111,101,.4)}
+.user-meta-v8{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;color:#b3a28b;font-size:8px}
+.user-actions-v8{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.user-actions-v8 button,.permission-editor button{min-height:40px;border:1px solid var(--line);background:#100d09;color:#e8ddce;font-size:7px;text-transform:uppercase}
+.user-actions-v8 .danger{color:#d98c84;border-color:rgba(196,111,101,.4)}
+.permission-editor{margin-top:10px;padding:10px;border:1px solid rgba(214,170,85,.22);display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.permission-editor label{display:flex;align-items:center;gap:7px;color:#c6b69e;font-size:8px}
+.permission-editor input{width:17px;height:17px}
+.permission-editor button{grid-column:1/-1}
+
+.users-section-title{margin-top:18px;padding-top:15px;border-top:1px solid var(--line);color:var(--gold2);font-size:8px;letter-spacing:.13em;text-transform:uppercase}
+.login-history-list{margin-top:8px;display:grid;gap:6px}
+.login-history-row{padding:9px;border:1px solid var(--line);display:grid;gap:3px}
+.login-history-row strong{font-family:var(--serif);font-size:16px;font-weight:400}
+.login-history-row span{font-size:7px;color:#9f907c}
+.login-history-row.failed{border-color:rgba(196,111,101,.35)}
+
+html[data-role="collaborator"] #settingsBtn{display:none!important}
+
+@media(max-width:520px){
+  .account-login-card{padding:21px}
+  .account-login-card h1{font-size:38px}
+  .current-user-badge{display:none}
+  .user-meta-v8,.permission-editor{grid-template-columns:1fr}
+  .user-actions-v8{grid-template-columns:1fr}
+}

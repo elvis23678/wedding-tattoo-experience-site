@@ -27,7 +27,7 @@
   }
 
   function getToken() {
-    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || '';
+    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem('wte_session_token_v8') || sessionStorage.getItem(TOKEN_KEY) || '';
   }
 
   function getDeviceId() {
@@ -93,9 +93,22 @@
   async function login() {
     const api = normalizeUrl(apiInput?.value);
     const password = passwordInput?.value || '';
+    const email = window.WTE_CURRENT_USER?.role === 'admin'
+      ? ''
+      : (window.WTE_CURRENT_USER?.email || '');
 
-    if (!api || !password) {
-      alert('Inserisci URL del backend e password Admin Cloud.');
+    if (!api) {
+      alert('Inserisci URL del backend.');
+      return;
+    }
+
+    if (!password && getToken()) {
+      setStatus('online','Cloud connesso');
+      return syncNow({preferRemote:true});
+    }
+
+    if (!password) {
+      alert('Inserisci la password per riconnettere il Cloud.');
       return;
     }
 
@@ -105,7 +118,7 @@
     try {
       const result = await request('/api/auth/login', {
         method:'POST',
-        body:JSON.stringify({password})
+        body:JSON.stringify({email,password})
       });
 
       const remember = document.getElementById('cloudRememberConnection')?.checked !== false;

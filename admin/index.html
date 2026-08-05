@@ -7,8 +7,31 @@
 <meta content="#050403" name="theme-color"/>
 <meta content="noindex,nofollow" name="robots"/>
 <title>WTE Admin — Archivio pratiche</title>
-<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="./admin.css?v=2.2.0-client-crm" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="7.0-catalogo-flash" name="wte-version"/><meta content="WTE-V5-STABLE" name="wte-admin-build"/></head>
-<body><div class="admin-lock" id="adminLock">
+<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="./admin.css?v=2.2.0-client-crm" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="8.0-multiutente" name="wte-version"/><meta content="WTE-V5-STABLE" name="wte-admin-build"/></head>
+<body><div class="account-login" id="accountLogin">
+<form class="account-login-card" id="accountLoginForm">
+<div class="account-login-brand">
+<div class="account-login-monogram">W</div>
+<span>Wedding Tattoo Experience</span>
+</div>
+<small>AREA RISERVATA</small>
+<h1>Accesso CRM</h1>
+<p>Inserisci il tuo account personale. Il proprietario può lasciare vuota l'email e usare la password Admin Cloud.</p>
+<label>Email
+      <input autocomplete="username" id="accountEmail" placeholder="nome@email.it" type="email"/>
+</label>
+<label>Password
+      <input autocomplete="current-password" id="accountPassword" placeholder="Password" required="" type="password"/>
+</label>
+<label class="account-remember">
+<input checked="" id="accountRemember" type="checkbox"/>
+      Resta collegato su questo dispositivo
+    </label>
+<button type="submit">Accedi</button>
+<small class="account-login-error" id="accountLoginError"></small>
+<p class="account-login-help">Password dimenticata? Contatta l'amministratore, che può reimpostarla dal pannello Utenti e ruoli.</p>
+</form>
+</div><div class="admin-lock" id="adminLock" style="display:none!important">
 <form class="admin-lock-card" id="adminLockForm">
 <div class="admin-lock-mark">W</div>
 <span>Wedding Tattoo Experience</span>
@@ -29,7 +52,10 @@
 <strong>Admin CRM</strong>
 </div>
 </div>
-<div class="top-actions"><button id="notificationBell" type="button">Notifiche <b id="notificationCount">0</b></button><button id="flashCatalogBtn" type="button">Catalogo Flash</button><span class="cloud-top-status local" id="cloudTopStatus">Cloud non connesso</span>
+<div class="top-actions"><div class="current-user-badge" id="currentUserBadge">
+<span id="currentUserName">Utente</span>
+<small id="currentUserRole">Ruolo</small>
+</div><button id="notificationBell" type="button">Notifiche <b id="notificationCount">0</b></button><button id="flashCatalogBtn" type="button">Catalogo Flash</button><span class="cloud-top-status local" id="cloudTopStatus">Cloud non connesso</span>
 <a href="/">Apri sito clienti</a>
 <button id="refreshBtn">Aggiorna</button>
 <button id="settingsBtn" type="button">Impostazioni</button><button id="adminLogout" type="button">Esci</button></div>
@@ -538,7 +564,14 @@
 <div><span>WTE Admin CRM</span><strong>Impostazioni</strong></div>
 <button aria-label="Chiudi" data-close-settings="" type="button">×</button>
 </header>
-<div class="settings-content">
+<div class="settings-content"><article class="settings-card" id="personalAccountCard">
+<div>
+<span>Account personale</span>
+<strong id="personalAccountName">Profilo</strong>
+<p id="personalAccountCopy">Dati di accesso e sicurezza.</p>
+</div>
+<button id="personalChangePasswordBtn" type="button">Cambia password</button>
+</article>
 <article class="settings-card danger-zone">
 <div><span>Archivio</span><strong>Azzera dati di prova</strong>
 <p>Elimina pratiche, follow-up, PDF locali, grafici e statistiche. Il PIN gestore rimane invariato.</p></div>
@@ -631,6 +664,9 @@
 <button id="createUserBtn" type="button">Crea utente</button>
 </div>
 <div id="usersList"></div>
+
+<div class="users-section-title">Accessi recenti</div>
+<div class="login-history-list" id="loginHistoryList"></div>
 </article></div>
 </section>
 </div><div aria-hidden="true" class="confirm-modal" id="confirmResetModal">
@@ -671,7 +707,7 @@
 <div class="backup-history-list" id="backupHistoryList"></div>
 </div>
 </section>
-</div><script defer="" src="./cloud.js?v=5.0.0-stable"></script><div aria-hidden="true" class="document-modal" id="documentGeneratorModal">
+</div><script defer="" src="./cloud.js?v=8.0.0"></script><div aria-hidden="true" class="document-modal" id="documentGeneratorModal">
 <div class="settings-backdrop" data-close-document-generator=""></div>
 <section class="document-panel">
 <header class="document-panel-head">
@@ -774,7 +810,7 @@
 <div class="notifications-actions"><button id="markAllNotificationsBtn">Segna tutte come lette</button></div>
 <div id="notificationsList"></div>
 </section>
-</div><script defer="True" src="./team.js?v=6.0.0"></script><script defer="True" src="./notifications.js?v=6.0.0"></script><script defer="True" src="./flash-admin.js?v=6.0.0"></script><div aria-hidden="true" class="flash-catalog-modal" id="flashCatalogModal">
+</div><script defer="True" src="./team.js?v=8.0.0"></script><script defer="True" src="./notifications.js?v=6.0.0"></script><script defer="True" src="./flash-admin.js?v=6.0.0"></script><div aria-hidden="true" class="flash-catalog-modal" id="flashCatalogModal">
 <div class="settings-backdrop" data-close-flash-catalog=""></div>
 <section class="flash-catalog-panel">
 <header class="flash-catalog-head">
@@ -840,5 +876,23 @@
 <div class="flash-manager-grid" id="flashManagerGrid"></div>
 </div>
 </section>
-</div><script defer="True" src="./flash-manager.js?v=7.0.0"></script></body>
+</div><script defer="True" src="./flash-manager.js?v=7.0.0"></script><div aria-hidden="true" class="account-password-modal" id="accountPasswordModal">
+<div class="settings-backdrop"></div>
+<form id="accountPasswordForm">
+<small>SICUREZZA ACCOUNT</small>
+<h2>Crea la tua password</h2>
+<p>Al primo accesso devi sostituire la password temporanea.</p>
+<label>Password temporanea
+      <input id="accountCurrentPassword" required="" type="password"/>
+</label>
+<label>Nuova password
+      <input id="accountNewPassword" minlength="8" required="" type="password"/>
+</label>
+<label>Ripeti nuova password
+      <input id="accountConfirmPassword" minlength="8" required="" type="password"/>
+</label>
+<button type="submit">Salva nuova password</button>
+<small id="accountPasswordError"></small>
+</form>
+</div><script defer="True" src="./auth-session.js?v=8.0.0"></script></body>
 </html>
