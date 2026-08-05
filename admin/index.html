@@ -7,7 +7,7 @@
 <meta content="#050403" name="theme-color"/>
 <meta content="noindex,nofollow" name="robots"/>
 <title>WTE Admin — Archivio pratiche</title>
-<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="./admin.css?v=2.2.0-client-crm" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="5.0-stable" name="wte-version"/><meta content="WTE-V5-STABLE" name="wte-admin-build"/></head>
+<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="./admin.css?v=2.2.0-client-crm" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="7.0-catalogo-flash" name="wte-version"/><meta content="WTE-V5-STABLE" name="wte-admin-build"/></head>
 <body><div class="admin-lock" id="adminLock">
 <form class="admin-lock-card" id="adminLockForm">
 <div class="admin-lock-mark">W</div>
@@ -29,7 +29,7 @@
 <strong>Admin CRM</strong>
 </div>
 </div>
-<div class="top-actions"><span class="cloud-top-status local" id="cloudTopStatus">Cloud non connesso</span>
+<div class="top-actions"><button id="notificationBell" type="button">Notifiche <b id="notificationCount">0</b></button><button id="flashCatalogBtn" type="button">Catalogo Flash</button><span class="cloud-top-status local" id="cloudTopStatus">Cloud non connesso</span>
 <a href="/">Apri sito clienti</a>
 <button id="refreshBtn">Aggiorna</button>
 <button id="settingsBtn" type="button">Impostazioni</button><button id="adminLogout" type="button">Esci</button></div>
@@ -523,6 +523,10 @@
 <div><small>Contratto</small><strong id="documentContractStatus">Non creato</strong></div>
 <div><small>Acconto</small><strong id="documentDepositStatus">€ 0</strong></div>
 </div>
+</section><section class="flash-selection-box" id="flashSelectionBox">
+<header><div><span>Selezione flash</span><strong id="flashSelectionStatus">Non avviata</strong></div><button id="createFlashLinkBtn" type="button">Crea link</button></header>
+<input id="flashSelectionLink" placeholder="Il link personale comparirà qui" readonly=""/>
+<div><button id="copyFlashLinkBtn" type="button">Copia link</button><button id="openFlashLinkBtn" type="button">Apri pagina</button></div>
 </section></div>
 <footer class="drawer-actions"><button id="openPdfBtn" type="button">Apri PDF</button><button id="whatsappBtn" type="button">WhatsApp</button><button id="duplicateBtn" type="button">Duplica</button><button class="danger" id="deleteBtn" type="button">Elimina</button><button id="saveNotesBtn" type="button">Salva modifiche</button><button class="gold" id="closeDetailBtn" type="button">Chiudi</button></footer>
 </aside>
@@ -617,6 +621,16 @@
     Apri automaticamente WhatsApp dopo Conferma evento e Registra acconto
   </label>
 <button id="savePaymentSettingsBtn" type="button">Salva impostazioni pagamento</button>
+</article><article class="settings-card" id="usersSettingsCard">
+<div><span>Collaboratori</span><strong>Utenti e ruoli</strong><p>Crea un accesso personale senza condividere le credenziali Admin.</p></div>
+<div class="users-form">
+<input id="newUserName" placeholder="Nome collaboratrice"/>
+<input id="newUserEmail" placeholder="Email" type="email"/>
+<input id="newUserPassword" placeholder="Password temporanea" type="password"/>
+<select id="newUserRole"><option value="collaborator">Collaboratrice</option><option value="admin">Admin</option></select>
+<button id="createUserBtn" type="button">Crea utente</button>
+</div>
+<div id="usersList"></div>
 </article></div>
 </section>
 </div><div aria-hidden="true" class="confirm-modal" id="confirmResetModal">
@@ -753,5 +767,78 @@
 </div>
 <div class="cloud-backups-list" id="cloudBackupsList"></div>
 </section>
-</div><script defer="True" src="./premium.js?v=5.0.0-stable"></script><script defer="True" src="./workflow.js?v=5.0.0-stable"></script></body>
+</div><script defer="True" src="./premium.js?v=5.0.0-stable"></script><script defer="True" src="./workflow.js?v=5.0.0-stable"></script><div aria-hidden="true" class="notifications-panel" id="notificationsPanel">
+<div class="settings-backdrop" data-close-notifications=""></div>
+<section>
+<header><div><span>Centro notifiche</span><strong>Attività recenti</strong></div><button data-close-notifications="">×</button></header>
+<div class="notifications-actions"><button id="markAllNotificationsBtn">Segna tutte come lette</button></div>
+<div id="notificationsList"></div>
+</section>
+</div><script defer="True" src="./team.js?v=6.0.0"></script><script defer="True" src="./notifications.js?v=6.0.0"></script><script defer="True" src="./flash-admin.js?v=6.0.0"></script><div aria-hidden="true" class="flash-catalog-modal" id="flashCatalogModal">
+<div class="settings-backdrop" data-close-flash-catalog=""></div>
+<section class="flash-catalog-panel">
+<header class="flash-catalog-head">
+<div>
+<span>Wedding Tattoo Experience</span>
+<strong>Catalogo Flash</strong>
+</div>
+<button data-close-flash-catalog="" type="button">×</button>
+</header>
+<div class="flash-catalog-content">
+<section class="flash-upload-card">
+<div>
+<span>Nuovi flash</span>
+<strong>Caricamento rapido</strong>
+<p>Seleziona più immagini: verranno compresse e codificate automaticamente.</p>
+</div>
+<div class="flash-upload-grid">
+<label>Categoria
+            <select id="flashUploadCategory">
+<option>Wedding</option>
+<option>Cuori</option>
+<option>Fedi</option>
+<option>Iniziali</option>
+<option>Floreale</option>
+<option>Animali</option>
+<option>Simboli</option>
+<option>Minimal</option>
+<option>Altro</option>
+</select>
+</label>
+<label>Prefisso codice
+            <input id="flashUploadPrefix" maxlength="8" value="WTE"/>
+</label>
+<label>Tag comuni
+            <input id="flashUploadTags" placeholder="cuore, amore, minimal"/>
+</label>
+<label class="flash-file-label">
+            Seleziona immagini
+            <input accept="image/png,image/jpeg,image/webp" id="flashUploadFiles" multiple="" type="file"/>
+</label>
+</div>
+<div class="flash-upload-progress" id="flashUploadProgress"></div>
+<button id="flashUploadStartBtn" type="button">Carica nel Cloud</button>
+</section>
+<section class="flash-catalog-toolbar">
+<input id="flashCatalogSearch" placeholder="Cerca codice, titolo, categoria o tag" type="search"/>
+<select id="flashCatalogCategoryFilter">
+<option value="">Tutte le categorie</option>
+</select>
+<select id="flashCatalogStatusFilter">
+<option value="">Tutti</option>
+<option value="active">Attivi</option>
+<option value="inactive">Disattivati</option>
+</select>
+<button id="flashCatalogRefreshBtn" type="button">Aggiorna</button>
+</section>
+<div class="flash-catalog-summary">
+<article><small>Totali</small><strong id="flashCatalogTotal">0</strong></article>
+<article><small>Attivi</small><strong id="flashCatalogActive">0</strong></article>
+<article><small>Disattivati</small><strong id="flashCatalogInactive">0</strong></article>
+<article><small>Categorie</small><strong id="flashCatalogCategoriesCount">0</strong></article>
+</div>
+<div class="flash-manager-grid" id="flashManagerGrid"></div>
+</div>
+</section>
+</div><script defer="True" src="./flash-manager.js?v=7.0.0"></script></body>
 </html>

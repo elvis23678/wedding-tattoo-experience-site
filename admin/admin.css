@@ -2784,3 +2784,78 @@ textarea{width:100%;min-height:90px}
     width:100%;
   }
 }
+
+#notificationBell{position:relative}#notificationCount{display:inline-flex;min-width:18px;height:18px;align-items:center;justify-content:center;margin-left:5px;border-radius:9px;background:#b64b43;color:#fff;font-size:8px}
+.users-form{display:grid;gap:8px}.users-form input,.users-form select{min-height:45px;padding:0 10px;border:1px solid var(--line);background:#100d09;color:#fff}.users-form button{min-height:45px;border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526)}
+.user-row{margin-top:8px;padding:10px;display:grid;grid-template-columns:1fr auto;gap:8px;border:1px solid var(--line)}.user-row span{display:block;color:#9f907c;font-size:8px}
+.flash-selection-box{margin-top:12px;padding:14px;border:1px solid rgba(214,170,85,.25);background:#0a0704}.flash-selection-box header{display:flex;justify-content:space-between;gap:10px}.flash-selection-box header span{color:var(--gold2);font-size:7px;text-transform:uppercase}.flash-selection-box header strong{display:block;margin-top:5px;font-family:var(--serif);font-size:17px}.flash-selection-box input{width:100%;min-height:45px;margin-top:10px;padding:0 10px;background:#080604;border:1px solid var(--line);color:#ddd}.flash-selection-box>div{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.flash-selection-box button{min-height:40px;border:1px solid var(--line);background:#100d09;color:#fff}
+.notifications-panel{position:fixed;inset:0;z-index:7000;display:none}.notifications-panel.open{display:block}.notifications-panel>section{position:absolute;right:0;top:0;width:min(520px,100%);height:100%;overflow:auto;background:#070503;border-left:1px solid var(--line)}.notifications-panel header{padding:15px;display:flex;justify-content:space-between;border-bottom:1px solid var(--line)}.notifications-panel header span{color:var(--gold2);font-size:8px;text-transform:uppercase}.notifications-panel header strong{display:block;margin-top:5px;font-family:var(--serif);font-size:23px}.notifications-panel header button{width:40px;height:40px;border-radius:50%;background:transparent;border:1px solid var(--line);color:#fff}.notifications-actions{padding:10px}.notifications-actions button{width:100%;min-height:40px;background:#100d09;border:1px solid var(--line);color:#fff}.notification-row{margin:0 10px 8px;padding:12px;border:1px solid var(--line);background:#0b0805}.notification-row.unread{border-color:rgba(214,170,85,.5)}.notification-row strong{font-family:var(--serif);font-size:17px;font-weight:400}.notification-row span{display:block;margin-top:5px;color:#9f907c;font-size:8px}
+.wte-popup{position:fixed;right:12px;top:12px;z-index:9000;width:min(380px,calc(100% - 24px));padding:14px;border:1px solid rgba(214,170,85,.5);background:#0b0805;box-shadow:0 20px 60px #000;color:#fff}.wte-popup strong{font-family:var(--serif);font-size:18px}.wte-popup p{color:#bbaa92;font-size:9px}
+@media(min-width:760px){.users-form{grid-template-columns:1fr 1fr 1fr auto auto}}
+
+
+/* =========================================================
+   WTE V7 — GESTIONE CATALOGO FLASH
+   ========================================================= */
+
+.flash-catalog-modal{position:fixed;inset:0;z-index:7200;display:none}
+.flash-catalog-modal.open{display:block}
+.flash-catalog-panel{position:absolute;inset:0;background:#060403;overflow:auto}
+.flash-catalog-head{position:sticky;top:0;z-index:3;min-height:74px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:rgba(8,6,4,.97)}
+.flash-catalog-head div{display:flex;flex-direction:column;gap:5px}
+.flash-catalog-head span{color:var(--gold2);font-size:8px;letter-spacing:.13em;text-transform:uppercase}
+.flash-catalog-head strong{font-family:var(--serif);font-size:25px;font-weight:400}
+.flash-catalog-head button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#fff;font-size:24px}
+.flash-catalog-content{padding:14px;max-width:1400px;margin:auto}
+
+.flash-upload-card{padding:15px;border:1px solid rgba(214,170,85,.26);background:radial-gradient(circle at 90% 0%,rgba(214,170,85,.09),transparent 32%),#090604}
+.flash-upload-card>div:first-child span{color:var(--gold2);font-size:8px;text-transform:uppercase}
+.flash-upload-card>div:first-child strong{display:block;margin-top:5px;font-family:var(--serif);font-size:23px;font-weight:400}
+.flash-upload-card>div:first-child p{margin:6px 0 0;color:var(--muted);font-size:9px}
+.flash-upload-grid{margin-top:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.flash-upload-grid label{display:flex;flex-direction:column;gap:6px;color:#cbbb9f;font-size:7px;text-transform:uppercase}
+.flash-upload-grid input,.flash-upload-grid select{min-height:45px;padding:0 10px;border:1px solid var(--line);background:#100d09;color:#fff}
+.flash-file-label input{padding:10px}
+#flashUploadStartBtn{width:100%;min-height:47px;margin-top:10px;border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;font-size:8px;font-weight:800;text-transform:uppercase}
+.flash-upload-progress{margin-top:10px;display:grid;gap:6px}
+.flash-upload-progress-row{padding:8px 10px;border:1px solid var(--line);background:#0c0906;color:#bbaa92;font-size:8px}
+.flash-upload-progress-row.success{border-color:rgba(127,180,134,.4);color:#9ac7a0}
+.flash-upload-progress-row.error{border-color:rgba(196,111,101,.45);color:#d98c84}
+
+.flash-catalog-toolbar{margin-top:12px;display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px}
+.flash-catalog-toolbar input,.flash-catalog-toolbar select,.flash-catalog-toolbar button{min-height:44px;padding:0 10px;border:1px solid var(--line);background:#100d09;color:#e8ddce}
+.flash-catalog-toolbar button{font-size:7px;font-weight:700;text-transform:uppercase}
+
+.flash-catalog-summary{margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.flash-catalog-summary article{min-height:74px;padding:10px;display:flex;flex-direction:column;justify-content:center;gap:6px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.flash-catalog-summary small{color:#9f907c;font-size:6px;text-transform:uppercase}
+.flash-catalog-summary strong{font-family:var(--serif);font-size:21px;font-weight:400;color:#f0ddb0}
+
+.flash-manager-grid{margin-top:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.flash-manager-card{padding:9px;border:1px solid var(--line);background:#0b0805}
+.flash-manager-card.inactive{opacity:.55}
+.flash-manager-card img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff;border:1px solid #2a2118}
+.flash-manager-card-head{margin-top:8px;display:flex;align-items:start;justify-content:space-between;gap:8px}
+.flash-manager-card-head strong{font-family:var(--serif);font-size:18px;font-weight:400}
+.flash-manager-card-head span{font-size:7px;color:#9f907c}
+.flash-manager-fields{margin-top:8px;display:grid;gap:6px}
+.flash-manager-fields input,.flash-manager-fields select{width:100%;min-height:40px;padding:0 8px;border:1px solid var(--line);background:#080604;color:#fff;font-size:9px}
+.flash-manager-actions{margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.flash-manager-actions button{min-height:38px;border:1px solid var(--line);background:#100d09;color:#e8ddce;font-size:7px;font-weight:700;text-transform:uppercase}
+.flash-manager-actions .danger{border-color:rgba(196,111,101,.45);color:#d98c84}
+.flash-manager-empty{grid-column:1/-1;padding:45px 15px;text-align:center;border:1px dashed var(--line);color:#908371}
+
+@media(min-width:700px){
+  .flash-upload-grid{grid-template-columns:repeat(4,1fr)}
+  .flash-manager-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(min-width:1100px){
+  .flash-manager-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media(max-width:699px){
+  .flash-catalog-toolbar{grid-template-columns:1fr}
+  .flash-catalog-summary{grid-template-columns:1fr 1fr}
+}
+@media(max-width:390px){
+  .flash-upload-grid,.flash-catalog-summary,.flash-manager-grid{grid-template-columns:1fr}
+}

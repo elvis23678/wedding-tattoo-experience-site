@@ -1,0 +1,8 @@
+(() => {
+const API='https://wte-cloud-api.onrender.com';
+const token=()=>localStorage.getItem('wte_cloud_token_v4')||localStorage.getItem('wte_cloud_token_v2')||'';
+async function req(path,opt={}){const r=await fetch(API+path,{...opt,headers:{'Content-Type':'application/json',Authorization:`Bearer ${token()}`,...(opt.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Errore');return d}
+async function load(){const wrap=document.getElementById('usersList');if(!wrap)return;try{const d=await req('/api/users');wrap.innerHTML='';d.users.forEach(u=>{const row=document.createElement('div');row.className='user-row';row.innerHTML=`<div><strong>${u.name}</strong><span>${u.email} · ${u.role} · ${u.enabled?'attivo':'disabilitato'}</span></div><button>${u.enabled?'Disabilita':'Abilita'}</button>`;row.querySelector('button').onclick=async()=>{await req(`/api/users/${u.id}`,{method:'PATCH',body:JSON.stringify({enabled:!u.enabled})});load()};wrap.appendChild(row)})}catch(e){wrap.innerHTML=`<small>${e.message}</small>`}}
+document.getElementById('createUserBtn')?.addEventListener('click',async()=>{try{await req('/api/users',{method:'POST',body:JSON.stringify({name:newUserName.value,email:newUserEmail.value,password:newUserPassword.value,role:newUserRole.value})});newUserName.value=newUserEmail.value=newUserPassword.value='';load();alert('Utente creato.')}catch(e){alert(e.message)}});
+document.getElementById('settingsBtn')?.addEventListener('click',()=>setTimeout(load,200));
+})();

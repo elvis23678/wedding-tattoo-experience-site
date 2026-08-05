@@ -1,0 +1,11 @@
+(() => {
+const API='https://wte-cloud-api.onrender.com';let last=0;
+const token=()=>localStorage.getItem('wte_cloud_token_v4')||localStorage.getItem('wte_cloud_token_v2')||'';
+async function req(path,opt={}){const r=await fetch(API+path,{...opt,headers:{'Content-Type':'application/json',Authorization:`Bearer ${token()}`}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Errore');return d}
+function popup(n){const el=document.createElement('div');el.className='wte-popup';el.innerHTML=`<strong>${n.title}</strong><p>${n.body}</p>`;document.body.appendChild(el);setTimeout(()=>el.remove(),6000);if('Notification'in window&&Notification.permission==='granted')new Notification(n.title,{body:n.body})}
+async function load(showPopups=false){if(!token())return;try{const d=await req('/api/notifications'),list=d.notifications||[],unread=list.filter(n=>!n.is_read);notificationCount.textContent=unread.length;notificationsList.innerHTML='';list.forEach(n=>{const row=document.createElement('article');row.className='notification-row '+(!n.is_read?'unread':'');row.innerHTML=`<strong>${n.title}</strong><span>${n.body}</span><span>${new Date(n.created_at).toLocaleString('it-IT')}</span>`;row.onclick=async()=>{await req(`/api/notifications/${n.id}/read`,{method:'POST'});load()};notificationsList.appendChild(row)});if(showPopups){unread.filter(n=>n.id>last).reverse().forEach(popup)}last=Math.max(last,...list.map(n=>Number(n.id)),0)}catch(e){}}
+notificationBell?.addEventListener('click',async()=>{notificationsPanel.classList.add('open');document.body.classList.add('lock');if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();load()});
+document.querySelectorAll('[data-close-notifications]').forEach(x=>x.onclick=()=>{notificationsPanel.classList.remove('open');document.body.classList.remove('lock')});
+markAllNotificationsBtn?.addEventListener('click',async()=>{await req('/api/notifications/read-all',{method:'POST'});load()});
+setInterval(()=>load(true),30000);setTimeout(()=>load(false),1000);
+})();
