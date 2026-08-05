@@ -97,7 +97,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'11.2.0', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'2.0.0', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -613,7 +613,8 @@ app.patch('/api/flash-catalog/:id', auth, async (req,res) => {
     category:z.string().max(80).optional(),
     tags:z.array(z.string().max(60)).max(30).optional(),
     active:z.boolean().optional(),
-    sortOrder:z.number().int().min(0).max(100000).optional()
+    sortOrder:z.number().int().min(0).max(100000).optional(),
+    imageData:z.string().min(100).optional()
   }).safeParse(req.body);
 
   if (!parsed.success) {
@@ -632,10 +633,38 @@ app.patch('/api/flash-catalog/:id', auth, async (req,res) => {
     sortOrder:'sort_order'
   };
 
-  Object.entries(parsed.data).forEach(([key,value]) => {
+  let imageReplaced = false;
+
+  for (const [key,value] of Object.entries(parsed.data)) {
+    if (key === 'imageData') {
+      let decoded;
+      try {
+        decoded = decodeDataUrl(value);
+      } catch (error) {
+        return res.status(400).json({error:error.message});
+      }
+
+      if (!['image/jpeg','image/png','image/webp'].includes(decoded.mime)) {
+        return res.status(400).json({error:'Formato immagine non supportato.'});
+      }
+
+      if (decoded.buffer.length > 2_000_000) {
+        return res.status(413).json({error:'Immagine troppo pesante dopo la compressione.'});
+      }
+
+      values.push(decoded.buffer);
+      fields.push(`image_data=$${values.length}`);
+      values.push(decoded.mime);
+      fields.push(`image_mime=$${values.length}`);
+      values.push(decoded.buffer.length);
+      fields.push(`image_size=$${values.length}`);
+      imageReplaced = true;
+      continue;
+    }
+
     values.push(value);
     fields.push(`${map[key]}=$${values.length}`);
-  });
+  }
 
   if (!fields.length) return res.status(400).json({error:'Nessuna modifica.'});
 
@@ -652,7 +681,15 @@ app.patch('/api/flash-catalog/:id', auth, async (req,res) => {
 
     if (!result.rowCount) return res.status(404).json({error:'Flash non trovato.'});
 
-    await logActivity(req,'Flash modificato',null,{id:req.params.id,changes:parsed.data});
+    const safeChanges = {...parsed.data};
+    if (safeChanges.imageData) safeChanges.imageData='[immagine sostituita]';
+
+    await logActivity(
+      req,
+      imageReplaced ? 'Immagine flash sostituita' : 'Flash modificato',
+      null,
+      {id:req.params.id,changes:safeChanges}
+    );
     res.json({item:result.rows[0]});
   } catch (error) {
     if (error.code === '23505') return res.status(409).json({error:'Codice flash già esistente.'});
