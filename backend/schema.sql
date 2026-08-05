@@ -22,3 +22,82 @@ CREATE TABLE IF NOT EXISTS wte_settings (
   data JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+
+CREATE TABLE IF NOT EXISTS wte_users (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'collaborator',
+  enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS wte_notifications (
+  id BIGSERIAL PRIMARY KEY,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  practice_id TEXT,
+  recipient_role TEXT,
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS wte_activity_log (
+  id BIGSERIAL PRIMARY KEY,
+  actor TEXT NOT NULL,
+  actor_role TEXT NOT NULL,
+  action TEXT NOT NULL,
+  practice_id TEXT,
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS wte_flash_sessions (
+  token TEXT PRIMARY KEY,
+  practice_id TEXT NOT NULL,
+  max_items INTEGER NOT NULL DEFAULT 50,
+  selections JSONB NOT NULL DEFAULT '[]'::jsonb,
+  customer_name TEXT,
+  signature_data TEXT,
+  accepted_at TIMESTAMPTZ,
+  locked BOOLEAN NOT NULL DEFAULT FALSE,
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wte_notifications_created
+ON wte_notifications(created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_wte_activity_created
+ON wte_activity_log(created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_wte_flash_practice
+ON wte_flash_sessions(practice_id);
+
+
+CREATE TABLE IF NOT EXISTS wte_flash_catalog (
+  id BIGSERIAL PRIMARY KEY,
+  code TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL DEFAULT '',
+  category TEXT NOT NULL DEFAULT 'Altro',
+  tags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+  image_data BYTEA NOT NULL,
+  image_mime TEXT NOT NULL,
+  image_size INTEGER NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_by TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wte_flash_catalog_active
+ON wte_flash_catalog(active, sort_order, code);
+
+CREATE INDEX IF NOT EXISTS idx_wte_flash_catalog_category
+ON wte_flash_catalog(category);

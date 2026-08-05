@@ -4,6 +4,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 import pg from 'pg';
 import { z } from 'zod';
 
@@ -64,24 +66,75 @@ function auth(req,res,next) {
   }
 }
 
+function adminOnly(req,res,next) {
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({error:'Operazione riservata all’amministratore.'});
+  }
+  next();
+}
+
+async function logActivity(req, action, practiceId = null, details = {}) {
+  try {
+    await pool.query(
+      `INSERT INTO wte_activity_log (actor, actor_role, action, practice_id, details)
+       VALUES ($1,$2,$3,$4,$5::jsonb)`,
+      [req.user?.name || req.user?.email || 'Sistema', req.user?.role || 'system',
+       action, practiceId, JSON.stringify(details)]
+    );
+  } catch (error) {
+    console.error('Activity log error', error);
+  }
+}
+
+async function createNotification(type,title,body,practiceId=null,recipientRole=null) {
+  await pool.query(
+    `INSERT INTO wte_notifications (type,title,body,practice_id,recipient_role)
+     VALUES ($1,$2,$3,$4,$5)`,
+    [type,title,body,practiceId,recipientRole]
+  );
+}
+
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'2.0.0', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'7.0.0', dbTime:result.rows[0].now});
 });
 
-app.post('/api/auth/login', (req,res) => {
-  const parsed = z.object({password:z.string().min(1)}).safeParse(req.body);
-  if (!parsed.success || parsed.data.password !== ADMIN_PASSWORD) {
-    return res.status(401).json({error:'Password Cloud non corretta.'});
+app.post('/api/auth/login', async (req,res) => {
+  const parsed = z.object({
+    email:z.string().email().optional(),
+    password:z.string().min(1)
+  }).safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({error:'Credenziali non valide.'});
+  }
+
+  if (!parsed.data.email && parsed.data.password === ADMIN_PASSWORD) {
+    const token = jwt.sign(
+      {role:'admin', name:'Admin principale', email:'admin@wte.local'},
+      JWT_SECRET,
+      {expiresIn:'30d'}
+    );
+    return res.json({token, user:{name:'Admin principale', role:'admin'}});
+  }
+
+  const result = await pool.query(
+    'SELECT id,email,name,password_hash,role,enabled FROM wte_users WHERE LOWER(email)=LOWER($1)',
+    [parsed.data.email]
+  );
+
+  const user = result.rows[0];
+  if (!user || !user.enabled || !(await bcrypt.compare(parsed.data.password, user.password_hash))) {
+    return res.status(401).json({error:'Email o password non corretti.'});
   }
 
   const token = jwt.sign(
-    {role:'admin'},
+    {sub:user.id, role:user.role, name:user.name, email:user.email},
     JWT_SECRET,
     {expiresIn:'30d'}
   );
 
-  res.json({token});
+  res.json({token, user:{id:user.id,email:user.email,name:user.name,role:user.role}});
 });
 
 
@@ -163,6 +216,14 @@ app.post('/api/public/practices', publicRateLimit, async (req,res) => {
      ON CONFLICT (id)
      DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()`,
     [practice.id, JSON.stringify(practice)]
+  );
+
+  await createNotification(
+    'new_practice',
+    'Nuova richiesta Wedding',
+    `${practice.name || 'Un cliente'} ha inviato una richiesta per il ${practice.date || 'data da definire'}.`,
+    practice.id,
+    null
   );
 
   res.status(201).json({ok:true, id:practice.id});
@@ -279,6 +340,429 @@ app.post('/api/practices/:id/documents', auth, async (req,res) => {
   );
 
   res.json({ok:true});
+});
+
+
+
+function flashCodeNumber(code) {
+  const match = String(code || '').match(/(\d+)$/);
+  return match ? Number(match[1]) : 0;
+}
+
+async function nextFlashCode(prefix = 'WTE') {
+  const result = await pool.query(
+    `SELECT code FROM wte_flash_catalog
+     WHERE code LIKE $1
+     ORDER BY id DESC LIMIT 500`,
+    [`${prefix}-%`]
+  );
+  const max = result.rows.reduce((value,row) => Math.max(value,flashCodeNumber(row.code)),0);
+  return `${prefix}-${String(max + 1).padStart(4,'0')}`;
+}
+
+function decodeDataUrl(dataUrl) {
+  const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) throw new Error('Immagine non valida.');
+  return {mime:match[1], buffer:Buffer.from(match[2],'base64')};
+}
+
+app.get('/api/public/flash-catalog', async (req,res) => {
+  const category = String(req.query.category || '').trim();
+  const search = String(req.query.search || '').trim();
+
+  const values = [];
+  const where = ['active=TRUE'];
+
+  if (category) {
+    values.push(category);
+    where.push(`category=$${values.length}`);
+  }
+
+  if (search) {
+    values.push(`%${search}%`);
+    where.push(`(
+      code ILIKE $${values.length}
+      OR title ILIKE $${values.length}
+      OR category ILIKE $${values.length}
+      OR array_to_string(tags,' ') ILIKE $${values.length}
+    )`);
+  }
+
+  const result = await pool.query(
+    `SELECT id,code,title,category,tags,image_mime,image_size,sort_order,updated_at
+     FROM wte_flash_catalog
+     WHERE ${where.join(' AND ')}
+     ORDER BY sort_order ASC, code ASC`,
+    values
+  );
+
+  res.json({
+    items:result.rows.map(item => ({
+      ...item,
+      image:`${req.protocol}://${req.get('host')}/api/public/flash-catalog/${item.id}/image`
+    }))
+  });
+});
+
+app.get('/api/public/flash-catalog/:id/image', async (req,res) => {
+  const result = await pool.query(
+    `SELECT image_data,image_mime FROM wte_flash_catalog
+     WHERE id=$1 AND active=TRUE`,
+    [req.params.id]
+  );
+
+  if (!result.rowCount) return res.status(404).end();
+
+  res.setHeader('Content-Type',result.rows[0].image_mime);
+  res.setHeader('Cache-Control','public,max-age=86400');
+  res.send(result.rows[0].image_data);
+});
+
+app.get('/api/flash-catalog', auth, async (req,res) => {
+  const result = await pool.query(
+    `SELECT id,code,title,category,tags,image_mime,image_size,active,
+            sort_order,created_by,created_at,updated_at
+     FROM wte_flash_catalog
+     ORDER BY active DESC,sort_order ASC,code ASC`
+  );
+
+  res.json({
+    items:result.rows.map(item => ({
+      ...item,
+      image:`${req.protocol}://${req.get('host')}/api/flash-catalog/${item.id}/image`
+    }))
+  });
+});
+
+app.get('/api/flash-catalog/:id/image', auth, async (req,res) => {
+  const result = await pool.query(
+    'SELECT image_data,image_mime FROM wte_flash_catalog WHERE id=$1',
+    [req.params.id]
+  );
+
+  if (!result.rowCount) return res.status(404).end();
+
+  res.setHeader('Content-Type',result.rows[0].image_mime);
+  res.setHeader('Cache-Control','private,max-age=3600');
+  res.send(result.rows[0].image_data);
+});
+
+app.post('/api/flash-catalog', auth, async (req,res) => {
+  const parsed = z.object({
+    imageData:z.string().min(100),
+    title:z.string().max(180).optional().default(''),
+    category:z.string().max(80).optional().default('Altro'),
+    tags:z.array(z.string().max(60)).max(30).optional().default([]),
+    prefix:z.string().regex(/^[A-Z0-9]{2,8}$/).optional().default('WTE'),
+    code:z.string().max(40).optional(),
+    sortOrder:z.number().int().min(0).max(100000).optional().default(0)
+  }).safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({error:'Dati del flash non validi.'});
+  }
+
+  let decoded;
+  try {
+    decoded = decodeDataUrl(parsed.data.imageData);
+  } catch (error) {
+    return res.status(400).json({error:error.message});
+  }
+
+  if (!['image/jpeg','image/png','image/webp'].includes(decoded.mime)) {
+    return res.status(400).json({error:'Formato immagine non supportato.'});
+  }
+
+  if (decoded.buffer.length > 2_000_000) {
+    return res.status(413).json({error:'Immagine troppo pesante dopo la compressione.'});
+  }
+
+  const code = parsed.data.code?.trim() || await nextFlashCode(parsed.data.prefix);
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO wte_flash_catalog
+       (code,title,category,tags,image_data,image_mime,image_size,sort_order,created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       RETURNING id,code,title,category,tags,active,sort_order,created_at`,
+      [
+        code,
+        parsed.data.title,
+        parsed.data.category,
+        parsed.data.tags,
+        decoded.buffer,
+        decoded.mime,
+        decoded.buffer.length,
+        parsed.data.sortOrder,
+        req.user?.name || req.user?.email || 'Staff'
+      ]
+    );
+
+    await logActivity(req,'Flash caricato',null,{code,category:parsed.data.category});
+    await createNotification(
+      'flash_catalog',
+      'Nuovo flash aggiunto',
+      `${code} è stato aggiunto al catalogo da ${req.user?.name || 'Staff'}.`,
+      null,
+      null
+    );
+
+    res.status(201).json({item:result.rows[0]});
+  } catch (error) {
+    if (error.code === '23505') return res.status(409).json({error:'Codice flash già esistente.'});
+    throw error;
+  }
+});
+
+app.patch('/api/flash-catalog/:id', auth, async (req,res) => {
+  const parsed = z.object({
+    code:z.string().max(40).optional(),
+    title:z.string().max(180).optional(),
+    category:z.string().max(80).optional(),
+    tags:z.array(z.string().max(60)).max(30).optional(),
+    active:z.boolean().optional(),
+    sortOrder:z.number().int().min(0).max(100000).optional()
+  }).safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({error:'Modifica flash non valida.'});
+  }
+
+  const fields = [];
+  const values = [];
+
+  const map = {
+    code:'code',
+    title:'title',
+    category:'category',
+    tags:'tags',
+    active:'active',
+    sortOrder:'sort_order'
+  };
+
+  Object.entries(parsed.data).forEach(([key,value]) => {
+    values.push(value);
+    fields.push(`${map[key]}=$${values.length}`);
+  });
+
+  if (!fields.length) return res.status(400).json({error:'Nessuna modifica.'});
+
+  values.push(req.params.id);
+
+  try {
+    const result = await pool.query(
+      `UPDATE wte_flash_catalog
+       SET ${fields.join(',')},updated_at=NOW()
+       WHERE id=$${values.length}
+       RETURNING id,code,title,category,tags,active,sort_order,updated_at`,
+      values
+    );
+
+    if (!result.rowCount) return res.status(404).json({error:'Flash non trovato.'});
+
+    await logActivity(req,'Flash modificato',null,{id:req.params.id,changes:parsed.data});
+    res.json({item:result.rows[0]});
+  } catch (error) {
+    if (error.code === '23505') return res.status(409).json({error:'Codice flash già esistente.'});
+    throw error;
+  }
+});
+
+app.delete('/api/flash-catalog/:id', auth, adminOnly, async (req,res) => {
+  const result = await pool.query(
+    'DELETE FROM wte_flash_catalog WHERE id=$1 RETURNING code',
+    [req.params.id]
+  );
+
+  if (!result.rowCount) return res.status(404).json({error:'Flash non trovato.'});
+
+  await logActivity(req,'Flash eliminato',null,{code:result.rows[0].code});
+  res.json({ok:true});
+});
+
+app.get('/api/flash-catalog-categories', auth, async (_req,res) => {
+  const result = await pool.query(
+    `SELECT category,COUNT(*)::int AS count
+     FROM wte_flash_catalog
+     GROUP BY category ORDER BY category`
+  );
+  res.json({categories:result.rows});
+});
+
+
+app.get('/api/users', auth, adminOnly, async (_req,res) => {
+  const result = await pool.query(
+    'SELECT id,email,name,role,enabled,created_at FROM wte_users ORDER BY created_at DESC'
+  );
+  res.json({users:result.rows});
+});
+
+app.post('/api/users', auth, adminOnly, async (req,res) => {
+  const parsed = z.object({
+    email:z.string().email(),
+    name:z.string().min(2).max(120),
+    password:z.string().min(6).max(120),
+    role:z.enum(['admin','collaborator']).default('collaborator')
+  }).safeParse(req.body);
+
+  if (!parsed.success) return res.status(400).json({error:'Dati utente non validi.'});
+
+  const hash = await bcrypt.hash(parsed.data.password, 12);
+  try {
+    const result = await pool.query(
+      `INSERT INTO wte_users (email,name,password_hash,role)
+       VALUES ($1,$2,$3,$4)
+       RETURNING id,email,name,role,enabled,created_at`,
+      [parsed.data.email,parsed.data.name,hash,parsed.data.role]
+    );
+    await logActivity(req,'Utente creato',null,{email:parsed.data.email,role:parsed.data.role});
+    res.status(201).json({user:result.rows[0]});
+  } catch (error) {
+    if (error.code === '23505') return res.status(409).json({error:'Email già utilizzata.'});
+    throw error;
+  }
+});
+
+app.patch('/api/users/:id', auth, adminOnly, async (req,res) => {
+  const parsed = z.object({
+    enabled:z.boolean().optional(),
+    role:z.enum(['admin','collaborator']).optional(),
+    password:z.string().min(6).max(120).optional()
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({error:'Modifica utente non valida.'});
+
+  const updates=[], values=[];
+  if (parsed.data.enabled !== undefined) { values.push(parsed.data.enabled); updates.push(`enabled=$${values.length}`); }
+  if (parsed.data.role) { values.push(parsed.data.role); updates.push(`role=$${values.length}`); }
+  if (parsed.data.password) {
+    values.push(await bcrypt.hash(parsed.data.password,12));
+    updates.push(`password_hash=$${values.length}`);
+  }
+  values.push(req.params.id);
+  const result = await pool.query(
+    `UPDATE wte_users SET ${updates.join(',')},updated_at=NOW()
+     WHERE id=$${values.length}
+     RETURNING id,email,name,role,enabled`,
+    values
+  );
+  res.json({user:result.rows[0]});
+});
+
+app.get('/api/notifications', auth, async (req,res) => {
+  const result = await pool.query(
+    `SELECT id,type,title,body,practice_id,is_read,created_at
+     FROM wte_notifications
+     WHERE recipient_role IS NULL OR recipient_role=$1
+     ORDER BY created_at DESC LIMIT 100`,
+    [req.user.role]
+  );
+  res.json({notifications:result.rows});
+});
+
+app.post('/api/notifications/:id/read', auth, async (req,res) => {
+  await pool.query('UPDATE wte_notifications SET is_read=TRUE WHERE id=$1',[req.params.id]);
+  res.json({ok:true});
+});
+
+app.post('/api/notifications/read-all', auth, async (req,res) => {
+  await pool.query(
+    'UPDATE wte_notifications SET is_read=TRUE WHERE recipient_role IS NULL OR recipient_role=$1',
+    [req.user.role]
+  );
+  res.json({ok:true});
+});
+
+app.get('/api/activity', auth, async (_req,res) => {
+  const result = await pool.query(
+    `SELECT id,actor,actor_role,action,practice_id,details,created_at
+     FROM wte_activity_log ORDER BY created_at DESC LIMIT 200`
+  );
+  res.json({activity:result.rows});
+});
+
+app.post('/api/flash-sessions', auth, async (req,res) => {
+  const parsed = z.object({
+    practiceId:z.string().min(1),
+    customerName:z.string().max(180).optional(),
+    maxItems:z.number().int().min(1).max(50).default(50),
+    expiresAt:z.string().optional()
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({error:'Dati sessione flash non validi.'});
+
+  const token = crypto.randomBytes(24).toString('hex');
+  await pool.query(
+    `INSERT INTO wte_flash_sessions
+     (token,practice_id,max_items,customer_name,expires_at)
+     VALUES ($1,$2,$3,$4,$5)`,
+    [token,parsed.data.practiceId,parsed.data.maxItems,
+     parsed.data.customerName||'',parsed.data.expiresAt||null]
+  );
+
+  await logActivity(req,'Link flash creato',parsed.data.practiceId,{token});
+  await createNotification('flash_link','Link flash creato',
+    `È stato creato il link per la selezione flash della pratica ${parsed.data.practiceId}.`,
+    parsed.data.practiceId,null);
+
+  res.status(201).json({token,url:`/flash.html?token=${token}`});
+});
+
+app.get('/api/public/flash-session/:token', async (req,res) => {
+  const result = await pool.query(
+    `SELECT token,practice_id,max_items,selections,customer_name,signature_data,
+            accepted_at,locked,expires_at
+     FROM wte_flash_sessions WHERE token=$1`,
+    [req.params.token]
+  );
+  const session=result.rows[0];
+  if (!session) return res.status(404).json({error:'Link non valido.'});
+  if (session.expires_at && new Date(session.expires_at)<new Date()) {
+    return res.status(410).json({error:'Link scaduto.'});
+  }
+  res.json({session});
+});
+
+app.post('/api/public/flash-session/:token', async (req,res) => {
+  const parsed = z.object({
+    selections:z.array(z.string().min(1)).max(50),
+    customerName:z.string().min(2).max(180),
+    signatureData:z.string().min(20),
+    accepted:z.literal(true)
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({error:'Selezione o firma non valida.'});
+
+  const current=await pool.query(
+    'SELECT practice_id,max_items,locked FROM wte_flash_sessions WHERE token=$1',
+    [req.params.token]
+  );
+  if (!current.rowCount) return res.status(404).json({error:'Link non valido.'});
+  if (current.rows[0].locked) return res.status(409).json({error:'Selezione già confermata.'});
+  if (parsed.data.selections.length>current.rows[0].max_items) {
+    return res.status(400).json({error:'Numero massimo di flash superato.'});
+  }
+
+  await pool.query(
+    `UPDATE wte_flash_sessions
+     SET selections=$2::jsonb,customer_name=$3,signature_data=$4,
+         accepted_at=NOW(),locked=TRUE,updated_at=NOW()
+     WHERE token=$1`,
+    [req.params.token,JSON.stringify(parsed.data.selections),
+     parsed.data.customerName,parsed.data.signatureData]
+  );
+
+  await createNotification('flash_completed','Selezione flash completata',
+    `${parsed.data.customerName} ha confermato ${parsed.data.selections.length} flash.`,
+    current.rows[0].practice_id,null);
+
+  res.json({ok:true,count:parsed.data.selections.length});
+});
+
+app.get('/api/flash-sessions/practice/:id', auth, async (req,res) => {
+  const result=await pool.query(
+    `SELECT token,practice_id,max_items,selections,customer_name,accepted_at,locked,expires_at,created_at
+     FROM wte_flash_sessions WHERE practice_id=$1 ORDER BY created_at DESC`,
+    [req.params.id]
+  );
+  res.json({sessions:result.rows});
 });
 
 app.delete('/api/practices/:id', auth, async (req,res) => {
