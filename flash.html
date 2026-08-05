@@ -136,7 +136,7 @@ async function init(){
  try{
   const [s,c]=await Promise.all([
    fetchJson(`${API}/api/public/flash-session/${encodeURIComponent(token)}`),
-   fetchJson(`${API}/api/public/flash-catalog?v=11.3`)
+   fetchJson(`${API}/api/public/flash-catalog?v=2.1.3`)
   ]);
   if(s.error){$('status').textContent=s.error;return}
   session=s.session;
