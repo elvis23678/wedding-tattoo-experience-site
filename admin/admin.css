@@ -1739,3 +1739,308 @@ textarea{width:100%;min-height:90px}
     border-left:1px solid var(--line);
   }
 }
+
+/* =========================================================
+   WTE ADMIN — MOBILE COMPACT FIX v1.2
+   Ottimizzazione smartphone e prevenzione layout giganteschi
+   ========================================================= */
+@media (max-width: 759px) {
+  html {
+    width: 100%;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .app {
+    width: 100%;
+    min-height: 100dvh;
+    display: block;
+  }
+
+  .topbar {
+    position: relative;
+    top: auto;
+    min-height: 0;
+    padding: 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .brand {
+    min-width: 0;
+  }
+
+  .brand-copy {
+    min-width: 0;
+  }
+
+  .brand-copy strong {
+    font-size: 18px;
+  }
+
+  .top-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .top-actions a,
+  .top-actions button {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 8px;
+    font-size: 7px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  main {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 9px 24px;
+    overflow: hidden;
+  }
+
+  main > section,
+  .analytics-shell,
+  .kanban-shell,
+  .calendar-shell,
+  .list-shell,
+  .followup-panel,
+  .backup-status-panel,
+  .clean-state-banner {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0 !important;
+    height: auto !important;
+    margin-bottom: 10px;
+  }
+
+  .intro {
+    padding: 14px 13px;
+  }
+
+  .intro h1 {
+    font-size: clamp(27px, 9vw, 36px);
+    line-height: 1.05;
+  }
+
+  .intro span {
+    margin-top: 7px;
+    font-size: 11px;
+  }
+
+  .clean-state-banner,
+  .backup-status-panel {
+    padding: 13px !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .clean-state-banner strong,
+  .backup-status-panel strong {
+    font-size: 24px !important;
+    line-height: 1.08;
+  }
+
+  .backup-status-actions {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+
+  .kpi-grid,
+  .ops-kpi-grid,
+  .insights-grid,
+  .analytics-grid,
+  .follow-grid,
+  .crm-fields-grid,
+  .system-grid,
+  .backup-history-summary {
+    width: 100%;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 7px !important;
+  }
+
+  .kpi,
+  .ops-kpi-grid article,
+  .insights-grid article,
+  .chart-card {
+    min-width: 0;
+    min-height: 92px !important;
+    padding: 12px !important;
+  }
+
+  .kpi strong {
+    font-size: 25px;
+  }
+
+  .controls,
+  .admin-extra-actions {
+    width: 100%;
+    grid-template-columns: 1fr !important;
+    gap: 7px;
+    padding: 9px;
+  }
+
+  .controls input,
+  .controls select {
+    min-height: 44px;
+  }
+
+  .analytics-shell,
+  .kanban-shell,
+  .calendar-shell {
+    padding: 10px !important;
+  }
+
+  .analytics-head,
+  .kanban-head,
+  .calendar-head {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .analytics-head h2,
+  .kanban-head h2,
+  .calendar-head h2 {
+    font-size: 25px !important;
+  }
+
+  .chart-wide {
+    grid-column: auto !important;
+  }
+
+  .bar-chart,
+  .line-chart,
+  #valueChart {
+    min-height: 150px !important;
+    height: 150px !important;
+  }
+
+  .donut-wrap {
+    min-height: 150px !important;
+  }
+
+  .kanban-board {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0 !important;
+    padding-bottom: 5px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  .kanban-column {
+    flex: 0 0 82vw !important;
+    min-width: 250px !important;
+    min-height: 300px !important;
+  }
+
+  .kanban-dropzone {
+    min-height: 230px !important;
+  }
+
+  .calendar-weekdays span {
+    font-size: 7px;
+  }
+
+  .calendar-grid {
+    min-height: 0 !important;
+  }
+
+  .calendar-day {
+    min-height: 54px !important;
+    padding: 5px !important;
+  }
+
+  .list-head {
+    min-height: 48px;
+  }
+
+  .practice-card {
+    padding: 11px;
+    gap: 8px;
+  }
+
+  .drawer-panel,
+  .settings-panel,
+  .backup-history-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .drawer-content,
+  .settings-content,
+  .backup-history-content {
+    padding: 10px !important;
+  }
+
+  .detail-grid,
+  .crm-fields-grid,
+  .system-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .drawer-actions {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .admin-lock {
+    padding: 14px;
+    min-height: 100dvh;
+  }
+
+  .admin-lock-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 25px 18px;
+  }
+
+  .admin-lock-card h1 {
+    font-size: clamp(34px, 11vw, 47px);
+  }
+
+  .admin-lock-card input {
+    min-height: 52px;
+    padding: 0 10px;
+    font-size: 17px;
+    letter-spacing: .12em;
+  }
+
+  .admin-lock-card input::placeholder {
+    font-size: 15px;
+    letter-spacing: .08em;
+  }
+}
+
+@media (max-width: 390px) {
+  .kpi-grid,
+  .ops-kpi-grid,
+  .insights-grid,
+  .analytics-grid,
+  .follow-grid,
+  .backup-history-summary {
+    grid-template-columns: 1fr !important;
+  }
+
+  .top-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .backup-status-actions {
+    grid-template-columns: 1fr;
+  }
+}
