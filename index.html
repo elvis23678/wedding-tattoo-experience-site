@@ -2,7 +2,7 @@
 
 <html lang="it">
 <head>
-<meta name="wte-release" content="2.1.0">
+<meta name="wte-release" content="2.1.1-urgent">
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport"/>
 <meta content="#030201" name="theme-color"/>
@@ -48,21 +48,36 @@
     .logo{width:58px;display:block}
     .logo img{width:100%;display:block}
     .menu-btn {
-      width:42px;height:42px;border-radius:50%;border:1px solid rgba(240,221,176,.28);
-      background:rgba(0,0,0,.16);position:relative
+      width:38px;height:38px;border-radius:50%;border:1px solid rgba(240,221,176,.28);
+      background:rgba(0,0,0,.22);position:relative
     }
-    .menu-btn span{position:absolute;left:13px;right:13px;height:1px;background:#fff;transition:.25s}
-    .menu-btn span:first-child{top:17px} .menu-btn span:last-child{top:24px}
-    .menu-btn.open span:first-child{top:21px;transform:rotate(45deg)}
-    .menu-btn.open span:last-child{top:21px;transform:rotate(-45deg)}
+    .menu-btn span{position:absolute;left:11px;right:11px;height:1px;background:#fff;transition:.25s}
+    .menu-btn span:first-child{top:15px} .menu-btn span:last-child{top:21px}
+    .menu-btn.open span:first-child{top:18px;transform:rotate(45deg)}
+    .menu-btn.open span:last-child{top:18px;transform:rotate(-45deg)}
 
     .menu {
-      position:fixed;inset:0;z-index:75;background:rgba(3,2,1,.985);
-      transform:translateX(100%);transition:.35s;display:flex;align-items:center;justify-content:center
+      position:fixed;top:0;right:0;bottom:0;left:auto;z-index:75;
+      width:min(86vw,360px);padding:82px 20px 28px;
+      background:rgba(3,2,1,.985);border-left:1px solid var(--line);
+      box-shadow:-22px 0 60px rgba(0,0,0,.52);
+      transform:translateX(105%);transition:transform .3s ease;
+      display:block;overflow-y:auto;overscroll-behavior:contain
+    }
+    .menu::before{
+      content:"MENU";display:block;margin:0 0 12px;
+      color:var(--gold2);font-size:8px;letter-spacing:.22em;text-align:left
     }
     .menu.open{transform:none}
-    .menu nav{display:flex;flex-direction:column;gap:22px;text-align:center}
-    .menu a{font-family:var(--serif);font-size:31px;text-decoration:none}
+    .menu nav{display:flex;flex-direction:column;gap:0;text-align:left}
+    .menu a{
+      display:block;padding:13px 3px;border-bottom:1px solid rgba(240,221,176,.12);
+      font-family:var(--serif);font-size:19px;line-height:1.15;text-decoration:none
+    }
+    @media(max-height:650px){
+      .menu{padding-top:70px}
+      .menu a{padding:10px 3px;font-size:17px}
+    }
 
     .hero {
       position:relative;min-height:100svh;height:100svh;display:flex;align-items:flex-end;overflow:hidden;isolation:isolate
