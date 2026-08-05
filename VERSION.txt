@@ -1,0 +1,3 @@
+WTE V5 STABLE
+Build: 5.0.0
+Data: 05/08/2026

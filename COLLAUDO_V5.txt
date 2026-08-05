@@ -1,0 +1,37 @@
+COLLAUDO WTE V5 STABLE
+
+1. CLOUD
+- Collegare il Cloud e attivare Mantieni automaticamente collegato.
+- Chiudere e riaprire Chrome: lo stato deve tornare Cloud senza reinserire la password, finché il token è valido.
+- Verificare che le pratiche Cloud compaiano sia nei contatori sia nel Kanban.
+
+2. NUOVA RICHIESTA
+- Inviare una richiesta dal sito clienti.
+- Verificare che compaia nel CRM dopo Aggiorna o entro 30 secondi.
+
+3. CONFERMA EVENTO
+- Usare una pratica Silver da 1.090 €.
+- Premere Conferma e richiedi acconto.
+- Verificare: totale 1.090,00 €, acconto 327,00 €, saldo 763,00 €.
+- Verificare scadenza acconto oggi + 7 giorni e saldo evento - 7 giorni.
+- Verificare messaggio cliente e apertura WhatsApp.
+
+4. DOCUMENTI
+- Creare preventivo e contratto.
+- Verificare che non compaia 1,09 €.
+- Verificare importi e scadenze.
+- Verificare clausola: senza saldo il servizio non viene eseguito e l’acconto resta acquisito, nei limiti di legge.
+
+5. PAGAMENTI
+- Registrare acconto 327 €. Stato: Confermato / Acconto ricevuto.
+- Registrare saldo 763 €. Stato: Pronto per evento / Pagato.
+
+6. AVVISI
+- Testare pratiche con evento a 14, 10 e 7 giorni.
+- Testare evento sotto i 7 giorni con saldo mancante: stato sospeso.
+
+7. BACKUP
+- Creare snapshot Cloud.
+- Verificare storico e ripristino.
+
+NON USARE CON CLIENTI REALI FINCHÉ TUTTI I TEST NON SONO SUPERATI.
