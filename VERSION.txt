@@ -1,1 +1,1 @@
-WTE V8.0 - Login multiutente, ruoli, permessi e sicurezza
+WTE V9.0 - Portale cliente flash, firma e PDF automatici
