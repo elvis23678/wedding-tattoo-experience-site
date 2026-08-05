@@ -2044,3 +2044,124 @@ textarea{width:100%;min-height:90px}
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   WTE ADMIN — STABLE MOBILE v2.1
+   Login più compatto e perfettamente centrato su smartphone.
+   ========================================================= */
+@media (max-width: 759px) {
+  .admin-lock {
+    min-height: 100dvh;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      14px
+      max(10px, env(safe-area-inset-bottom));
+    display: grid;
+    place-items: center;
+    overflow-y: auto;
+  }
+
+  .admin-lock-card {
+    width: min(100%, 380px);
+    max-width: 380px;
+    min-height: 0;
+    padding: 20px 16px 22px;
+    margin: 0 auto;
+    gap: 0;
+  }
+
+  .admin-lock-mark {
+    width: 66px;
+    height: 66px;
+    margin-bottom: 18px;
+    font-size: 35px;
+  }
+
+  .admin-lock-card > span {
+    margin-bottom: 12px;
+    font-size: 8px;
+    letter-spacing: .22em;
+  }
+
+  .admin-lock-card h1 {
+    margin: 0 0 8px;
+    font-size: clamp(32px, 9.5vw, 43px);
+    line-height: 1;
+  }
+
+  .admin-lock-card p {
+    max-width: 320px;
+    margin: 0 auto 15px;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .admin-lock-card input {
+    width: 100%;
+    min-height: 50px;
+    height: 50px;
+    margin-bottom: 10px;
+    padding: 0 12px;
+    font-size: 16px;
+    letter-spacing: .10em;
+  }
+
+  .admin-lock-card input::placeholder {
+    font-size: 14px;
+    letter-spacing: .08em;
+  }
+
+  .admin-lock-card button {
+    width: 100%;
+    min-height: 50px;
+    height: 50px;
+    padding: 0 14px;
+    font-size: 10px;
+  }
+
+  .admin-lock-card small {
+    min-height: 16px;
+    margin-top: 7px;
+  }
+}
+
+@media (max-width: 390px), (max-height: 740px) {
+  .admin-lock {
+    align-items: center;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .admin-lock-card {
+    width: min(100%, 350px);
+    padding: 15px 13px 17px;
+  }
+
+  .admin-lock-mark {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 12px;
+    font-size: 30px;
+  }
+
+  .admin-lock-card > span {
+    margin-bottom: 9px;
+    font-size: 7px;
+  }
+
+  .admin-lock-card h1 {
+    margin-bottom: 6px;
+    font-size: clamp(29px, 9vw, 38px);
+  }
+
+  .admin-lock-card p {
+    margin-bottom: 11px;
+    font-size: 10px;
+  }
+
+  .admin-lock-card input,
+  .admin-lock-card button {
+    min-height: 46px;
+    height: 46px;
+  }
+}
