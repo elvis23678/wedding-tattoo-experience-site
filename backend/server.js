@@ -97,7 +97,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'10.0.0', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'11.0.0', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -455,6 +455,7 @@ function decodeDataUrl(dataUrl) {
 }
 
 app.get('/api/public/flash-catalog', async (req,res) => {
+  res.setHeader('Cache-Control','no-store');
   const category = String(req.query.category || '').trim();
   const search = String(req.query.search || '').trim();
 
@@ -487,7 +488,7 @@ app.get('/api/public/flash-catalog', async (req,res) => {
   res.json({
     items:result.rows.map(item => ({
       ...item,
-      image:`${req.protocol}://${req.get('host')}/api/public/flash-catalog/${item.id}/image`
+      image:`https://${req.get('host')}/api/public/flash-catalog/${item.id}/image`
     }))
   });
 });
