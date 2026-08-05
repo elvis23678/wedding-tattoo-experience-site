@@ -325,7 +325,11 @@
       const card=document.createElement('article');
       card.className=`flash-manager-card ${item.active?'':'inactive'}`;
       card.innerHTML=`
-        <img loading="lazy" src="${item.image}?v=${encodeURIComponent(item.updated_at||'')}" alt="${item.code}">
+        <img loading="lazy" decoding="async"
+             src="${API}/api/public/flash-catalog/${encodeURIComponent(item.id)}/image?v=${encodeURIComponent(item.updated_at||Date.now())}"
+             data-fallback="/flash/${encodeURIComponent(item.code)}.png"
+             onerror="if(!this.dataset.used){this.dataset.used='1';this.src=this.dataset.fallback}"
+             alt="${item.code}">
         <div class="flash-manager-card-head">
           <div><strong>${item.code}</strong><span>${item.image_size?Math.round(item.image_size/1024)+' KB':''}</span></div>
           <span>${item.active?'Attivo':'Disattivato'}</span>
