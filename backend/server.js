@@ -97,7 +97,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'11.0.0', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'11.2.0', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -502,6 +502,9 @@ app.get('/api/public/flash-catalog/:id/image', async (req,res) => {
 
   if (!result.rowCount) return res.status(404).end();
 
+  // Consente al dominio pubblico di mostrare le immagini servite dall'API Render.
+  res.setHeader('Cross-Origin-Resource-Policy','cross-origin');
+  res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Content-Type',result.rows[0].image_mime);
   res.setHeader('Cache-Control','public,max-age=86400');
   res.send(result.rows[0].image_data);
