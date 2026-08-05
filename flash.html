@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Scelta Flash - Wedding Tattoo Experience</title>
+<meta name="wte-release" content="2.0">
 <style>
 :root{--bg:#070503;--card:#100c08;--gold:#d3a64f;--text:#f3eadb;--muted:#a99a84;--line:rgba(211,166,79,.25);--ok:#8fb596}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 50% 0,rgba(211,166,79,.08),transparent 25%),var(--bg);color:var(--text);font-family:Arial,sans-serif}
@@ -15,7 +16,7 @@ main{padding:12px;max-width:1180px;margin:auto}.notice{padding:13px;border:1px s
 .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.toolbar input,.toolbar select{min-height:46px;padding:0 10px;background:#0d0906;border:1px solid var(--line);color:#fff}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
 .card{position:relative;padding:8px;border:1px solid var(--line);background:var(--card);transition:.15s}.card.selected{outline:2px solid var(--gold);transform:translateY(-1px)}
-.card img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff}.card strong{display:block;margin-top:7px}.card span{display:block;margin-top:3px;color:var(--muted);font-size:12px}
+.card img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff}.card strong{display:block;margin-top:7px}.card span{display:block;margin-top:3px;color:var(--muted);font-size:12px}
 .card button{width:100%;min-height:40px;margin-top:7px;border:0;background:#1a130c;color:var(--text)}.card.selected button{background:var(--gold);color:#171006}
 .form{margin-top:18px;padding:15px;border:1px solid var(--line);background:var(--card)}
 .form h2{font-family:Georgia,serif;font-size:28px;font-weight:400}.form p{color:var(--muted);line-height:1.55}
@@ -99,7 +100,20 @@ function render(){
  if(!list.length){grid.innerHTML='<div class="empty">Nessun flash trovato.</div>';return}
  list.forEach(item=>{
   const card=document.createElement('article');card.className='card'+(selected.has(item.code)?' selected':'');
-  card.innerHTML=`<img loading="lazy" src="${item.image}" alt="${item.code}"><strong>${item.code}</strong><span>${item.title||item.category||''}</span><button>${selected.has(item.code)?'Rimuovi':'Seleziona'}</button>`;
+  const apiImage=`${API}/api/public/flash-catalog/${encodeURIComponent(item.id)}/image?v=${encodeURIComponent(item.updated_at||'11.3')}`;
+  const localImage=`/flash/${encodeURIComponent(item.code)}.png`;
+  card.innerHTML=`<img loading="lazy" decoding="async" src="${apiImage}" data-fallback="${localImage}" alt="${item.code}"><strong>${item.code}</strong><span>${item.title||item.category||''}</span><button>${selected.has(item.code)?'Rimuovi':'Seleziona'}</button>`;
+  const image=card.querySelector('img');
+  image.onerror=()=>{
+   const fallback=image.dataset.fallback;
+   if(fallback && !image.dataset.fallbackUsed){
+    image.dataset.fallbackUsed='1';
+    image.src=fallback;
+   }else{
+    image.onerror=null;
+    image.alt=`${item.code} - immagine non disponibile`;
+   }
+  };
   card.querySelector('button').disabled=Boolean(session?.locked);
   card.querySelector('button').onclick=()=>{
    if(selected.has(item.code))selected.delete(item.code);
@@ -122,7 +136,7 @@ async function init(){
  try{
   const [s,c]=await Promise.all([
    fetchJson(`${API}/api/public/flash-session/${encodeURIComponent(token)}`),
-   fetchJson(`${API}/api/public/flash-catalog?v=11`)
+   fetchJson(`${API}/api/public/flash-catalog?v=11.3`)
   ]);
   if(s.error){$('status').textContent=s.error;return}
   session=s.session;
