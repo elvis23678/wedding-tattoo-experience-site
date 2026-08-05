@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
+import PDFDocument from 'pdfkit';
 import pg from 'pg';
 import { z } from 'zod';
 
@@ -96,7 +97,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'8.0.0', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'9.0.0', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -902,14 +903,263 @@ app.get('/api/activity', auth, async (_req,res) => {
   res.json({activity:result.rows});
 });
 
+
+function safePdfText(value) {
+  return String(value ?? '').replace(/[^\x20-\x7EÀ-ÿ]/g,' ');
+}
+
+function euroPdf(value) {
+  return new Intl.NumberFormat('it-IT',{
+    style:'currency',currency:'EUR',maximumFractionDigits:2
+  }).format(Number(value || 0));
+}
+
+function practicePayload(row) {
+  return row?.payload && typeof row.payload === 'object' ? row.payload : {};
+}
+
+async function flashSessionBundle(token) {
+  const sessionResult = await pool.query(
+    `SELECT token,practice_id,max_items,selections,customer_name,signature_data,
+            accepted_at,locked,expires_at,created_at,updated_at
+     FROM wte_flash_sessions WHERE token=$1`,
+    [token]
+  );
+  if (!sessionResult.rowCount) return null;
+
+  const session = sessionResult.rows[0];
+  const practiceResult = await pool.query(
+    'SELECT id,payload,created_at,updated_at FROM wte_practices WHERE id=$1',
+    [session.practice_id]
+  );
+  const practiceRow = practiceResult.rows[0] || null;
+  const practice = practicePayload(practiceRow);
+
+  const codes = Array.isArray(session.selections) ? session.selections : [];
+  let items = [];
+  if (codes.length) {
+    const result = await pool.query(
+      `SELECT id,code,title,category,tags,image_data,image_mime
+       FROM wte_flash_catalog
+       WHERE code = ANY($1::text[])
+       ORDER BY array_position($1::text[],code)`,
+      [codes]
+    );
+    items = result.rows;
+  }
+
+  return {session,practice,items};
+}
+
+function writePdfHeader(doc, subtitle, practiceId) {
+  doc.rect(0,0,doc.page.width,92).fill('#090604');
+  doc.fillColor('#D4A64C').font('Helvetica-Bold').fontSize(9)
+    .text('WEDDING TATTOO EXPERIENCE',48,28,{characterSpacing:1.6});
+  doc.fillColor('#F5EBDD').font('Helvetica').fontSize(23)
+    .text(subtitle,48,47);
+  doc.fillColor('#7A6C5B').fontSize(8)
+    .text(`Pratica ${safePdfText(practiceId)}`,48,76);
+  doc.y=112;
+}
+
+function writePracticeDetails(doc, practice, session) {
+  const rows = [
+    ['Cliente',practice.name || session.customer_name || '-'],
+    ['Data matrimonio',practice.date || '-'],
+    ['Location',practice.location || practice.city || '-'],
+    ['Pacchetto',practice.package || practice.packageName || '-'],
+    ['Invitati',practice.guests || practice.invited || '-'],
+    ['Codice pratica',session.practice_id]
+  ];
+  doc.font('Helvetica-Bold').fontSize(12).fillColor('#8A5D1B')
+    .text('DATI EVENTO');
+  doc.moveDown(.45);
+  rows.forEach(([label,value])=>{
+    doc.font('Helvetica-Bold').fontSize(8).fillColor('#8A7964')
+      .text(label.toUpperCase(),{continued:true,width:120});
+    doc.font('Helvetica').fontSize(10).fillColor('#211B16')
+      .text(`  ${safePdfText(value)}`);
+  });
+  doc.moveDown(.6);
+}
+
+function signatureBuffer(dataUrl) {
+  const match=String(dataUrl || '').match(/^data:image\/(?:png|jpeg);base64,(.+)$/);
+  return match ? Buffer.from(match[1],'base64') : null;
+}
+
+function selectedCodesText(items) {
+  return items.map(x=>x.code).join(', ');
+}
+
+function buildClientFlashPdf(res,bundle) {
+  const {session,practice,items}=bundle;
+  const doc=new PDFDocument({size:'A4',margin:48,bufferPages:true});
+  res.setHeader('Content-Type','application/pdf');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="WTE_${session.practice_id}_selezione_cliente.pdf"`
+  );
+  doc.pipe(res);
+
+  writePdfHeader(doc,'Selezione flash confermata',session.practice_id);
+  writePracticeDetails(doc,practice,session);
+
+  doc.font('Helvetica-Bold').fontSize(12).fillColor('#8A5D1B')
+    .text('FLASH SELEZIONATI');
+  doc.moveDown(.4);
+  doc.font('Helvetica').fontSize(10).fillColor('#211B16')
+    .text(`${items.length} flash confermati su un massimo di ${session.max_items}.`);
+  doc.moveDown(.25);
+  doc.font('Helvetica').fontSize(9).fillColor('#54483C')
+    .text(selectedCodesText(items) || '-',{lineGap:3});
+
+  doc.moveDown(1);
+  doc.font('Helvetica-Bold').fontSize(12).fillColor('#8A5D1B')
+    .text('DICHIARAZIONE DI ACCETTAZIONE');
+  doc.moveDown(.4);
+  const terms =
+    'Il cliente conferma la selezione dei flash indicati. La selezione definisce '+
+    'i soggetti disponibili durante l evento e non garantisce l esecuzione di tutti '+
+    'i tatuaggi. Il numero effettivo dipende dalla durata del servizio, dalle '+
+    'condizioni operative e dalle richieste degli invitati. Dimensione, posizione e '+
+    'fattibilita tecnica sono valutate dal tatuatore. I tatuaggi sono eseguiti '+
+    'esclusivamente su persone maggiorenni previa acquisizione del consenso informato.';
+  doc.font('Helvetica').fontSize(9.5).fillColor('#211B16')
+    .text(terms,{align:'justify',lineGap:3});
+
+  doc.moveDown(1);
+  doc.font('Helvetica-Bold').fontSize(9).fillColor('#8A7964')
+    .text('FIRMATARIO');
+  doc.font('Helvetica').fontSize(11).fillColor('#211B16')
+    .text(safePdfText(session.customer_name || practice.name || '-'));
+  doc.font('Helvetica').fontSize(9).fillColor('#54483C')
+    .text(`Confermato il ${new Date(session.accepted_at).toLocaleString('it-IT')}`);
+
+  const sig=signatureBuffer(session.signature_data);
+  if(sig){
+    try{
+      doc.image(sig,48,doc.y+12,{fit:[230,85]});
+      doc.y+=105;
+    }catch{}
+  }
+
+  doc.moveDown(.5);
+  doc.strokeColor('#C9AD7E').moveTo(48,doc.y).lineTo(310,doc.y).stroke();
+  doc.font('Helvetica').fontSize(8).fillColor('#7A6C5B')
+    .text('Firma digitale acquisita dal portale Wedding Tattoo Experience',48,doc.y+5);
+
+  doc.end();
+}
+
+function buildOperatorFlashPdf(res,bundle) {
+  const {session,practice,items}=bundle;
+  const doc=new PDFDocument({size:'A4',margin:32,bufferPages:true});
+  res.setHeader('Content-Type','application/pdf');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="WTE_${session.practice_id}_scheda_operativa_flash.pdf"`
+  );
+  doc.pipe(res);
+
+  writePdfHeader(doc,'Scheda operativa flash',session.practice_id);
+  writePracticeDetails(doc,practice,session);
+  doc.font('Helvetica-Bold').fontSize(11).fillColor('#8A5D1B')
+    .text(`${items.length} FLASH PRONTI PER IL SERVIZIO`);
+  doc.moveDown(.6);
+
+  const cols=3;
+  const gap=9;
+  const usable=doc.page.width-64;
+  const cellW=(usable-gap*(cols-1))/cols;
+  const cellH=168;
+  let col=0;
+  let x=32;
+  let y=doc.y;
+
+  items.forEach((item,index)=>{
+    if(y+cellH>doc.page.height-45){
+      doc.addPage();
+      writePdfHeader(doc,'Scheda operativa flash',session.practice_id);
+      y=112;col=0;x=32;
+    }
+
+    doc.roundedRect(x,y,cellW,cellH-7,3).strokeColor('#CBB793').stroke();
+    try{
+      doc.image(item.image_data,x+7,y+7,{
+        fit:[cellW-14,95],
+        align:'center',
+        valign:'center'
+      });
+    }catch{
+      doc.font('Helvetica').fontSize(8).fillColor('#7A6C5B')
+        .text('Anteprima non disponibile',x+8,y+43,{width:cellW-16,align:'center'});
+    }
+    doc.font('Helvetica-Bold').fontSize(10).fillColor('#211B16')
+      .text(safePdfText(item.code),x+8,y+107,{width:cellW-16,align:'center'});
+    doc.font('Helvetica').fontSize(7.5).fillColor('#6F6254')
+      .text(safePdfText(item.title || item.category || ''),x+8,y+121,{
+        width:cellW-16,align:'center',height:20
+      });
+    doc.rect(x+10,y+145,9,9).strokeColor('#8A7964').stroke();
+    doc.font('Helvetica').fontSize(7).fillColor('#6F6254')
+      .text('Eseguito  Invitato: __________________',x+23,y+145,{width:cellW-28});
+
+    col++;
+    if(col>=cols){
+      col=0;x=32;y+=cellH;
+    }else{
+      x+=cellW+gap;
+    }
+  });
+
+  if(col!==0)y+=cellH;
+  if(y+145>doc.page.height-45){
+    doc.addPage();
+    writePdfHeader(doc,'Note operative',session.practice_id);
+    y=112;
+  }
+  doc.y=y;
+  doc.font('Helvetica-Bold').fontSize(11).fillColor('#8A5D1B')
+    .text('NOTE OPERATIVE');
+  doc.moveDown(.4);
+  for(let i=0;i<7;i++){
+    doc.strokeColor('#D6C8B2').moveTo(32,doc.y+13).lineTo(doc.page.width-32,doc.y+13).stroke();
+    doc.moveDown(1.15);
+  }
+
+  doc.end();
+}
+
 app.post('/api/flash-sessions', auth, async (req,res) => {
   const parsed = z.object({
     practiceId:z.string().min(1),
     customerName:z.string().max(180).optional(),
     maxItems:z.number().int().min(1).max(50).default(50),
-    expiresAt:z.string().optional()
+    expiresAt:z.string().optional(),
+    forceNew:z.boolean().optional().default(false)
   }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({error:'Dati sessione flash non validi.'});
+
+  if (!parsed.data.forceNew) {
+    const existing=await pool.query(
+      `SELECT token,locked,accepted_at,selections,created_at
+       FROM wte_flash_sessions
+       WHERE practice_id=$1
+       ORDER BY created_at DESC LIMIT 1`,
+      [parsed.data.practiceId]
+    );
+    if(existing.rowCount){
+      const row=existing.rows[0];
+      const path=`/flash.html?token=${row.token}`;
+      return res.json({
+        token:row.token,path,
+        url:`https://www.weddingtattooexperience.it${path}`,
+        existing:true,locked:row.locked,acceptedAt:row.accepted_at,
+        count:Array.isArray(row.selections)?row.selections.length:0
+      });
+    }
+  }
 
   const token = crypto.randomBytes(24).toString('hex');
   await pool.query(
@@ -925,7 +1175,12 @@ app.post('/api/flash-sessions', auth, async (req,res) => {
     `È stato creato il link per la selezione flash della pratica ${parsed.data.practiceId}.`,
     parsed.data.practiceId,null);
 
-  res.status(201).json({token,url:`/flash.html?token=${token}`});
+  const path=`/flash.html?token=${token}`;
+  res.status(201).json({
+    token,path,
+    url:`https://www.weddingtattooexperience.it${path}`,
+    existing:false,locked:false,count:0
+  });
 });
 
 app.get('/api/public/flash-session/:token', async (req,res) => {
@@ -975,7 +1230,44 @@ app.post('/api/public/flash-session/:token', async (req,res) => {
     `${parsed.data.customerName} ha confermato ${parsed.data.selections.length} flash.`,
     current.rows[0].practice_id,null);
 
-  res.json({ok:true,count:parsed.data.selections.length});
+  res.json({
+    ok:true,
+    count:parsed.data.selections.length,
+    clientPdf:`/api/public/flash-session/${req.params.token}/pdf?type=client`,
+    operatorPdf:`/api/public/flash-session/${req.params.token}/pdf?type=operator`
+  });
+});
+
+
+app.get('/api/public/flash-session/:token/pdf', async (req,res) => {
+  const bundle=await flashSessionBundle(req.params.token);
+  if(!bundle) return res.status(404).json({error:'Selezione non trovata.'});
+  if(!bundle.session.locked || !bundle.session.accepted_at) {
+    return res.status(409).json({error:'La selezione non è ancora stata firmata.'});
+  }
+
+  const type=String(req.query.type || 'client');
+  if(type==='operator') return buildOperatorFlashPdf(res,bundle);
+  return buildClientFlashPdf(res,bundle);
+});
+
+app.post('/api/flash-sessions/:token/reopen', auth, async (req,res) => {
+  const result=await pool.query(
+    `UPDATE wte_flash_sessions
+     SET locked=FALSE,accepted_at=NULL,signature_data=NULL,updated_at=NOW()
+     WHERE token=$1 RETURNING practice_id`,
+    [req.params.token]
+  );
+  if(!result.rowCount) return res.status(404).json({error:'Sessione non trovata.'});
+  await logActivity(req,'Selezione flash riaperta',result.rows[0].practice_id,{
+    token:req.params.token
+  });
+  await createNotification(
+    'flash_reopened','Selezione flash riaperta',
+    `La selezione della pratica ${result.rows[0].practice_id} è stata riaperta.`,
+    result.rows[0].practice_id,null
+  );
+  res.json({ok:true});
 });
 
 app.get('/api/flash-sessions/practice/:id', auth, async (req,res) => {
