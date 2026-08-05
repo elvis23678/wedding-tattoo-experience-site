@@ -152,11 +152,13 @@
           <div class="wte-editor-crop"></div>
         </div>
         <div class="wte-editor-controls">
+          <button type="button" data-editor-fit="contain">Adatta intera</button>
+          <button type="button" data-editor-fit="cover">Riempi quadrato</button>
           <button type="button" data-editor-rotate="-90">Ruota sinistra</button>
           <button type="button" data-editor-rotate="90">Ruota destra</button>
           <div class="wte-editor-zoom">
             <span>Zoom</span>
-            <input id="wteEditorZoom" type="range" min="1" max="3" step="0.01" value="1">
+            <input id="wteEditorZoom" type="range" min="0.5" max="3" step="0.01" value="1">
           </div>
         </div>
         <div class="wte-editor-actions">
@@ -179,7 +181,7 @@
       const image=new Image();
       const objectUrl=URL.createObjectURL(file);
 
-      let rotation=0,zoom=1,offsetX=0,offsetY=0;
+      let rotation=0,zoom=1,offsetX=0,offsetY=0,fitMode='contain';
       let dragging=false,lastX=0,lastY=0,finished=false;
 
       function finish(result,error){
@@ -211,7 +213,10 @@
         context.fillRect(0,0,size,size);
 
         const dimensions=rotatedDimensions();
-        const scale=Math.max(size/dimensions.width,size/dimensions.height)*zoom;
+        const baseScale=fitMode==='contain'
+          ? Math.min(size/dimensions.width,size/dimensions.height)
+          : Math.max(size/dimensions.width,size/dimensions.height);
+        const scale=baseScale*zoom;
 
         context.save();
         context.translate(size/2+offsetX*ratio,size/2+offsetY*ratio);
@@ -222,13 +227,24 @@
       }
 
       image.onload=()=>{
-        rotation=0;zoom=1;offsetX=0;offsetY=0;
+        rotation=0;zoom=1;offsetX=0;offsetY=0;fitMode='contain';
         zoomInput.value='1';
         modal.classList.add('open');
         requestAnimationFrame(draw);
       };
       image.onerror=()=>finish(null,new Error('Impossibile leggere l’immagine.'));
       image.src=objectUrl;
+
+      modal.querySelectorAll('[data-editor-fit]').forEach(button=>{
+        button.onclick=()=>{
+          fitMode=button.dataset.editorFit;
+          zoom=1;
+          offsetX=0;
+          offsetY=0;
+          zoomInput.value='1';
+          draw();
+        };
+      });
 
       modal.querySelectorAll('[data-editor-rotate]').forEach(button=>{
         button.onclick=()=>{
@@ -266,7 +282,10 @@
           oc.fillStyle='#fff';oc.fillRect(0,0,1200,1200);
 
           const dimensions=rotatedDimensions();
-          const scale=Math.max(1200/dimensions.width,1200/dimensions.height)*zoom;
+          const baseScale=fitMode==='contain'
+            ? Math.min(1200/dimensions.width,1200/dimensions.height)
+            : Math.max(1200/dimensions.width,1200/dimensions.height);
+          const scale=baseScale*zoom;
           const conversion=1200/(canvas.getBoundingClientRect().width||1);
 
           oc.save();
