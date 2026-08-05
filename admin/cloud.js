@@ -2,7 +2,8 @@
 (() => {
   const REQUEST_KEY = 'wte_requests_v1';
   const API_KEY = 'wte_cloud_api_url_v2';
-  const TOKEN_KEY = 'wte_cloud_token_v2';
+  const TOKEN_KEY = 'wte_cloud_token_v4';
+  const REMEMBER_KEY = 'wte_cloud_remember_v4';
   const LAST_SYNC_KEY = 'wte_cloud_last_sync_v2';
   const DEVICE_KEY = 'wte_cloud_device_v2';
 
@@ -26,7 +27,7 @@
   }
 
   function getToken() {
-    return sessionStorage.getItem(TOKEN_KEY) || '';
+    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || '';
   }
 
   function getDeviceId() {
@@ -58,7 +59,7 @@
       topStatus.textContent =
         type === 'online' ? 'Cloud' :
         type === 'syncing' ? 'Sync…' :
-        type === 'error' ? 'Errore' : 'Locale';
+        type === 'error' ? 'Offline' : 'Cloud non connesso';
     }
   }
 
@@ -107,11 +108,17 @@
         body:JSON.stringify({password})
       });
 
-      sessionStorage.setItem(TOKEN_KEY, result.token);
+      const remember = document.getElementById('cloudRememberConnection')?.checked !== false;
+      localStorage.setItem(REMEMBER_KEY, remember ? '1' : '0');
+      localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
+      (remember ? localStorage : sessionStorage).setItem(TOKEN_KEY, result.token);
       passwordInput.value = '';
       setStatus('online', 'Cloud connesso');
       await syncNow({preferRemote:true});
     } catch (error) {
+      localStorage.removeItem(TOKEN_KEY);
       sessionStorage.removeItem(TOKEN_KEY);
       setStatus('error', error.message);
       alert(error.message);
@@ -151,9 +158,10 @@
     try {
       const remote = await request('/api/practices');
       const local = loadLocal();
-      const merged = preferRemote && !local.length
-        ? remote.practices
-        : mergePractices(local, remote.practices || []);
+      const remoteItems = Array.isArray(remote.practices) ? remote.practices : [];
+      const merged = preferRemote
+        ? remoteItems
+        : mergePractices(local, remoteItems);
 
       await request('/api/practices/sync', {
         method:'POST',
@@ -166,6 +174,7 @@
 
       localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
       document.getElementById('refreshBtn')?.click();
+      window.dispatchEvent(new CustomEvent('wte:cloud-synced',{detail:{count:merged.length}}));
       setStatus('online', `Sincronizzato · ${merged.length} pratiche`);
     } catch (error) {
       setStatus('error', error.message);
@@ -184,6 +193,8 @@
   syncBtn?.addEventListener('click', () => syncNow());
 
   if (apiInput) apiInput.value = getApi();
+  const rememberInput = document.getElementById('cloudRememberConnection');
+  if (rememberInput) rememberInput.checked = localStorage.getItem(REMEMBER_KEY) !== '0';
 
   window.addEventListener('storage', event => {
     if (event.key === REQUEST_KEY) scheduleSync();
@@ -199,11 +210,11 @@
     setStatus('online', 'Cloud connesso');
     syncNow({preferRemote:true});
   } else {
-    setStatus('local', 'Modalità locale');
+    setStatus('local', 'Cloud non connesso');
   }
 
   // Periodic sync while Admin is open.
   setInterval(() => {
     if (document.visibilityState === 'visible') syncNow();
-  }, 60000);
+  }, 30000);
 })();

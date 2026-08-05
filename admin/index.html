@@ -7,7 +7,7 @@
 <meta content="#050403" name="theme-color"/>
 <meta content="noindex,nofollow" name="robots"/>
 <title>WTE Admin — Archivio pratiche</title>
-<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="./admin.css?v=2.2.0-client-crm" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="2.5-premium" name="wte-version"/><meta content="WTE-V1.1-STABILE-PREMIUM" name="wte-admin-build"/></head>
+<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="./admin.css?v=2.2.0-client-crm" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="5.0-stable" name="wte-version"/><meta content="WTE-V5-STABLE" name="wte-admin-build"/></head>
 <body><div class="admin-lock" id="adminLock">
 <form class="admin-lock-card" id="adminLockForm">
 <div class="admin-lock-mark">W</div>
@@ -29,7 +29,7 @@
 <strong>Admin CRM</strong>
 </div>
 </div>
-<div class="top-actions"><span class="cloud-top-status local" id="cloudTopStatus">Locale</span>
+<div class="top-actions"><span class="cloud-top-status local" id="cloudTopStatus">Cloud non connesso</span>
 <a href="/">Apri sito clienti</a>
 <button id="refreshBtn">Aggiorna</button>
 <button id="settingsBtn" type="button">Impostazioni</button><button id="adminLogout" type="button">Esci</button></div>
@@ -317,6 +317,22 @@
 </div>
 <div class="calendar-selected-events" id="calendarSelectedEvents"></div>
 </div>
+</section><section class="workflow-notifications" id="workflowNotifications">
+<header>
+<div>
+<span>Automazioni operative</span>
+<h2>Avvisi e pagamenti</h2>
+<p>Scadenze acconto, saldo e pratiche che richiedono attenzione.</p>
+</div>
+<button id="workflowRefreshBtn" type="button">Aggiorna avvisi</button>
+</header>
+<div class="workflow-notification-kpis">
+<article><small>Acconti da ricevere</small><strong id="workflowDepositsDue">0</strong></article>
+<article><small>Saldi in scadenza</small><strong id="workflowBalancesDue">0</strong></article>
+<article><small>Eventi sospesi</small><strong id="workflowSuspended">0</strong></article>
+<article><small>Messaggi pronti</small><strong id="workflowMessagesReady">0</strong></article>
+</div>
+<div class="workflow-notification-list" id="workflowNotificationList"></div>
 </section><section class="premium-dashboard" id="premiumDashboard">
 <header class="premium-head">
 <div>
@@ -459,12 +475,29 @@
       <input id="detailBalance" min="0" placeholder="0" step="10" type="number"/>
 </label>
 </div>
+</section><section class="payment-workflow-summary" id="paymentWorkflowSummary">
+<header><span>Flusso pagamento</span><strong id="workflowPaymentState">Da configurare</strong></header>
+<div>
+<small>Totale</small><strong id="workflowTotal">€ 0</strong>
+<small>Acconto</small><strong id="workflowDeposit">€ 0</strong>
+<small>Saldo</small><strong id="workflowBalance">€ 0</strong>
+</div>
+<p id="workflowDeadlineCopy">Apri una pratica per visualizzare le scadenze.</p>
+</section><section class="payment-message-box" id="paymentMessageBox">
+<header>
+<div>
+<span>Messaggio cliente</span>
+<strong id="paymentMessageTitle">Nessun messaggio pronto</strong>
+</div>
+<button id="openPreparedWhatsappBtn" type="button">Apri WhatsApp</button>
+</header>
+<textarea id="paymentMessagePreview" placeholder="La richiesta di acconto comparirà qui dopo la conferma dell’evento." readonly=""></textarea>
 </section><section class="quick-actions">
 <button id="callBtn" type="button">Chiama</button>
 <button id="emailBtn" type="button">Email</button>
-<button id="registerDepositBtn" type="button">Registra acconto</button>
-<button id="confirmEventBtn" type="button">Conferma evento</button>
-</section><section class="timeline-box">
+<button id="registerDepositBtn" type="button">Registra acconto ricevuto</button>
+<button id="confirmEventBtn" type="button">Conferma e richiedi acconto</button>
+<button id="registerBalanceBtn" type="button">Registra saldo ricevuto</button></section><section class="timeline-box">
 <div class="timeline-head">
 <span>Cronologia pratica</span>
 <button id="addTimelineBtn" type="button">Aggiungi nota</button>
@@ -494,7 +527,7 @@
 <footer class="drawer-actions"><button id="openPdfBtn" type="button">Apri PDF</button><button id="whatsappBtn" type="button">WhatsApp</button><button id="duplicateBtn" type="button">Duplica</button><button class="danger" id="deleteBtn" type="button">Elimina</button><button id="saveNotesBtn" type="button">Salva modifiche</button><button class="gold" id="closeDetailBtn" type="button">Chiudi</button></footer>
 </aside>
 </div>
-<script defer="" src="./admin.js?v=2.2.0-client-crm"></script><div aria-hidden="true" class="settings-modal" id="settingsModal">
+<script defer="" src="./admin.js?v=5.0.0-stable"></script><div aria-hidden="true" class="settings-modal" id="settingsModal">
 <div class="settings-backdrop" data-close-settings=""></div>
 <section class="settings-panel">
 <header class="settings-head">
@@ -545,7 +578,10 @@
 <button id="cloudConnectBtn" type="button">Connetti</button>
 <button id="cloudSyncBtn" type="button">Sincronizza ora</button>
 </div>
-<div class="cloud-status local" id="cloudStatus">
+<label class="settings-check cloud-remember-check">
+<input checked="" id="cloudRememberConnection" type="checkbox"/>
+  Mantieni automaticamente il CRM collegato al Cloud su questo dispositivo
+</label><div class="cloud-status local" id="cloudStatus">
 <i></i>
 <span>Modalità locale</span>
 </div>
@@ -564,6 +600,23 @@
 <small>Ultimo backup Cloud</small>
 <strong id="cloudBackupLast">—</strong>
 </div>
+</article><article class="settings-card payment-settings-card" id="paymentSettingsCard">
+<div>
+<span>Pagamenti cliente</span>
+<strong>Coordinate e regole automatiche</strong>
+<p>Questi dati vengono inseriti nei messaggi di acconto, nei contratti e nei promemoria.</p>
+</div>
+<div class="payment-settings-grid">
+<label>Intestatario<input id="settingsPayee" placeholder="Tattoo Beauty Saloon" type="text"/></label>
+<label>IBAN<input id="settingsIban" placeholder="IT00..." type="text"/></label>
+<label>PayPal<input id="settingsPaypal" placeholder="Email o link PayPal" type="text"/></label>
+<label>Acconto %<input id="settingsDepositPercent" max="100" min="0" type="number" value="30"/></label>
+</div>
+<label class="settings-check">
+<input checked="" id="settingsAutoOpenWhatsapp" type="checkbox"/>
+    Apri automaticamente WhatsApp dopo Conferma evento e Registra acconto
+  </label>
+<button id="savePaymentSettingsBtn" type="button">Salva impostazioni pagamento</button>
 </article></div>
 </section>
 </div><div aria-hidden="true" class="confirm-modal" id="confirmResetModal">
@@ -604,7 +657,7 @@
 <div class="backup-history-list" id="backupHistoryList"></div>
 </div>
 </section>
-</div><script defer="" src="./cloud.js?v=2.2.0-client-crm"></script><div aria-hidden="true" class="document-modal" id="documentGeneratorModal">
+</div><script defer="" src="./cloud.js?v=5.0.0-stable"></script><div aria-hidden="true" class="document-modal" id="documentGeneratorModal">
 <div class="settings-backdrop" data-close-document-generator=""></div>
 <section class="document-panel">
 <header class="document-panel-head">
@@ -654,7 +707,7 @@
 </div>
 </div>
 </section>
-</div><script defer="True" src="./documents.js?v=2.3.0"></script><div aria-hidden="true" class="availability-modal" id="availabilityDayModal">
+</div><script defer="True" src="./documents.js?v=5.0.0-stable"></script><div aria-hidden="true" class="availability-modal" id="availabilityDayModal">
 <div class="settings-backdrop" data-close-availability-day=""></div>
 <section class="availability-day-card">
 <header>
@@ -687,7 +740,7 @@
 </header>
 <div class="availability-conflicts-list" id="availabilityConflictsList"></div>
 </section>
-</div><script defer="True" src="./availability.js?v=2.4.0"></script><div aria-hidden="true" class="cloud-backups-modal" id="cloudBackupsModal">
+</div><script defer="True" src="./availability.js?v=5.0.0-stable"></script><div aria-hidden="true" class="cloud-backups-modal" id="cloudBackupsModal">
 <div class="settings-backdrop" data-close-cloud-backups=""></div>
 <section class="cloud-backups-panel">
 <header>
@@ -700,5 +753,5 @@
 </div>
 <div class="cloud-backups-list" id="cloudBackupsList"></div>
 </section>
-</div><script defer="True" src="./premium.js?v=2.5.0"></script></body>
+</div><script defer="True" src="./premium.js?v=5.0.0-stable"></script><script defer="True" src="./workflow.js?v=5.0.0-stable"></script></body>
 </html>

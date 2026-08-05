@@ -136,7 +136,7 @@
       :`${header(type,it)}${client(it)}
         <section class="doc-section"><h2>Oggetto del contratto</h2><p class="doc-terms">Il cliente incarica Wedding Tattoo Experience di svolgere il servizio durante l’evento indicato, nel rispetto delle condizioni organizzative e igienico-sanitarie concordate.</p></section>
         ${totals(d)}
-        <section class="doc-section"><h2>Condizioni essenziali</h2><p class="doc-terms">La data si considera riservata dopo l’incasso dell’acconto. Il saldo deve essere versato entro la data indicata. I tatuaggi saranno eseguiti esclusivamente su maggiorenni, previa acquisizione del consenso informato.${d.terms?'<br><br>'+esc(d.terms):''}</p></section>
+        <section class="doc-section"><h2>Condizioni essenziali</h2><p class="doc-terms">La data si considera riservata dopo l’incasso dell’acconto. Il saldo deve essere ricevuto entro e non oltre 7 giorni prima dell’evento. In assenza del saldo entro tale termine, il servizio non verrà eseguito e l’acconto versato resterà acquisito quale corrispettivo per il blocco della data, salvo diversa disposizione inderogabile di legge. I tatuaggi saranno eseguiti esclusivamente su maggiorenni, previa acquisizione del consenso informato.${d.terms?'<br><br>'+esc(d.terms):''}</p></section>
         <section class="doc-signatures"><div class="doc-signature">Firma cliente</div><div class="doc-signature">Wedding Tattoo Experience</div></section>
         <footer class="doc-footer">BOZZA NON VALIDA FINO ALLA CONFERMA DELL’ACCONTO</footer>`;
 
