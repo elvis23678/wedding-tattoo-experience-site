@@ -16,3 +16,9 @@ CREATE TABLE IF NOT EXISTS wte_backups (
 
 CREATE INDEX IF NOT EXISTS idx_wte_backups_created
 ON wte_backups(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS wte_settings (
+  id TEXT PRIMARY KEY,
+  data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

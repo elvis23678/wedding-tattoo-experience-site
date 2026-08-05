@@ -78,7 +78,7 @@ app.post('/api/auth/login', (req,res) => {
   const token = jwt.sign(
     {role:'admin'},
     JWT_SECRET,
-    {expiresIn:'12h'}
+    {expiresIn:'30d'}
   );
 
   res.json({token});
@@ -166,6 +166,25 @@ app.post('/api/public/practices', publicRateLimit, async (req,res) => {
   );
 
   res.status(201).json({ok:true, id:practice.id});
+});
+
+
+app.get('/api/settings', auth, async (_req,res) => {
+  const result = await pool.query(`SELECT data FROM wte_settings WHERE id = 'global'`);
+  res.json({settings:result.rows[0]?.data || {}});
+});
+
+app.post('/api/settings', auth, async (req,res) => {
+  const parsed = z.record(z.any()).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({error:'Impostazioni non valide.'});
+  await pool.query(
+    `INSERT INTO wte_settings (id, data, updated_at)
+     VALUES ('global', $1::jsonb, NOW())
+     ON CONFLICT (id)
+     DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()`,
+    [JSON.stringify(parsed.data)]
+  );
+  res.json({ok:true});
 });
 
 app.get('/api/practices', auth, async (_req,res) => {
