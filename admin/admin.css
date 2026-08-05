@@ -2931,3 +2931,11 @@ html[data-role="collaborator"] #settingsBtn{display:none!important}
   .user-meta-v8,.permission-editor{grid-template-columns:1fr}
   .user-actions-v8{grid-template-columns:1fr}
 }
+
+/* WTE V9 - Selezione flash e PDF */
+.flash-selection-box>p{margin:9px 0;color:#a99a84;font-size:8px;line-height:1.5}
+.flash-selection-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important}
+.flash-selection-actions button{min-height:42px!important}
+.flash-selection-actions button:disabled{opacity:.35}
+.flash-selection-meta{margin-top:9px;padding:9px;border:1px solid rgba(214,170,85,.18);color:#b8a88f;font-size:8px;line-height:1.5}
+@media(min-width:700px){.flash-selection-actions{grid-template-columns:repeat(5,1fr)!important}}

@@ -272,7 +272,7 @@ ${methods}`;
     if(s.autoOpenWhatsapp)openWhatsapp(item,msg);
   }
 
-  function registerDeposit(e){
+  async function registerDeposit(e){
     e.preventDefault();
     e.stopImmediatePropagation();
 
@@ -303,7 +303,27 @@ ${methods}`;
     timeline(item,'Acconto ricevuto',
       `${euro(amount)} registrati · Saldo ${euro(item.balance)} entro ${fmt(item.balanceDueDate)}`);
 
-    const msg=buildMessage(item,'deposit-received');
+    let flashUrl=item.flashSelectionLink||'';
+    try{
+      if(window.WTEFlash?.ensureSession){
+        const flash=await window.WTEFlash.ensureSession(item);
+        flashUrl=flash?.url||flashUrl;
+        if(flashUrl){
+          item.flashSelectionLink=flashUrl;
+          item.flashSelectionToken=flash.token||item.flashSelectionToken;
+          item.flashSelectionStatus=flash.locked?'Confermata':'Link inviato';
+          timeline(item,'Link selezione flash disponibile',
+            `Il cliente può scegliere fino a 50 flash: ${flashUrl}`);
+        }
+      }
+    }catch(error){
+      timeline(item,'Link flash non generato',error.message||'Errore Cloud');
+    }
+
+    let msg=buildMessage(item,'deposit-received');
+    if(flashUrl){
+      msg+=`\n\n🎨 *Scegliete i flash per il vostro evento*\n${flashUrl}\n\nPotete selezionare fino a 50 soggetti. Al termine firmate e confermate la selezione.`;
+    }
     storeMessage(item,'deposit-received',msg);
     save(items);
     refreshDrawer(item);
