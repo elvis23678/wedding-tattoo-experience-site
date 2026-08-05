@@ -2165,3 +2165,492 @@ textarea{width:100%;min-height:90px}
     height: 46px;
   }
 }
+
+
+/* =========================================================
+   WTE CLOUD — CLIENTI → CRM v2.2
+   ========================================================= */
+.cloud-top-status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:36px;
+  padding:0 13px;
+  border:1px solid rgba(214,170,85,.35);
+  color:#b8ada2;
+  background:rgba(255,255,255,.025);
+  font:700 8px/1 Arial,sans-serif;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.cloud-top-status.online{color:#a6d0ac;border-color:rgba(127,180,134,.48)}
+.cloud-top-status.syncing{color:#efd08d;border-color:rgba(214,170,85,.55)}
+.cloud-top-status.error{color:#df958d;border-color:rgba(196,111,101,.55)}
+.cloud-settings-card{grid-template-columns:1fr!important}
+.cloud-settings-fields{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto auto;
+  gap:8px;
+}
+.cloud-settings-fields input{
+  width:100%;
+  min-width:0;
+  min-height:48px;
+  padding:0 13px;
+  border:1px solid rgba(214,170,85,.25);
+  background:#080705;
+  color:#f3eadf;
+  outline:none;
+}
+.cloud-settings-fields button{
+  min-height:48px;
+  padding:0 15px;
+}
+.cloud-status{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  color:#b8ada2;
+  font-size:11px;
+}
+.cloud-status i{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#777;
+  box-shadow:0 0 12px currentColor;
+}
+.cloud-status.online i{background:#7fb486}
+.cloud-status.syncing i{background:#d6aa55}
+.cloud-status.error i{background:#c46f65}
+@media(max-width:759px){
+  .cloud-top-status{grid-column:1/-1}
+  .cloud-settings-fields{grid-template-columns:1fr}
+  .cloud-settings-fields button{width:100%}
+}
+
+
+/* WTE PUNTO 3 — PREVENTIVO E CONTRATTO */
+.document-generator-box{margin-top:12px;padding:15px;border:1px solid rgba(214,170,85,.24);background:#0a0704}
+.document-generator-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.document-generator-head span{color:var(--gold2);font-size:8px;letter-spacing:.12em;text-transform:uppercase}
+.document-generator-head strong{display:block;margin-top:5px;font-family:var(--serif);font-size:20px;font-weight:400}
+.document-generator-head button{min-height:40px;padding:0 14px;border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48 58%,#a87526);color:#171006;font-size:8px;font-weight:800;text-transform:uppercase}
+.document-generator-status{margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.document-generator-status div{min-height:70px;padding:10px;display:flex;flex-direction:column;justify-content:center;gap:6px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.document-generator-status small{color:#a99b87;font-size:6px;text-transform:uppercase}
+.document-generator-status strong{font-family:var(--serif);font-size:15px;font-weight:400}
+.document-modal{position:fixed;inset:0;z-index:6400;display:none}
+.document-modal.open{display:block}
+.document-panel{position:absolute;inset:0;background:#060403;overflow:auto}
+.document-panel-head{position:sticky;top:0;z-index:2;min-height:76px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);background:rgba(8,6,4,.96)}
+.document-panel-head div{display:flex;flex-direction:column;gap:4px}
+.document-panel-head span{color:var(--gold2);font-size:8px;letter-spacing:.13em;text-transform:uppercase}
+.document-panel-head strong{font-family:var(--serif);font-size:24px;font-weight:400}
+.document-panel-head button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#fff;font-size:24px}
+.document-panel-content{padding:14px}
+.document-form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.document-form-grid label,.document-textarea-label{display:flex;flex-direction:column;gap:7px;color:#cbbb9f;font-size:8px;text-transform:uppercase}
+.document-form-grid input,.document-textarea-label textarea{min-height:46px;padding:0 11px;border:1px solid var(--line);background:#100d09;color:#fff}
+.document-textarea-label{margin-top:10px}
+.document-textarea-label textarea{min-height:90px;padding:10px}
+.document-actions{margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.document-actions button{min-height:44px;padding:0 10px;border:1px solid var(--line);background:#0b0805;color:#e2d5c0;font-size:7px;font-weight:700;text-transform:uppercase}
+.document-actions button:first-child,.document-actions button:nth-child(2){border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48 58%,#a87526);color:#171006}
+.document-preview-wrap{position:relative;margin-top:14px;background:#fff;overflow:hidden}
+.document-preview{min-height:900px;padding:42px;color:#201a14;background:#fff;font-family:Georgia,serif}
+.document-preview-watermark{position:absolute;left:50%;top:50%;z-index:1;transform:translate(-50%,-50%) rotate(-32deg);color:rgba(110,80,35,.12);font:700 clamp(70px,14vw,150px)/1 Arial,sans-serif;letter-spacing:.15em;pointer-events:none}
+.document-preview>*{position:relative;z-index:2}
+.document-empty-state{padding-top:180px;text-align:center;color:#8f8274}
+.doc-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:24px;border-bottom:2px solid #b58a42}
+.doc-brand small{display:block;color:#8c692f;font:700 10px/1.3 Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase}
+.doc-brand h1{margin:8px 0 0;font-size:34px;font-weight:400}
+.doc-meta{text-align:right;font:12px/1.5 Arial,sans-serif}
+.doc-section{margin-top:26px}
+.doc-section h2{margin:0 0 12px;color:#8c692f;font:700 12px/1.3 Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+.doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+.doc-row{padding:9px 0;border-bottom:1px solid #e7ded1}
+.doc-row small{display:block;color:#8d8175;font:10px/1.3 Arial,sans-serif;text-transform:uppercase}
+.doc-row strong{display:block;margin-top:4px;font-size:15px;font-weight:400}
+.doc-total-box{margin-top:26px;padding:20px;border:1px solid #b58a42;background:#fbf7ef}
+.doc-total-box div{display:flex;justify-content:space-between;gap:12px;padding:7px 0}
+.doc-total-box div:last-child{margin-top:7px;padding-top:14px;border-top:1px solid #b58a42;font-size:20px}
+.doc-terms{font-size:12px;line-height:1.7}
+.doc-signatures{margin-top:60px;display:grid;grid-template-columns:1fr 1fr;gap:50px}
+.doc-signature{padding-top:48px;border-top:1px solid #40372f;text-align:center;font:11px/1.4 Arial,sans-serif}
+.doc-footer{margin-top:50px;padding-top:18px;border-top:1px solid #ded4c6;color:#766a5e;text-align:center;font:10px/1.5 Arial,sans-serif}
+@media(max-width:759px){.document-generator-status,.document-form-grid,.document-actions{grid-template-columns:1fr}.document-preview{min-height:720px;padding:20px 16px;font-size:12px}.doc-header{flex-direction:column}.doc-meta{text-align:left}.doc-grid,.doc-signatures{grid-template-columns:1fr}}
+@media print{body *{visibility:hidden!important}#documentPreview,#documentPreview *{visibility:visible!important}#documentPreview{position:absolute;left:0;top:0;width:100%;min-height:0;padding:20mm}#documentWatermark{visibility:visible!important}}
+
+
+/* =========================================================
+   WTE PUNTO 4 — CALENDARIO E DISPONIBILITÀ
+   ========================================================= */
+
+.availability-toolbar{
+  margin-bottom:14px;
+  padding:15px;
+  border:1px solid var(--line);
+  background:
+    radial-gradient(circle at 90% 0%,rgba(201,154,67,.09),transparent 30%),
+    #080604;
+}
+
+.availability-toolbar > div:first-child span{
+  color:var(--gold2);
+  font-size:8px;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+
+.availability-toolbar > div:first-child strong{
+  display:block;
+  margin-top:6px;
+  font-family:var(--serif);
+  font-size:27px;
+  font-weight:400;
+}
+
+.availability-toolbar > div:first-child p{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:10px;
+}
+
+.availability-toolbar-actions{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+
+.availability-toolbar-actions button{
+  min-height:42px;
+  border:1px solid var(--line);
+  background:#0b0805;
+  color:#e2d5c0;
+  font-size:8px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+
+.availability-kpis{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--line);
+  border-left:1px solid var(--line);
+}
+
+.availability-kpis article{
+  min-height:76px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:6px;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+
+.availability-kpis small{
+  color:#9f907c;
+  font-size:6px;
+  text-transform:uppercase;
+}
+
+.availability-kpis strong{
+  color:#f0ddb0;
+  font-family:var(--serif);
+  font-size:22px;
+  font-weight:400;
+}
+
+.calendar-day.availability-blocked{
+  background:rgba(157,66,57,.18)!important;
+  box-shadow:inset 0 0 0 1px rgba(196,111,101,.35);
+}
+
+.calendar-day.availability-conflict{
+  background:rgba(180,90,40,.24)!important;
+  box-shadow:inset 0 0 0 1px rgba(224,149,75,.55);
+}
+
+.calendar-day.availability-free{
+  background:rgba(127,180,134,.05);
+}
+
+.calendar-day-note{
+  display:block;
+  margin-top:4px;
+  color:#c8b797;
+  font-size:5px;
+  line-height:1.2;
+  text-transform:uppercase;
+}
+
+.availability-modal{
+  position:fixed;
+  inset:0;
+  z-index:6500;
+  display:none;
+}
+
+.availability-modal.open{
+  display:block;
+}
+
+.availability-day-card,
+.availability-conflicts-panel{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:min(94vw,520px);
+  max-height:90vh;
+  overflow:auto;
+  padding:20px;
+  border:1px solid var(--line);
+  background:#090704;
+  z-index:1;
+}
+
+.availability-day-card header,
+.availability-conflicts-panel header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding-bottom:14px;
+  border-bottom:1px solid var(--line);
+}
+
+.availability-day-card header div,
+.availability-conflicts-panel header div{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.availability-day-card header span,
+.availability-conflicts-panel header span{
+  color:var(--gold2);
+  font-size:8px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.availability-day-card header strong,
+.availability-conflicts-panel header strong{
+  font-family:var(--serif);
+  font-size:25px;
+  font-weight:400;
+}
+
+.availability-day-card header button,
+.availability-conflicts-panel header button{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:transparent;
+  color:#fff;
+  font-size:22px;
+}
+
+.availability-day-status{
+  margin-top:14px;
+  padding:12px;
+  border:1px solid var(--line);
+  color:#d9cdbb;
+  font-size:10px;
+}
+
+.availability-day-events,
+.availability-conflicts-list{
+  display:grid;
+  gap:8px;
+  margin-top:10px;
+}
+
+.availability-event-card,
+.availability-conflict-card{
+  padding:12px;
+  border:1px solid rgba(201,154,67,.22);
+  background:#0d0906;
+}
+
+.availability-event-card strong,
+.availability-conflict-card strong{
+  display:block;
+  font-family:var(--serif);
+  font-size:17px;
+  font-weight:400;
+}
+
+.availability-event-card span,
+.availability-conflict-card span{
+  display:block;
+  margin-top:5px;
+  color:#a99b87;
+  font-size:8px;
+}
+
+.availability-day-note{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  margin-top:13px;
+  color:#cbbb9f;
+  font-size:8px;
+  text-transform:uppercase;
+}
+
+.availability-day-note textarea{
+  min-height:110px;
+  padding:11px;
+  resize:vertical;
+  border:1px solid var(--line);
+  background:#100d09;
+  color:#fff;
+}
+
+.availability-day-actions{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.availability-day-actions button{
+  min-height:45px;
+  border:1px solid var(--line);
+  background:#0b0805;
+  color:#e2d5c0;
+  font-size:8px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+
+#availabilityToggleBlockBtn.block{
+  border:0;
+  background:#8d4038;
+  color:#fff;
+}
+
+#availabilityToggleBlockBtn.unblock{
+  border:0;
+  background:linear-gradient(135deg,#f2dfad,#cc9f48 58%,#a87526);
+  color:#171006;
+}
+
+.availability-empty{
+  padding:28px 16px;
+  text-align:center;
+  color:#928471;
+  border:1px dashed rgba(240,221,176,.12);
+}
+
+@media(max-width:759px){
+  .availability-toolbar-actions,
+  .availability-kpis{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .availability-day-actions{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:390px){
+  .availability-toolbar-actions,
+  .availability-kpis{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* =========================================================
+   WTE PUNTO 5 — PREMIUM
+   ========================================================= */
+
+.premium-dashboard{
+  margin-bottom:14px;
+  padding:15px;
+  border:1px solid rgba(214,170,85,.22);
+  background:
+    radial-gradient(circle at 92% 0%,rgba(214,170,85,.11),transparent 32%),
+    #080604;
+}
+
+.premium-head{display:grid;gap:12px;margin-bottom:14px}
+.premium-head span{color:var(--gold2);font-size:8px;letter-spacing:.13em;text-transform:uppercase}
+.premium-head h2{margin:6px 0 0;font-family:var(--serif);font-size:30px;font-weight:400}
+.premium-head p{margin:7px 0 0;color:var(--muted);font-size:10px}
+.premium-head-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.premium-head-actions button{min-height:42px;border:1px solid var(--line);background:#0b0805;color:#e2d5c0;font-size:8px;font-weight:700;text-transform:uppercase}
+
+.premium-kpis{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line);margin-bottom:12px}
+.premium-kpis article{min-height:92px;padding:11px;display:flex;flex-direction:column;justify-content:center;gap:6px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.premium-kpis small{color:#9f907c;font-size:6px;text-transform:uppercase}
+.premium-kpis strong{color:#f0ddb0;font-family:var(--serif);font-size:22px;font-weight:400}
+.premium-kpis span{color:#887c6d;font-size:7px}
+
+.premium-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.premium-card{padding:14px;border:1px solid var(--line);background:#0a0704}
+.premium-card-wide{grid-column:1/-1}
+.premium-card header span{color:var(--gold2);font-size:7px;text-transform:uppercase}
+.premium-card header strong{display:block;margin-top:5px;font-family:var(--serif);font-size:20px;font-weight:400}
+
+.premium-pipeline,.premium-deadlines{margin-top:12px;display:grid;gap:8px}
+.premium-pipeline-row,.premium-deadline-row{padding:10px;border:1px solid var(--line);background:#0d0906}
+.premium-pipeline-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.premium-pipeline-row span,.premium-deadline-row span{color:#a99b87;font-size:8px}
+.premium-pipeline-row strong,.premium-deadline-row strong{font-family:var(--serif);font-size:16px;font-weight:400}
+.premium-deadline-row small{display:block;margin-top:4px;color:#8e8273;font-size:7px}
+.premium-empty{padding:24px 12px;text-align:center;color:#8f8272;border:1px dashed rgba(240,221,176,.12)}
+
+.premium-filters{margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.premium-filters input,.premium-filters select,.premium-filters button{min-height:44px;padding:0 10px;border:1px solid var(--line);background:#100d09;color:#e8ddce}
+.premium-filters button{font-size:7px;font-weight:700;text-transform:uppercase}
+
+.cloud-backup-card{grid-template-columns:1fr!important}
+.cloud-backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cloud-backup-actions button{min-height:46px;border:1px solid var(--line);background:#0b0805;color:#e2d5c0;font-size:8px;font-weight:700;text-transform:uppercase}
+.cloud-backup-status{padding-top:10px;border-top:1px solid var(--line)}
+.cloud-backup-status small{color:#9f907c;font-size:7px;text-transform:uppercase}
+.cloud-backup-status strong{display:block;margin-top:5px;font-family:var(--serif);font-size:16px;font-weight:400}
+
+.cloud-backups-modal{position:fixed;inset:0;z-index:6600;display:none}
+.cloud-backups-modal.open{display:block}
+.cloud-backups-panel{position:absolute;inset:0;background:#060403;overflow:auto}
+.cloud-backups-panel>header{position:sticky;top:0;z-index:2;min-height:76px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:rgba(8,6,4,.96)}
+.cloud-backups-panel>header div{display:flex;flex-direction:column;gap:4px}
+.cloud-backups-panel>header span{color:var(--gold2);font-size:8px;text-transform:uppercase}
+.cloud-backups-panel>header strong{font-family:var(--serif);font-size:24px;font-weight:400}
+.cloud-backups-panel>header button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#fff;font-size:24px}
+.cloud-backups-summary{margin:14px;display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.cloud-backups-summary div{min-height:78px;padding:11px;display:flex;flex-direction:column;justify-content:center;gap:6px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cloud-backups-summary small{color:#9f907c;font-size:7px;text-transform:uppercase}
+.cloud-backups-summary strong{font-family:var(--serif);font-size:17px;font-weight:400}
+.cloud-backups-list{padding:0 14px 14px;display:grid;gap:8px}
+.cloud-backup-row{padding:13px;display:grid;grid-template-columns:1fr auto;gap:10px;border:1px solid var(--line);background:#0a0704}
+.cloud-backup-row strong{font-family:var(--serif);font-size:17px;font-weight:400}
+.cloud-backup-row span{display:block;margin-top:5px;color:#9f907c;font-size:8px}
+.cloud-backup-row button{min-height:38px;padding:0 10px;border:1px solid var(--line);background:#0b0805;color:#e2d5c0;font-size:7px;text-transform:uppercase}
+
+@media(min-width:760px){
+  .premium-head{grid-template-columns:1fr 260px;align-items:end}
+  .cloud-backups-panel{left:auto;width:min(620px,86vw);border-left:1px solid var(--line)}
+}
+
+@media(max-width:759px){
+  .premium-kpis,.premium-grid,.premium-filters{grid-template-columns:1fr 1fr}
+  .premium-card-wide{grid-column:1/-1}
+  .cloud-backup-actions{grid-template-columns:1fr}
+}
+
+@media(max-width:390px){
+  .premium-kpis,.premium-grid,.premium-filters{grid-template-columns:1fr}
+}

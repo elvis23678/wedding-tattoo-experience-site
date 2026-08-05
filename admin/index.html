@@ -7,7 +7,7 @@
 <meta content="#050403" name="theme-color"/>
 <meta content="noindex,nofollow" name="robots"/>
 <title>WTE Admin — Archivio pratiche</title>
-<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="./admin.css?v=2.1.0-stable-mobile" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="2.1-stable-mobile" name="wte-version"/><meta content="WTE-V1.1-STABILE-PREMIUM" name="wte-admin-build"/></head>
+<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="./admin.css?v=2.2.0-client-crm" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="2.5-premium" name="wte-version"/><meta content="WTE-V1.1-STABILE-PREMIUM" name="wte-admin-build"/></head>
 <body><div class="admin-lock" id="adminLock">
 <form class="admin-lock-card" id="adminLockForm">
 <div class="admin-lock-mark">W</div>
@@ -29,7 +29,7 @@
 <strong>Admin CRM</strong>
 </div>
 </div>
-<div class="top-actions">
+<div class="top-actions"><span class="cloud-top-status local" id="cloudTopStatus">Locale</span>
 <a href="/">Apri sito clienti</a>
 <button id="refreshBtn">Aggiorna</button>
 <button id="settingsBtn" type="button">Impostazioni</button><button id="adminLogout" type="button">Esci</button></div>
@@ -269,6 +269,23 @@
 <div class="kanban-dropzone" data-dropzone=""></div>
 </section>
 </div>
+</section><section class="availability-toolbar" id="availabilityToolbar">
+<div>
+<span>Gestione disponibilità</span>
+<strong>Calendario operativo</strong>
+<p>Controlla eventi, blocchi manuali e possibili conflitti.</p>
+</div>
+<div class="availability-toolbar-actions">
+<button id="availabilityTodayBtn" type="button">Oggi</button>
+<button id="availabilityBlockedBtn" type="button">Date bloccate</button>
+<button id="availabilityConflictsBtn" type="button">Conflitti</button>
+</div>
+<div class="availability-kpis">
+<article><small>Eventi mese</small><strong id="availabilityMonthEvents">0</strong></article>
+<article><small>Date bloccate</small><strong id="availabilityBlockedCount">0</strong></article>
+<article><small>Conflitti</small><strong id="availabilityConflictCount">0</strong></article>
+<article><small>Prossimi 7 giorni</small><strong id="availabilityNext7">0</strong></article>
+</div>
 </section><section class="calendar-shell">
 <header class="calendar-head">
 <div>
@@ -299,6 +316,52 @@
 <strong id="calendarSelectedCount">0 eventi</strong>
 </div>
 <div class="calendar-selected-events" id="calendarSelectedEvents"></div>
+</div>
+</section><section class="premium-dashboard" id="premiumDashboard">
+<header class="premium-head">
+<div>
+<span>WTE Premium</span>
+<h2>Controllo operativo</h2>
+<p>Incassi, saldi, pipeline e sicurezza dei dati in un’unica schermata.</p>
+</div>
+<div class="premium-head-actions">
+<button id="premiumRefreshBtn" type="button">Aggiorna</button>
+<button id="premiumExportReportBtn" type="button">Esporta report</button>
+</div>
+</header>
+<div class="premium-kpis">
+<article><small>Valore confermato</small><strong id="premiumConfirmedValue">€ 0</strong><span>Pratiche confermate</span></article>
+<article><small>Acconti ricevuti</small><strong id="premiumDeposits">€ 0</strong><span>Incassato registrato</span></article>
+<article><small>Saldo residuo</small><strong id="premiumBalance">€ 0</strong><span>Ancora da incassare</span></article>
+<article><small>Conversione</small><strong id="premiumConversion">0%</strong><span>Richieste → conferme</span></article>
+</div>
+<div class="premium-grid">
+<article class="premium-card">
+<header><span>Pipeline</span><strong>Stato pratiche</strong></header>
+<div class="premium-pipeline" id="premiumPipeline"></div>
+</article>
+<article class="premium-card">
+<header><span>Scadenze</span><strong>Prossime attività</strong></header>
+<div class="premium-deadlines" id="premiumDeadlines"></div>
+</article>
+<article class="premium-card premium-card-wide">
+<header><span>Ricerca avanzata</span><strong>Filtra archivio</strong></header>
+<div class="premium-filters">
+<input id="premiumDateFrom" type="date"/>
+<input id="premiumDateTo" type="date"/>
+<select id="premiumPackageFilter">
+<option value="">Tutti i pacchetti</option>
+</select>
+<select id="premiumPaymentFilter">
+<option value="">Tutti i pagamenti</option>
+<option value="unpaid">Da incassare</option>
+<option value="partial">Acconto ricevuto</option>
+<option value="paid">Pagato</option>
+</select>
+<button id="premiumApplyFilters" type="button">Applica</button>
+<button id="premiumResetFilters" type="button">Azzera</button>
+</div>
+</article>
 </div>
 </section><section class="list-shell">
 <header class="list-head">
@@ -414,11 +477,24 @@
 <span>Note interne</span>
 <textarea id="detailNotes" placeholder="Scrivi una nota interna..."></textarea>
 </div>
+<section class="document-generator-box" id="documentGeneratorBox">
+<div class="document-generator-head">
+<div>
+<span>Documenti automatici</span>
+<strong>Preventivo e contratto</strong>
 </div>
+<button id="openDocumentGeneratorBtn" type="button">Genera</button>
+</div>
+<div class="document-generator-status">
+<div><small>Preventivo</small><strong id="documentQuoteStatus">Non creato</strong></div>
+<div><small>Contratto</small><strong id="documentContractStatus">Non creato</strong></div>
+<div><small>Acconto</small><strong id="documentDepositStatus">€ 0</strong></div>
+</div>
+</section></div>
 <footer class="drawer-actions"><button id="openPdfBtn" type="button">Apri PDF</button><button id="whatsappBtn" type="button">WhatsApp</button><button id="duplicateBtn" type="button">Duplica</button><button class="danger" id="deleteBtn" type="button">Elimina</button><button id="saveNotesBtn" type="button">Salva modifiche</button><button class="gold" id="closeDetailBtn" type="button">Chiudi</button></footer>
 </aside>
 </div>
-<script defer="" src="./admin.js?v=2.1.0-stable-mobile"></script><div aria-hidden="true" class="settings-modal" id="settingsModal">
+<script defer="" src="./admin.js?v=2.2.0-client-crm"></script><div aria-hidden="true" class="settings-modal" id="settingsModal">
 <div class="settings-backdrop" data-close-settings=""></div>
 <section class="settings-panel">
 <header class="settings-head">
@@ -457,7 +533,38 @@
 <div><small>Ultimo backup</small><strong id="systemLastBackup">—</strong></div>
 </div>
 </article>
+<article class="settings-card cloud-settings-card" id="cloudSettingsCard">
+<div>
+<span>WTE Cloud</span>
+<strong>Sincronizzazione online</strong>
+<p>Collega l’Area Gestori al backend: le richieste inviate dal sito clienti compariranno automaticamente nel CRM.</p>
 </div>
+<div class="cloud-settings-fields">
+<input id="cloudApiUrl" type="url" value="https://wte-cloud-api.onrender.com"/>
+<input id="cloudPassword" placeholder="Password Admin Cloud" type="password"/>
+<button id="cloudConnectBtn" type="button">Connetti</button>
+<button id="cloudSyncBtn" type="button">Sincronizza ora</button>
+</div>
+<div class="cloud-status local" id="cloudStatus">
+<i></i>
+<span>Modalità locale</span>
+</div>
+</article>
+<article class="settings-card cloud-backup-card" id="cloudBackupCard">
+<div>
+<span>Backup Cloud</span>
+<strong>Protezione online</strong>
+<p>Crea uno snapshot nel database, consulta lo storico e ripristina una versione precedente.</p>
+</div>
+<div class="cloud-backup-actions">
+<button id="createCloudBackupBtn" type="button">Crea backup Cloud</button>
+<button id="openCloudBackupsBtn" type="button">Storico Cloud</button>
+</div>
+<div class="cloud-backup-status">
+<small>Ultimo backup Cloud</small>
+<strong id="cloudBackupLast">—</strong>
+</div>
+</article></div>
 </section>
 </div><div aria-hidden="true" class="confirm-modal" id="confirmResetModal">
 <div class="settings-backdrop" data-cancel-reset=""></div>
@@ -497,5 +604,101 @@
 <div class="backup-history-list" id="backupHistoryList"></div>
 </div>
 </section>
-</div></body>
+</div><script defer="" src="./cloud.js?v=2.2.0-client-crm"></script><div aria-hidden="true" class="document-modal" id="documentGeneratorModal">
+<div class="settings-backdrop" data-close-document-generator=""></div>
+<section class="document-panel">
+<header class="document-panel-head">
+<div>
+<span>WTE Document Studio</span>
+<strong id="documentPanelTitle">Genera documenti</strong>
+</div>
+<button data-close-document-generator="" type="button">×</button>
+</header>
+<div class="document-panel-content">
+<div class="document-form-grid">
+<label>Prezzo totale
+          <input id="docTotalPrice" min="0" step="10" type="number"/>
+</label>
+<label>Acconto %
+          <input id="docDepositPercent" max="100" min="0" step="5" type="number" value="30"/>
+</label>
+<label>Acconto calcolato
+          <input id="docDepositAmount" min="0" step="10" type="number"/>
+</label>
+<label>Scadenza acconto
+          <input id="docDepositDueDate" type="date"/>
+</label>
+<label>Scadenza saldo
+          <input id="docBalanceDueDate" type="date"/>
+</label>
+<label>Validità preventivo
+          <input id="docQuoteValidUntil" type="date"/>
+</label>
+</div>
+<label class="document-textarea-label">Condizioni particolari
+        <textarea id="docSpecialTerms" placeholder="Note, trasferta, ore extra, condizioni..."></textarea>
+</label>
+<div class="document-actions">
+<button id="generateQuoteBtn" type="button">Crea preventivo</button>
+<button id="generateContractBtn" type="button">Crea bozza contratto</button>
+<button id="printDocumentBtn" type="button">Stampa / PDF</button>
+<button id="sendDocumentWhatsappBtn" type="button">WhatsApp</button>
+</div>
+<div class="document-preview-wrap">
+<div class="document-preview-watermark" id="documentWatermark">BOZZA</div>
+<article class="document-preview" id="documentPreview">
+<div class="document-empty-state">
+            Seleziona “Crea preventivo” oppure “Crea bozza contratto”.
+          </div>
+</article>
+</div>
+</div>
+</section>
+</div><script defer="True" src="./documents.js?v=2.3.0"></script><div aria-hidden="true" class="availability-modal" id="availabilityDayModal">
+<div class="settings-backdrop" data-close-availability-day=""></div>
+<section class="availability-day-card">
+<header>
+<div>
+<span>Gestione data</span>
+<strong id="availabilityDayTitle">—</strong>
+</div>
+<button data-close-availability-day="" type="button">×</button>
+</header>
+<div class="availability-day-status" id="availabilityDayStatus"></div>
+<div class="availability-day-events" id="availabilityDayEvents"></div>
+<label class="availability-day-note">
+      Nota interna
+      <textarea id="availabilityDayNote" placeholder="Motivo del blocco, location, organizzazione..."></textarea>
+</label>
+<div class="availability-day-actions">
+<button id="availabilityToggleBlockBtn" type="button">Blocca data</button>
+<button id="availabilitySaveNoteBtn" type="button">Salva nota</button>
+</div>
+</section>
+</div><div aria-hidden="true" class="availability-modal" id="availabilityConflictsModal">
+<div class="settings-backdrop" data-close-conflicts=""></div>
+<section class="availability-conflicts-panel">
+<header>
+<div>
+<span>Controllo automatico</span>
+<strong>Conflitti calendario</strong>
+</div>
+<button data-close-conflicts="" type="button">×</button>
+</header>
+<div class="availability-conflicts-list" id="availabilityConflictsList"></div>
+</section>
+</div><script defer="True" src="./availability.js?v=2.4.0"></script><div aria-hidden="true" class="cloud-backups-modal" id="cloudBackupsModal">
+<div class="settings-backdrop" data-close-cloud-backups=""></div>
+<section class="cloud-backups-panel">
+<header>
+<div><span>WTE Cloud</span><strong>Storico backup online</strong></div>
+<button data-close-cloud-backups="" type="button">×</button>
+</header>
+<div class="cloud-backups-summary">
+<div><small>Backup disponibili</small><strong id="cloudBackupsCount">0</strong></div>
+<div><small>Ultimo snapshot</small><strong id="cloudBackupsLast">—</strong></div>
+</div>
+<div class="cloud-backups-list" id="cloudBackupsList"></div>
+</section>
+</div><script defer="True" src="./premium.js?v=2.5.0"></script></body>
 </html>
