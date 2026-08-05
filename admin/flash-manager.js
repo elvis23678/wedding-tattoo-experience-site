@@ -112,63 +112,6 @@
     await loadCatalog();
   }
 
-
-  async function importSeedCatalog(){
-    if(!token())return alert('Collega prima il Cloud.');
-
-    flashSeedImportBtn.disabled=true;
-    flashUploadProgress.innerHTML='';
-
-    try{
-      const seed=await fetch('/flash-seed.json',{cache:'no-store'}).then(response=>{
-        if(!response.ok)throw new Error('Archivio iniziale non disponibile.');
-        return response.json();
-      });
-
-      const existing=new Set(catalog.map(item=>item.code));
-      let imported=0;
-      let skipped=0;
-      let failed=0;
-
-      for(const item of seed.items||[]){
-        if(existing.has(item.code)){
-          progress(item.code,'success','già presente');
-          skipped++;
-          continue;
-        }
-
-        const row=progress(item.code,'','caricamento...');
-        try{
-          await request('/api/flash-catalog',{
-            method:'POST',
-            body:JSON.stringify({
-              imageData:item.imageData,
-              title:item.title,
-              category:item.category,
-              tags:item.tags||[],
-              code:item.code,
-              prefix:'WTE'
-            })
-          });
-          row.className='flash-upload-progress-row success';
-          row.textContent=`${item.code}: importato`;
-          imported++;
-        }catch(error){
-          row.className='flash-upload-progress-row error';
-          row.textContent=`${item.code}: ${error.message}`;
-          failed++;
-        }
-      }
-
-      await loadCatalog();
-      alert(`Importazione completata. Nuovi: ${imported}, già presenti: ${skipped}, errori: ${failed}.`);
-    }catch(error){
-      alert(error.message);
-    }finally{
-      flashSeedImportBtn.disabled=false;
-    }
-  }
-
   function categoryOptions(value){
     const categories=[
       'Wedding','Cuori','Fedi','Iniziali','Floreale',
@@ -202,11 +145,7 @@
       const card=document.createElement('article');
       card.className=`flash-manager-card ${item.active?'':'inactive'}`;
       card.innerHTML=`
-        <img loading="lazy"
-             src="/flash/${encodeURIComponent(item.code)}.png"
-             data-api-image="${item.image||''}"
-             onerror="if(this.dataset.apiImage&&this.src!==this.dataset.apiImage){this.onerror=null;this.src=this.dataset.apiImage+'?v=${encodeURIComponent(item.updated_at||'')}'}"
-             alt="${item.code}">
+        <img loading="lazy" src="${item.image}?v=${encodeURIComponent(item.updated_at||'')}" alt="${item.code}">
         <div class="flash-manager-card-head">
           <div><strong>${item.code}</strong><span>${item.image_size?Math.round(item.image_size/1024)+' KB':''}</span></div>
           <span>${item.active?'Attivo':'Disattivato'}</span>
@@ -218,11 +157,38 @@
           <input data-field="tags" value="${(item.tags||[]).join(', ')}" placeholder="Tag separati da virgola">
         </div>
         <div class="flash-manager-actions">
+          <input data-action="image-file" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+          <button data-action="replace-image">Sostituisci immagine</button>
           <button data-action="save">Salva</button>
           <button data-action="toggle">${item.active?'Disattiva':'Riattiva'}</button>
           <button data-action="delete" class="danger">Elimina</button>
           <button data-action="copy">Copia codice</button>
         </div>`;
+
+      const imageInput=card.querySelector('[data-action="image-file"]');
+      card.querySelector('[data-action="replace-image"]').onclick=()=>imageInput.click();
+
+      imageInput.onchange=async()=>{
+        const file=imageInput.files?.[0];
+        if(!file)return;
+        const replaceButton=card.querySelector('[data-action="replace-image"]');
+        replaceButton.disabled=true;
+        replaceButton.textContent='Caricamento…';
+        try{
+          const imageData=await compressImage(file);
+          await request(`/api/flash-catalog/${item.id}`,{
+            method:'PATCH',
+            body:JSON.stringify({imageData})
+          });
+          await loadCatalog();
+        }catch(error){
+          alert(error.message);
+          replaceButton.disabled=false;
+          replaceButton.textContent='Sostituisci immagine';
+        }finally{
+          imageInput.value='';
+        }
+      };
 
       card.querySelector('[data-action="save"]').onclick=async()=>{
         try{
@@ -302,7 +268,6 @@
   }));
 
   flashUploadStartBtn?.addEventListener('click',upload);
-  flashSeedImportBtn?.addEventListener('click',importSeedCatalog);
   flashCatalogRefreshBtn?.addEventListener('click',loadCatalog);
   flashCatalogSearch?.addEventListener('input',render);
   flashCatalogCategoryFilter?.addEventListener('change',render);
