@@ -1756,14 +1756,48 @@ document.getElementById('showToday')?.addEventListener('click',()=>{
   document.querySelectorAll('[data-cancel-reset]').forEach(el=>el.addEventListener('click',()=>{resetModal.classList.remove('open');resetModal.setAttribute('aria-hidden','true')}));
 
   document.getElementById('confirmResetBtn')?.addEventListener('click',async()=>{
-    localStorage.removeItem(REQUEST_KEY);
-    localStorage.removeItem(COUNTER_KEY);
-    await clearPdfs();
-    resetModal.classList.remove('open');
-    resetModal.setAttribute('aria-hidden','true');
-    await refreshSystemInfo();
-    document.getElementById('refreshBtn')?.click();
-    showToast('Archivio azzerato. Il PIN è stato mantenuto.');
+    const button=document.getElementById('confirmResetBtn');
+    const originalText=button.textContent;
+    button.disabled=true;
+    button.textContent='Azzeramento…';
+
+    try{
+      const api=String(
+        localStorage.getItem('wte_cloud_api_url_v2')
+        ||'https://wte-cloud-api.onrender.com'
+      ).replace(/\/+$/,'');
+
+      const token=
+        localStorage.getItem('wte_cloud_token_v4')
+        ||sessionStorage.getItem('wte_session_token_v8')
+        ||localStorage.getItem('wte_cloud_token_v2')
+        ||'';
+
+      if(!token)throw new Error('Sessione Cloud non disponibile. Esci e accedi nuovamente.');
+
+      const response=await fetch(`${api}/api/practices`,{
+        method:'DELETE',
+        headers:{Authorization:`Bearer ${token}`}
+      });
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(result.error||`Errore Cloud ${response.status}`);
+
+      localStorage.removeItem(REQUEST_KEY);
+      localStorage.removeItem(COUNTER_KEY);
+      await clearPdfs();
+
+      resetModal.classList.remove('open');
+      resetModal.setAttribute('aria-hidden','true');
+      await refreshSystemInfo();
+      document.getElementById('refreshBtn')?.click();
+
+      showToast(`Archivio azzerato: ${Number(result.deletedPractices||0)} pratiche eliminate.`);
+    }catch(error){
+      alert(`Archivio non azzerato: ${error.message}`);
+    }finally{
+      button.disabled=false;
+      button.textContent=originalText;
+    }
   });
 
   document.getElementById('settingsExportBtn')?.addEventListener('click',()=>{

@@ -112,6 +112,162 @@
     await loadCatalog();
   }
 
+
+  function installImageEditor(){
+    if(document.getElementById('wteImageEditor'))return;
+
+    const style=document.createElement('style');
+    style.textContent=`
+      .wte-image-editor{position:fixed;inset:0;z-index:15000;display:none;align-items:center;justify-content:center;padding:8px;background:rgba(0,0,0,.88)}
+      .wte-image-editor.open{display:flex}
+      .wte-image-editor-card{width:min(560px,100%);max-height:96vh;overflow:auto;padding:14px;border:1px solid rgba(214,170,85,.35);background:#090604;color:#f3eadb}
+      .wte-image-editor-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+      .wte-image-editor-head strong{font-family:Georgia,serif;font-size:24px;font-weight:400}
+      .wte-image-editor-head button{width:40px;height:40px;border:1px solid rgba(214,170,85,.25);background:#100d09;color:#fff;font-size:22px}
+      .wte-editor-help{margin:8px 0;color:#aa9b85;font-size:10px;line-height:1.45}
+      .wte-editor-stage{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border:1px solid rgba(214,170,85,.35);background:#fff;touch-action:none}
+      .wte-editor-stage canvas{display:block;width:100%;height:100%;margin:0;background:#fff;touch-action:none}
+      .wte-editor-crop{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 2px rgba(211,166,79,.95)}
+      .wte-editor-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+      .wte-editor-controls button,.wte-editor-actions button{min-height:44px;border:1px solid rgba(214,170,85,.25);background:#100d09;color:#eee3d3;font-size:8px;font-weight:700;text-transform:uppercase}
+      .wte-editor-zoom{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:8px;border:1px solid rgba(214,170,85,.18)}
+      .wte-editor-zoom span{font-size:8px;text-transform:uppercase;color:#b9a88e}
+      .wte-editor-zoom input{flex:1}
+      .wte-editor-actions{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px}
+      .wte-editor-actions .save{border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006}`;
+    document.head.appendChild(style);
+
+    const modal=document.createElement('div');
+    modal.className='wte-image-editor';
+    modal.id='wteImageEditor';
+    modal.innerHTML=`
+      <section class="wte-image-editor-card">
+        <header class="wte-image-editor-head">
+          <strong>Ritaglia e ruota</strong>
+          <button type="button" data-editor-close>×</button>
+        </header>
+        <p class="wte-editor-help">Trascina l'immagine, usa lo zoom e ruotala. Il salvataggio produce un'immagine quadrata ottimizzata.</p>
+        <div class="wte-editor-stage">
+          <canvas id="wteEditorCanvas"></canvas>
+          <div class="wte-editor-crop"></div>
+        </div>
+        <div class="wte-editor-controls">
+          <button type="button" data-editor-rotate="-90">Ruota a sinistra</button>
+          <button type="button" data-editor-rotate="90">Ruota a destra</button>
+          <div class="wte-editor-zoom">
+            <span>Zoom</span>
+            <input id="wteEditorZoom" type="range" min="1" max="3" step="0.01" value="1">
+          </div>
+        </div>
+        <div class="wte-editor-actions">
+          <button type="button" data-editor-cancel>Annulla</button>
+          <button type="button" class="save" id="wteEditorSave">Salva immagine</button>
+        </div>
+      </section>`;
+    document.body.appendChild(modal);
+  }
+
+  function openImageEditor(file){
+    installImageEditor();
+
+    return new Promise((resolve,reject)=>{
+      const modal=document.getElementById('wteImageEditor');
+      const canvas=document.getElementById('wteEditorCanvas');
+      const zoomInput=document.getElementById('wteEditorZoom');
+      const saveButton=document.getElementById('wteEditorSave');
+      const context=canvas.getContext('2d',{alpha:false});
+      const image=new Image();
+      const objectUrl=URL.createObjectURL(file);
+
+      let rotation=0,zoom=1,offsetX=0,offsetY=0,dragging=false,lastX=0,lastY=0,finished=false;
+
+      function close(result,error){
+        if(finished)return;
+        finished=true;
+        URL.revokeObjectURL(objectUrl);
+        modal.classList.remove('open');
+        if(error)reject(error); else resolve(result);
+      }
+
+      function rotatedDimensions(){
+        const quarter=Math.abs(rotation/90)%2;
+        return quarter
+          ? {width:image.naturalHeight,height:image.naturalWidth}
+          : {width:image.naturalWidth,height:image.naturalHeight};
+      }
+
+      function draw(){
+        const rect=canvas.getBoundingClientRect();
+        const size=Math.max(320,Math.round(rect.width*window.devicePixelRatio));
+        if(canvas.width!==size||canvas.height!==size){canvas.width=size;canvas.height=size}
+        context.setTransform(1,0,0,1,0,0);
+        context.fillStyle='#fff';
+        context.fillRect(0,0,size,size);
+        const dimensions=rotatedDimensions();
+        const scale=Math.max(size/dimensions.width,size/dimensions.height)*zoom;
+        context.save();
+        context.translate(size/2+offsetX*window.devicePixelRatio,size/2+offsetY*window.devicePixelRatio);
+        context.rotate(rotation*Math.PI/180);
+        context.scale(scale,scale);
+        context.drawImage(image,-image.naturalWidth/2,-image.naturalHeight/2);
+        context.restore();
+      }
+
+      image.onload=()=>{zoom=1;rotation=0;offsetX=0;offsetY=0;zoomInput.value='1';modal.classList.add('open');requestAnimationFrame(draw)};
+      image.onerror=()=>close(null,new Error('Impossibile leggere l’immagine.'));
+      image.src=objectUrl;
+
+      modal.querySelectorAll('[data-editor-rotate]').forEach(button=>{
+        button.onclick=()=>{rotation=(rotation+Number(button.dataset.editorRotate)+360)%360;offsetX=0;offsetY=0;draw()};
+      });
+      zoomInput.oninput=()=>{zoom=Number(zoomInput.value);draw()};
+
+      canvas.onpointerdown=event=>{dragging=true;lastX=event.clientX;lastY=event.clientY;canvas.setPointerCapture?.(event.pointerId)};
+      canvas.onpointermove=event=>{
+        if(!dragging)return;
+        offsetX+=event.clientX-lastX;
+        offsetY+=event.clientY-lastY;
+        lastX=event.clientX;lastY=event.clientY;draw();
+      };
+      canvas.onpointerup=canvas.onpointercancel=()=>dragging=false;
+
+      modal.querySelector('[data-editor-close]').onclick=()=>close(null);
+      modal.querySelector('[data-editor-cancel]').onclick=()=>close(null);
+
+      saveButton.onclick=()=>{
+        saveButton.disabled=true;
+        saveButton.textContent='Elaborazione…';
+        try{
+          const output=document.createElement('canvas');
+          output.width=1200;output.height=1200;
+          const oc=output.getContext('2d',{alpha:false});
+          oc.fillStyle='#fff';oc.fillRect(0,0,1200,1200);
+          const dimensions=rotatedDimensions();
+          const scale=Math.max(1200/dimensions.width,1200/dimensions.height)*zoom;
+          const conversion=1200/(canvas.getBoundingClientRect().width||1);
+          oc.save();
+          oc.translate(600+offsetX*conversion,600+offsetY*conversion);
+          oc.rotate(rotation*Math.PI/180);
+          oc.scale(scale,scale);
+          oc.drawImage(image,-image.naturalWidth/2,-image.naturalHeight/2);
+          oc.restore();
+
+          let quality=.88;
+          let result=output.toDataURL('image/jpeg',quality);
+          while(result.length>2400000&&quality>.52){
+            quality-=.08;
+            result=output.toDataURL('image/jpeg',quality);
+          }
+          close(result);
+        }catch(error){
+          saveButton.disabled=false;
+          saveButton.textContent='Salva immagine';
+          alert(error.message);
+        }
+      };
+    });
+  }
+
   function categoryOptions(value){
     const categories=[
       'Wedding','Cuori','Fedi','Iniziali','Floreale',
