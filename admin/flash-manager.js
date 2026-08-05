@@ -202,7 +202,11 @@
       const card=document.createElement('article');
       card.className=`flash-manager-card ${item.active?'':'inactive'}`;
       card.innerHTML=`
-        <img loading="lazy" src="${item.image}?v=${encodeURIComponent(item.updated_at||'')}" alt="${item.code}">
+        <img loading="lazy"
+             src="/flash/${encodeURIComponent(item.code)}.png"
+             data-api-image="${item.image||''}"
+             onerror="if(this.dataset.apiImage&&this.src!==this.dataset.apiImage){this.onerror=null;this.src=this.dataset.apiImage+'?v=${encodeURIComponent(item.updated_at||'')}'}"
+             alt="${item.code}">
         <div class="flash-manager-card-head">
           <div><strong>${item.code}</strong><span>${item.image_size?Math.round(item.image_size/1024)+' KB':''}</span></div>
           <span>${item.active?'Attivo':'Disattivato'}</span>
