@@ -97,7 +97,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'2.1.0', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'2.1.1', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -503,8 +503,6 @@ app.get('/api/public/flash-catalog/:id/image', async (req,res) => {
   if (!result.rowCount) return res.status(404).end();
 
   // Consente al dominio pubblico di mostrare le immagini servite dall'API Render.
-  res.setHeader('Cross-Origin-Resource-Policy','cross-origin');
-  res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Cross-Origin-Resource-Policy','cross-origin');
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Content-Type',result.rows[0].image_mime);
@@ -1330,35 +1328,6 @@ app.get('/api/flash-sessions/practice/:id', auth, async (req,res) => {
   );
   res.json({sessions:result.rows});
 });
-
-
-app.delete('/api/practices', auth, adminOnly, async (req,res) => {
-  const client=await pool.connect();
-  try{
-    await client.query('BEGIN');
-    const countResult=await client.query('SELECT COUNT(*)::int AS count FROM wte_practices');
-    const deletedPractices=Number(countResult.rows[0]?.count||0);
-    await client.query('DELETE FROM wte_flash_sessions');
-    await client.query(
-      `DELETE FROM wte_notifications
-       WHERE practice_id IS NOT NULL
-          OR type IN ('new_practice','flash_link','flash_completed','flash_reopened')`
-    );
-    await client.query('DELETE FROM wte_activity_log WHERE practice_id IS NOT NULL');
-    await client.query('DELETE FROM wte_practices');
-    await client.query('COMMIT');
-
-    await logActivity(req,'Archivio pratiche azzerato',null,{deletedPractices});
-    res.json({ok:true,deletedPractices});
-  }catch(error){
-    await client.query('ROLLBACK');
-    console.error('Archive reset error',error);
-    res.status(500).json({error:'Errore durante l’azzeramento dell’archivio Cloud.'});
-  }finally{
-    client.release();
-  }
-});
-
 
 app.delete('/api/practices/:id', auth, async (req,res) => {
   await pool.query('DELETE FROM wte_practices WHERE id = $1', [req.params.id]);
