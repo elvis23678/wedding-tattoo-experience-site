@@ -3520,7 +3520,52 @@
 .s3-save-status.error{color:#9b4d45;border-color:rgba(155,77,69,.28)}
 #s3OpenPdf{color:#f0ddb0!important}
 @media(max-width:600px){.s2p2-document-head{flex-wrap:wrap}.s3-save-status{order:3;width:100%;margin:0;text-align:center}}
-</style><meta content="WTE-SPRINT3-PHASE1" name="version"/></head>
+</style><meta content="WTE-SPRINT3-PHASE1" name="version"/>
+<style id="wte-v11-mobile-menu-fix">
+/* V11 — menu mobile compatto e leggibile */
+@media (max-width: 759px){
+  .menu{
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    overflow-y:auto!important;
+    padding:calc(96px + env(safe-area-inset-top)) 22px calc(118px + env(safe-area-inset-bottom))!important;
+  }
+  .menu nav{
+    width:min(100%,520px)!important;
+    margin:0 auto!important;
+    gap:0!important;
+    text-align:left!important;
+  }
+  .menu nav a{
+    display:flex!important;
+    align-items:center!important;
+    min-height:58px!important;
+    padding:12px 6px!important;
+    border-bottom:1px solid rgba(211,166,79,.25)!important;
+    font-family:var(--serif)!important;
+    font-size:clamp(20px,6vw,25px)!important;
+    line-height:1.12!important;
+    letter-spacing:0!important;
+    text-align:left!important;
+    white-space:normal!important;
+  }
+  .menu nav a:first-child{display:none!important;}
+  .menu nav a::after{
+    content:'›';
+    margin-left:auto;
+    padding-left:14px;
+    color:var(--gold2);
+    font-family:Arial,sans-serif;
+    font-size:25px;
+    font-weight:300;
+  }
+  .menu-btn{z-index:90!important;}
+}
+@media (max-width: 380px){
+  .menu nav a{font-size:19px!important;min-height:52px!important;}
+}
+</style>
+</head>
 <body>
 <div class="grain"></div>
 <header class="header" id="header">

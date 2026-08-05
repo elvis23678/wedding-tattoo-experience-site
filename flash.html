@@ -109,23 +109,47 @@ function render(){
   };grid.appendChild(card)
  })
 }
+async function fetchJson(url){
+ const response=await fetch(url,{cache:'no-store',headers:{'Accept':'application/json'}});
+ const text=await response.text();
+ let data={};
+ try{data=text?JSON.parse(text):{}}catch{throw new Error('Risposta Cloud non valida.')}
+ if(!response.ok)throw new Error(data.error||`Errore Cloud ${response.status}`);
+ return data;
+}
 async function init(){
  if(!token){$('status').textContent='Link non valido.';return}
- const [s,c]=await Promise.all([
-  fetch(`${API}/api/public/flash-session/${token}`).then(r=>r.json()),
-  fetch(`${API}/api/public/flash-catalog`).then(r=>r.json())
- ]);
- if(s.error){$('status').textContent=s.error;return}
- session=s.session;catalog=c.items||[];selected=new Set(session.selections||[]);
- $('customerName').value=session.customer_name||'';
- categories();update();render();
- if(session.locked){
-  $('status').textContent=`Selezione completata: ${selected.size} flash confermati.`;
-  $('lockedBanner').classList.add('show');
-  $('confirm').disabled=true;$('customerName').disabled=true;$('termsAccepted').disabled=true;
-  canvas.style.pointerEvents='none';pdfLinks();
- }else{
-  $('status').textContent=`Selezionate fino a ${session.max_items} flash, poi firmate e confermate.`;
+ try{
+  const [s,c]=await Promise.all([
+   fetchJson(`${API}/api/public/flash-session/${encodeURIComponent(token)}`),
+   fetchJson(`${API}/api/public/flash-catalog?v=11`)
+  ]);
+  if(s.error){$('status').textContent=s.error;return}
+  session=s.session;
+  const rawCatalog=Array.isArray(c)?c:(Array.isArray(c.items)?c.items:[]);
+  catalog=rawCatalog.map(item=>({
+   ...item,
+   code:String(item.code||''),
+   tags:Array.isArray(item.tags)?item.tags:[],
+   image:item.image||item.image_url||item.url||''
+  })).filter(item=>item.code);
+  selected=new Set(session.selections||[]);
+  $('customerName').value=session.customer_name||'';
+  categories();update();render();
+  if(session.locked){
+   $('status').textContent=`Selezione completata: ${selected.size} flash confermati.`;
+   $('lockedBanner').classList.add('show');
+   $('confirm').disabled=true;$('customerName').disabled=true;$('termsAccepted').disabled=true;
+   canvas.style.pointerEvents='none';pdfLinks();
+  }else if(catalog.length){
+   $('status').textContent=`${catalog.length} flash disponibili. Selezionatene fino a ${session.max_items}, poi firmate e confermate.`;
+  }else{
+   $('status').textContent='Il catalogo è collegato, ma non risultano flash attivi.';
+  }
+ }catch(error){
+  console.error(error);
+  $('status').textContent=`Impossibile caricare il catalogo: ${error.message}`;
+  grid.innerHTML='<div class="empty">Catalogo temporaneamente non disponibile. Ricaricate la pagina tra pochi secondi.</div>';
  }
 }
 $('search').oninput=render;$('category').onchange=render;
