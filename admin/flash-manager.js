@@ -112,6 +112,63 @@
     await loadCatalog();
   }
 
+
+  async function importSeedCatalog(){
+    if(!token())return alert('Collega prima il Cloud.');
+
+    flashSeedImportBtn.disabled=true;
+    flashUploadProgress.innerHTML='';
+
+    try{
+      const seed=await fetch('/flash-seed.json',{cache:'no-store'}).then(response=>{
+        if(!response.ok)throw new Error('Archivio iniziale non disponibile.');
+        return response.json();
+      });
+
+      const existing=new Set(catalog.map(item=>item.code));
+      let imported=0;
+      let skipped=0;
+      let failed=0;
+
+      for(const item of seed.items||[]){
+        if(existing.has(item.code)){
+          progress(item.code,'success','già presente');
+          skipped++;
+          continue;
+        }
+
+        const row=progress(item.code,'','caricamento...');
+        try{
+          await request('/api/flash-catalog',{
+            method:'POST',
+            body:JSON.stringify({
+              imageData:item.imageData,
+              title:item.title,
+              category:item.category,
+              tags:item.tags||[],
+              code:item.code,
+              prefix:'WTE'
+            })
+          });
+          row.className='flash-upload-progress-row success';
+          row.textContent=`${item.code}: importato`;
+          imported++;
+        }catch(error){
+          row.className='flash-upload-progress-row error';
+          row.textContent=`${item.code}: ${error.message}`;
+          failed++;
+        }
+      }
+
+      await loadCatalog();
+      alert(`Importazione completata. Nuovi: ${imported}, già presenti: ${skipped}, errori: ${failed}.`);
+    }catch(error){
+      alert(error.message);
+    }finally{
+      flashSeedImportBtn.disabled=false;
+    }
+  }
+
   function categoryOptions(value){
     const categories=[
       'Wedding','Cuori','Fedi','Iniziali','Floreale',
@@ -241,6 +298,7 @@
   }));
 
   flashUploadStartBtn?.addEventListener('click',upload);
+  flashSeedImportBtn?.addEventListener('click',importSeedCatalog);
   flashCatalogRefreshBtn?.addEventListener('click',loadCatalog);
   flashCatalogSearch?.addEventListener('input',render);
   flashCatalogCategoryFilter?.addEventListener('change',render);

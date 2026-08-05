@@ -2939,3 +2939,15 @@ html[data-role="collaborator"] #settingsBtn{display:none!important}
 .flash-selection-actions button:disabled{opacity:.35}
 .flash-selection-meta{margin-top:9px;padding:9px;border:1px solid rgba(214,170,85,.18);color:#b8a88f;font-size:8px;line-height:1.5}
 @media(min-width:700px){.flash-selection-actions{grid-template-columns:repeat(5,1fr)!important}}
+
+#flashSeedImportBtn{
+  width:100%;
+  min-height:47px;
+  margin-top:8px;
+  border:1px solid rgba(143,181,150,.45);
+  background:#0b100c;
+  color:#b8d7bd;
+  font-size:8px;
+  font-weight:800;
+  text-transform:uppercase;
+}
