@@ -101,3 +101,35 @@ ON wte_flash_catalog(active, sort_order, code);
 
 CREATE INDEX IF NOT EXISTS idx_wte_flash_catalog_category
 ON wte_flash_catalog(category);
+
+
+ALTER TABLE wte_users
+ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT TRUE;
+
+ALTER TABLE wte_users
+ADD COLUMN IF NOT EXISTS permissions JSONB NOT NULL DEFAULT
+'{"dashboard":true,"practices":true,"documents":true,"payments":true,"flash":true,"notifications":true,"settings":false,"users":false,"delete_practices":false}'::jsonb;
+
+ALTER TABLE wte_users
+ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+
+ALTER TABLE wte_users
+ADD COLUMN IF NOT EXISTS last_login_ip TEXT;
+
+ALTER TABLE wte_users
+ADD COLUMN IF NOT EXISTS last_user_agent TEXT;
+
+CREATE TABLE IF NOT EXISTS wte_login_log (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT REFERENCES wte_users(id) ON DELETE SET NULL,
+  email TEXT,
+  name TEXT,
+  role TEXT,
+  ip_address TEXT,
+  user_agent TEXT,
+  success BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wte_login_log_created
+ON wte_login_log(created_at DESC);

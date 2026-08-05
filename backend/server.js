@@ -96,45 +96,123 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'7.0.0', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'8.0.0', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
   const parsed = z.object({
-    email:z.string().email().optional(),
+    email:z.string().email().optional().or(z.literal('')),
     password:z.string().min(1)
   }).safeParse(req.body);
 
   if (!parsed.success) {
-    return res.status(400).json({error:'Credenziali non valide.'});
+    return res.status(400).json({error:'Inserisci credenziali valide.'});
   }
 
+  const ipAddress = String(
+    req.headers['x-forwarded-for'] || req.socket.remoteAddress || ''
+  ).split(',')[0].trim();
+  const userAgent = String(req.headers['user-agent'] || '').slice(0,500);
+
+  // Accesso proprietario compatibile con la password Admin Cloud.
   if (!parsed.data.email && parsed.data.password === ADMIN_PASSWORD) {
+    const owner = {
+      id:null,
+      email:'admin@wte.local',
+      name:'Amministratore',
+      role:'admin',
+      mustChangePassword:false,
+      permissions:{
+        dashboard:true,practices:true,documents:true,payments:true,flash:true,
+        notifications:true,settings:true,users:true,delete_practices:true
+      }
+    };
+
     const token = jwt.sign(
-      {role:'admin', name:'Admin principale', email:'admin@wte.local'},
+      {
+        role:owner.role,
+        name:owner.name,
+        email:owner.email,
+        permissions:owner.permissions,
+        legacyOwner:true
+      },
       JWT_SECRET,
       {expiresIn:'30d'}
     );
-    return res.json({token, user:{name:'Admin principale', role:'admin'}});
+
+    await pool.query(
+      `INSERT INTO wte_login_log
+       (email,name,role,ip_address,user_agent,success)
+       VALUES ($1,$2,$3,$4,$5,TRUE)`,
+      [owner.email,owner.name,owner.role,ipAddress,userAgent]
+    );
+
+    return res.json({token,user:owner});
   }
 
   const result = await pool.query(
-    'SELECT id,email,name,password_hash,role,enabled FROM wte_users WHERE LOWER(email)=LOWER($1)',
+    `SELECT id,email,name,password_hash,role,enabled,must_change_password,
+            permissions,last_login_at
+     FROM wte_users
+     WHERE LOWER(email)=LOWER($1)`,
     [parsed.data.email]
   );
 
   const user = result.rows[0];
-  if (!user || !user.enabled || !(await bcrypt.compare(parsed.data.password, user.password_hash))) {
+  const valid = Boolean(
+    user && user.enabled &&
+    await bcrypt.compare(parsed.data.password,user.password_hash)
+  );
+
+  if (!valid) {
+    await pool.query(
+      `INSERT INTO wte_login_log
+       (user_id,email,name,role,ip_address,user_agent,success)
+       VALUES ($1,$2,$3,$4,$5,$6,FALSE)`,
+      [user?.id || null,parsed.data.email,user?.name || '',user?.role || '',
+       ipAddress,userAgent]
+    );
     return res.status(401).json({error:'Email o password non corretti.'});
   }
 
+  await pool.query(
+    `UPDATE wte_users
+     SET last_login_at=NOW(),last_login_ip=$2,last_user_agent=$3,updated_at=NOW()
+     WHERE id=$1`,
+    [user.id,ipAddress,userAgent]
+  );
+
+  await pool.query(
+    `INSERT INTO wte_login_log
+     (user_id,email,name,role,ip_address,user_agent,success)
+     VALUES ($1,$2,$3,$4,$5,$6,TRUE)`,
+    [user.id,user.email,user.name,user.role,ipAddress,userAgent]
+  );
+
   const token = jwt.sign(
-    {sub:user.id, role:user.role, name:user.name, email:user.email},
+    {
+      sub:user.id,
+      role:user.role,
+      name:user.name,
+      email:user.email,
+      permissions:user.permissions || {}
+    },
     JWT_SECRET,
     {expiresIn:'30d'}
   );
 
-  res.json({token, user:{id:user.id,email:user.email,name:user.name,role:user.role}});
+  res.json({
+    token,
+    user:{
+      id:user.id,
+      email:user.email,
+      name:user.name,
+      role:user.role,
+      mustChangePassword:user.must_change_password,
+      permissions:user.permissions || {},
+      lastLoginAt:user.last_login_at
+    }
+  });
 });
 
 
@@ -590,9 +668,100 @@ app.get('/api/flash-catalog-categories', auth, async (_req,res) => {
 });
 
 
+
+app.get('/api/auth/me', auth, async (req,res) => {
+  if (req.user?.legacyOwner) {
+    return res.json({
+      user:{
+        id:null,
+        email:req.user.email,
+        name:req.user.name,
+        role:'admin',
+        mustChangePassword:false,
+        permissions:req.user.permissions || {}
+      }
+    });
+  }
+
+  const result = await pool.query(
+    `SELECT id,email,name,role,enabled,must_change_password,permissions,
+            last_login_at,last_login_ip,created_at
+     FROM wte_users WHERE id=$1`,
+    [req.user.sub]
+  );
+
+  if (!result.rowCount || !result.rows[0].enabled) {
+    return res.status(401).json({error:'Account non disponibile.'});
+  }
+
+  const user=result.rows[0];
+  res.json({
+    user:{
+      id:user.id,email:user.email,name:user.name,role:user.role,
+      enabled:user.enabled,
+      mustChangePassword:user.must_change_password,
+      permissions:user.permissions || {},
+      lastLoginAt:user.last_login_at,
+      lastLoginIp:user.last_login_ip,
+      createdAt:user.created_at
+    }
+  });
+});
+
+app.post('/api/auth/change-password', auth, async (req,res) => {
+  if (req.user?.legacyOwner) {
+    return res.status(400).json({
+      error:'La password proprietario si modifica nelle variabili Environment di Render.'
+    });
+  }
+
+  const parsed=z.object({
+    currentPassword:z.string().min(1),
+    newPassword:z.string().min(8).max(120)
+  }).safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      error:'La nuova password deve contenere almeno 8 caratteri.'
+    });
+  }
+
+  const result=await pool.query(
+    'SELECT password_hash FROM wte_users WHERE id=$1 AND enabled=TRUE',
+    [req.user.sub]
+  );
+
+  if (!result.rowCount ||
+      !(await bcrypt.compare(parsed.data.currentPassword,result.rows[0].password_hash))) {
+    return res.status(401).json({error:'Password attuale non corretta.'});
+  }
+
+  const hash=await bcrypt.hash(parsed.data.newPassword,12);
+  await pool.query(
+    `UPDATE wte_users
+     SET password_hash=$2,must_change_password=FALSE,updated_at=NOW()
+     WHERE id=$1`,
+    [req.user.sub,hash]
+  );
+
+  await logActivity(req,'Password personale modificata');
+  res.json({ok:true});
+});
+
+app.get('/api/auth/login-history', auth, adminOnly, async (_req,res) => {
+  const result=await pool.query(
+    `SELECT id,user_id,email,name,role,ip_address,user_agent,success,created_at
+     FROM wte_login_log
+     ORDER BY created_at DESC LIMIT 200`
+  );
+  res.json({logins:result.rows});
+});
+
 app.get('/api/users', auth, adminOnly, async (_req,res) => {
   const result = await pool.query(
-    'SELECT id,email,name,role,enabled,created_at FROM wte_users ORDER BY created_at DESC'
+    `SELECT id,email,name,role,enabled,must_change_password,permissions,
+            last_login_at,last_login_ip,created_at,updated_at
+     FROM wte_users ORDER BY created_at DESC`
   );
   res.json({users:result.rows});
 });
@@ -610,10 +779,23 @@ app.post('/api/users', auth, adminOnly, async (req,res) => {
   const hash = await bcrypt.hash(parsed.data.password, 12);
   try {
     const result = await pool.query(
-      `INSERT INTO wte_users (email,name,password_hash,role)
-       VALUES ($1,$2,$3,$4)
-       RETURNING id,email,name,role,enabled,created_at`,
-      [parsed.data.email,parsed.data.name,hash,parsed.data.role]
+      `INSERT INTO wte_users
+       (email,name,password_hash,role,must_change_password,permissions)
+       VALUES ($1,$2,$3,$4,TRUE,$5::jsonb)
+       RETURNING id,email,name,role,enabled,must_change_password,permissions,created_at`,
+      [
+        parsed.data.email,parsed.data.name,hash,parsed.data.role,
+        JSON.stringify(parsed.data.role === 'admin'
+          ? {
+              dashboard:true,practices:true,documents:true,payments:true,flash:true,
+              notifications:true,settings:true,users:true,delete_practices:true
+            }
+          : {
+              dashboard:true,practices:true,documents:true,payments:true,flash:true,
+              notifications:true,settings:false,users:false,delete_practices:false
+            }
+        )
+      ]
     );
     await logActivity(req,'Utente creato',null,{email:parsed.data.email,role:parsed.data.role});
     res.status(201).json({user:result.rows[0]});
@@ -627,25 +809,65 @@ app.patch('/api/users/:id', auth, adminOnly, async (req,res) => {
   const parsed = z.object({
     enabled:z.boolean().optional(),
     role:z.enum(['admin','collaborator']).optional(),
-    password:z.string().min(6).max(120).optional()
+    password:z.string().min(8).max(120).optional(),
+    mustChangePassword:z.boolean().optional(),
+    permissions:z.record(z.boolean()).optional()
   }).safeParse(req.body);
+
   if (!parsed.success) return res.status(400).json({error:'Modifica utente non valida.'});
 
-  const updates=[], values=[];
-  if (parsed.data.enabled !== undefined) { values.push(parsed.data.enabled); updates.push(`enabled=$${values.length}`); }
-  if (parsed.data.role) { values.push(parsed.data.role); updates.push(`role=$${values.length}`); }
+  const updates=[],values=[];
+  if (parsed.data.enabled !== undefined) {
+    values.push(parsed.data.enabled);updates.push(`enabled=$${values.length}`);
+  }
+  if (parsed.data.role) {
+    values.push(parsed.data.role);updates.push(`role=$${values.length}`);
+  }
   if (parsed.data.password) {
     values.push(await bcrypt.hash(parsed.data.password,12));
     updates.push(`password_hash=$${values.length}`);
+    values.push(parsed.data.mustChangePassword !== false);
+    updates.push(`must_change_password=$${values.length}`);
+  } else if (parsed.data.mustChangePassword !== undefined) {
+    values.push(parsed.data.mustChangePassword);
+    updates.push(`must_change_password=$${values.length}`);
   }
+  if (parsed.data.permissions) {
+    values.push(JSON.stringify(parsed.data.permissions));
+    updates.push(`permissions=$${values.length}::jsonb`);
+  }
+
+  if (!updates.length) return res.status(400).json({error:'Nessuna modifica.'});
+
   values.push(req.params.id);
-  const result = await pool.query(
-    `UPDATE wte_users SET ${updates.join(',')},updated_at=NOW()
+  const result=await pool.query(
+    `UPDATE wte_users
+     SET ${updates.join(',')},updated_at=NOW()
      WHERE id=$${values.length}
-     RETURNING id,email,name,role,enabled`,
+     RETURNING id,email,name,role,enabled,must_change_password,permissions,
+               last_login_at,last_login_ip,updated_at`,
     values
   );
+
+  if (!result.rowCount) return res.status(404).json({error:'Utente non trovato.'});
+
+  await logActivity(req,'Utente modificato',null,{
+    userId:req.params.id,
+    fields:Object.keys(parsed.data)
+  });
+
   res.json({user:result.rows[0]});
+});
+
+
+app.delete('/api/users/:id', auth, adminOnly, async (req,res) => {
+  const result=await pool.query(
+    'DELETE FROM wte_users WHERE id=$1 RETURNING email,name',
+    [req.params.id]
+  );
+  if (!result.rowCount) return res.status(404).json({error:'Utente non trovato.'});
+  await logActivity(req,'Utente eliminato',null,result.rows[0]);
+  res.json({ok:true});
 });
 
 app.get('/api/notifications', auth, async (req,res) => {
