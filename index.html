@@ -5707,5 +5707,96 @@ Prezzo: ${document.getElementById('s2DocPrice')?.textContent || ''}`;
   ensureProposalId();
   hookJsPdf();
 })();
-</script></body>
+</script>
+<script id="wte-cloud-client-intake">
+(() => {
+  const STORAGE_KEY = 'wte_requests_v1';
+  const API_URL = 'https://wte-cloud-api.onrender.com';
+  const SENT_KEY = 'wte_cloud_sent_ids_v2';
+  let timer = null;
+  let sending = false;
+
+  function loadItems() {
+    try {
+      const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      return Array.isArray(value) ? value : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function loadSent() {
+    try {
+      return JSON.parse(localStorage.getItem(SENT_KEY) || '{}') || {};
+    } catch {
+      return {};
+    }
+  }
+
+  function fingerprint(item) {
+    return String(item?.updatedAt || item?.createdAt || '') + '|' +
+      String(item?.status || '') + '|' + String(item?.type || '');
+  }
+
+  async function sendPending() {
+    if (sending || !navigator.onLine) return;
+    sending = true;
+
+    try {
+      const sent = loadSent();
+      const items = loadItems()
+        .filter(item => item && item.id)
+        .sort((a,b) => new Date(a.updatedAt || a.createdAt || 0) - new Date(b.updatedAt || b.createdAt || 0));
+
+      for (const item of items) {
+        const mark = fingerprint(item);
+        if (sent[item.id] === mark) continue;
+
+        const response = await fetch(`${API_URL}/api/public/practices`, {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            'X-WTE-Device':'cliente-web'
+          },
+          body:JSON.stringify(item),
+          keepalive:true
+        });
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.error || `Errore Cloud ${response.status}`);
+        }
+
+        sent[item.id] = mark;
+        localStorage.setItem(SENT_KEY, JSON.stringify(sent));
+      }
+    } catch (error) {
+      console.warn('[WTE Cloud] Invio rinviato:', error.message);
+    } finally {
+      sending = false;
+    }
+  }
+
+  function schedule() {
+    clearTimeout(timer);
+    timer = setTimeout(sendPending, 500);
+  }
+
+  const originalSetItem = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key, value) {
+    originalSetItem(key, value);
+    if (key === STORAGE_KEY) schedule();
+  };
+
+  window.addEventListener('online', sendPending);
+  window.addEventListener('pagehide', sendPending);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') sendPending();
+  });
+
+  setTimeout(sendPending, 1200);
+})();
+</script>
+
+</body>
 </html>
