@@ -28,3 +28,5 @@ self.addEventListener('fetch', event => {
     fetch(request, { cache: 'no-store' }).catch(() => caches.match(request))
   );
 });
+
+self.addEventListener('notificationclick',e=>{e.notification.close();e.waitUntil(clients.openWindow('/admin/'));});
