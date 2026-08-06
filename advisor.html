@@ -6,95 +6,167 @@
 <meta name="theme-color" content="#070503">
 <title>Trova il pacchetto giusto - Wedding Tattoo Experience</title>
 <style>
-:root{--bg:#070503;--card:#100c08;--gold:#d3a64f;--text:#f3eadb;--muted:#a99a84;--line:rgba(211,166,79,.25);--ok:#9cc4a1}
+:root{
+  --bg:#070503;--card:#100c08;--gold:#d3a64f;--gold2:#f0ddb0;
+  --text:#f3eadb;--muted:#a99a84;--line:rgba(211,166,79,.25);--ok:#9cc4a1
+}
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(circle at 50% 0,rgba(211,166,79,.10),transparent 32%),var(--bg);color:var(--text);font-family:Arial,sans-serif}
-main{max-width:760px;margin:auto;padding:18px 14px 44px}
-.brand{color:var(--gold);font-size:9px;letter-spacing:.18em;text-transform:uppercase}
+body{
+  margin:0;min-height:100vh;
+  background:
+    radial-gradient(circle at 50% 0,rgba(211,166,79,.11),transparent 30%),
+    var(--bg);
+  color:var(--text);font-family:Arial,sans-serif
+}
+main{max-width:720px;margin:auto;padding:18px 14px 48px}
+.brand{color:var(--gold);font-size:9px;letter-spacing:.19em;text-transform:uppercase}
 h1{margin:8px 0 6px;font-family:Georgia,serif;font-size:32px;font-weight:400}
 .intro{margin:0;color:var(--muted);line-height:1.55}
-.progress{height:4px;margin:18px 0;background:#211910;overflow:hidden}
-.progress span{display:block;height:100%;width:16.6%;background:linear-gradient(90deg,#f2dfad,#b87c24);transition:.25s}
-.card{padding:18px;border:1px solid var(--line);background:rgba(16,12,8,.92)}
-.step{display:none}.step.active{display:block}
-.step small{color:var(--gold);font-size:9px;letter-spacing:.12em;text-transform:uppercase}
-.step h2{margin:8px 0 6px;font-family:Georgia,serif;font-size:27px;font-weight:400}
-.step p{margin:0 0 14px;color:var(--muted);line-height:1.5}
-label{display:grid;gap:6px;margin-top:11px;color:#b9aa94;font-size:9px;text-transform:uppercase}
-input,select,textarea{width:100%;min-height:50px;padding:0 12px;border:1px solid var(--line);background:#090604;color:#fff;font-size:16px}
-textarea{min-height:94px;padding:12px;resize:vertical}
-.choices{display:grid;gap:9px;margin-top:12px}
-.choice{min-height:58px;padding:12px;border:1px solid var(--line);background:#0b0805;color:#fff;text-align:left}
+.progress-wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0}
+.dots{display:flex;gap:7px}
+.dot{width:8px;height:8px;border-radius:50%;background:#30251a;transition:.25s}
+.dot.done,.dot.active{background:var(--gold)}
+.step-counter{color:var(--muted);font-size:11px}
+.card{
+  min-height:420px;padding:20px;border:1px solid var(--line);
+  background:rgba(16,12,8,.94);display:flex;flex-direction:column
+}
+.step{display:none;flex:1}.step.active{display:block}
+.step small{color:var(--gold);font-size:9px;letter-spacing:.13em;text-transform:uppercase}
+.step h2{margin:9px 0 7px;font-family:Georgia,serif;font-size:29px;font-weight:400}
+.step p{margin:0 0 18px;color:var(--muted);line-height:1.5}
+label{display:grid;gap:7px;margin-top:12px;color:#b9aa94;font-size:9px;text-transform:uppercase}
+input,select,textarea{
+  width:100%;min-height:54px;padding:0 13px;border:1px solid var(--line);
+  background:#090604;color:#fff;font-size:17px
+}
+textarea{min-height:110px;padding:13px;resize:vertical}
+.choices{display:grid;gap:11px;margin-top:14px}
+.choice{
+  min-height:80px;padding:14px;border:1px solid var(--line);
+  background:#0b0805;color:#fff;text-align:left;display:grid;
+  grid-template-columns:48px 1fr;align-items:center;gap:12px
+}
 .choice.selected{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
-.choice strong{display:block}.choice span{display:block;margin-top:4px;color:var(--muted);font-size:12px}
-.actions{display:grid;grid-template-columns:1fr 2fr;gap:9px;margin-top:18px}
-.actions button,.result-actions a{min-height:50px;border:1px solid var(--line);background:#0b0805;color:#fff;font-weight:800}
-.actions .next,.result-actions .gold{border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006}
-.result{display:none}.result.show{display:block}
-.result h2{margin:8px 0 4px;font-family:Georgia,serif;font-size:29px;font-weight:400}
-.price{color:var(--gold);font-size:25px;font-weight:800}
-.result p{color:var(--muted);line-height:1.55}
-.features{padding:0;list-style:none}.features li{padding:8px 0;border-bottom:1px solid rgba(211,166,79,.12)}
-.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}
-.result-actions a{display:grid;place-items:center;text-decoration:none;text-align:center}
+.choice .icon{
+  width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid rgba(211,166,79,.32);font-size:22px
+}
+.choice strong{display:block;font-size:14px}
+.choice span{display:block;margin-top:4px;color:var(--muted);font-size:12px;line-height:1.35}
+.actions{display:grid;grid-template-columns:1fr 2fr;gap:9px;margin-top:20px}
+.actions button,.result-actions a{
+  min-height:52px;border:1px solid var(--line);background:#0b0805;
+  color:#fff;font-weight:800
+}
+.actions .next,.result-actions .gold{
+  border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);
+  color:#171006
+}
+.result{display:none;text-align:center}
+.result.show{display:block}
+.result-badge{
+  width:68px;height:68px;margin:0 auto 12px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(156,196,161,.13);
+  border:1px solid rgba(156,196,161,.38);font-size:31px
+}
+.result h2{margin:8px 0 4px;font-family:Georgia,serif;font-size:31px;font-weight:400}
+.price{color:var(--gold);font-size:28px;font-weight:800}
+.result p{color:var(--muted);line-height:1.6}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.summary-grid div{padding:10px 6px;border:1px solid rgba(211,166,79,.16)}
+.summary-grid span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase}
+.summary-grid strong{display:block;margin-top:4px;font-size:12px}
+.features{padding:0;list-style:none;text-align:left}
+.features li{padding:9px 0;border-bottom:1px solid rgba(211,166,79,.12)}
+.result-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:9px;margin-top:16px}
+.result-actions a{display:grid;place-items:center;text-decoration:none;text-align:center;padding:0 10px}
 .note{margin-top:12px;color:var(--muted);font-size:10px;line-height:1.45}
-@media(max-width:600px){.actions,.result-actions{grid-template-columns:1fr}}
+@media(max-width:600px){
+  .actions,.result-actions,.summary-grid{grid-template-columns:1fr}
+  .card{min-height:390px;padding:17px}
+}
 </style>
 </head>
 <body>
 <main>
 <div class="brand">Wedding Tattoo Experience</div>
 <h1>Troviamo il pacchetto giusto</h1>
-<p class="intro">Sei domande, una proposta chiara e la bozza del contratto pronta.</p>
-<div class="progress"><span id="progressBar"></span></div>
+<p class="intro">Poche domande, una proposta chiara e il contratto già pronto.</p>
+
+<div class="progress-wrap">
+  <div class="dots" id="dots"></div>
+  <div class="step-counter" id="stepCounter">1 / 8</div>
+</div>
 
 <form class="card" id="wizard">
 <section class="step active" data-step="1">
-<small>Passaggio 1 di 6</small>
-<h2>Come vi chiamate?</h2>
-<p>Inserisci il referente principale della pratica.</p>
-<label>Nome e cognome<input name="name" required autocomplete="name"></label>
-<label>E-mail<input name="email" type="email" required autocomplete="email"></label>
-<label>Telefono<input name="phone" required autocomplete="tel"></label>
+<small>Iniziamo</small>
+<h2>Come ti chiami?</h2>
+<p>Inserisci il nome del referente principale.</p>
+<label>Nome e cognome<input name="name" required autocomplete="name" autofocus></label>
 </section>
 
 <section class="step" data-step="2">
-<small>Passaggio 2 di 6</small>
+<small>Contatti</small>
+<h2>Qual è la tua e-mail?</h2>
+<p>La useremo per contratto, ricevute e comunicazioni automatiche.</p>
+<label>E-mail<input name="email" type="email" required autocomplete="email"></label>
+</section>
+
+<section class="step" data-step="3">
+<small>Contatti</small>
+<h2>Numero di telefono?</h2>
+<p>Serve solo per comunicazioni importanti sulla pratica.</p>
+<label>Telefono<input name="phone" required autocomplete="tel"></label>
+</section>
+
+<section class="step" data-step="4">
+<small>Il matrimonio</small>
 <h2>Quando vi sposate?</h2>
-<p>Questi dati generano automaticamente tutte le scadenze.</p>
+<p>Da questa data il sistema calcola tutte le scadenze.</p>
 <label>Data evento<input name="date" type="date" required></label>
 <label>Ora evento<input name="time" type="time" required></label>
 </section>
 
-<section class="step" data-step="3">
-<small>Passaggio 3 di 6</small>
+<section class="step" data-step="5">
+<small>Il matrimonio</small>
 <h2>Dove si svolgerà?</h2>
-<p>Indica location e città. La trasferta sarà verificata dal sistema.</p>
+<p>Indica location e città.</p>
 <label>Luogo del matrimonio<input name="location" required placeholder="Nome location, città"></label>
 </section>
 
-<section class="step" data-step="4">
-<small>Passaggio 4 di 6</small>
-<h2>Quanti invitati prevedete?</h2>
-<p>Serve a dimensionare correttamente durata e formula.</p>
+<section class="step" data-step="6">
+<small>Gli invitati</small>
+<h2>Quante persone prevedete?</h2>
+<p>Il numero degli invitati aiuta a dimensionare correttamente il servizio.</p>
 <label>Numero invitati<input name="guests" type="number" min="1" max="5000" value="100" required></label>
 </section>
 
-<section class="step" data-step="5">
-<small>Passaggio 5 di 6</small>
-<h2>Che esperienza desiderate?</h2>
-<div class="choices" id="experienceChoices">
-<button class="choice" type="button" data-value="intimo"><strong>Elegante e discreta</strong><span>Un’esperienza raccolta e non invasiva.</span></button>
-<button class="choice selected" type="button" data-value="equilibrato"><strong>Coinvolgente ed equilibrata</strong><span>Il giusto equilibrio tra intrattenimento e fluidità.</span></button>
-<button class="choice" type="button" data-value="premium"><strong>Attrazione principale</strong><span>Una presenza forte, estesa e centrale nell’evento.</span></button>
+<section class="step" data-step="7">
+<small>L’esperienza</small>
+<h2>Che atmosfera desiderate?</h2>
+<div class="choices">
+<button class="choice" type="button" data-value="intimo">
+  <span class="icon">✨</span>
+  <span><strong>Elegante e discreta</strong><span>Un’esperienza raffinata e raccolta.</span></span>
+</button>
+<button class="choice selected" type="button" data-value="equilibrato">
+  <span class="icon">🎉</span>
+  <span><strong>Coinvolgente</strong><span>Il giusto equilibrio tra intrattenimento e fluidità.</span></span>
+</button>
+<button class="choice" type="button" data-value="premium">
+  <span class="icon">🔥</span>
+  <span><strong>Wow effect</strong><span>Il tattoo corner diventa una delle attrazioni principali.</span></span>
+</button>
 </div>
 <input type="hidden" name="experience" value="equilibrato">
 </section>
 
-<section class="step" data-step="6">
-<small>Passaggio 6 di 6</small>
+<section class="step" data-step="8">
+<small>Ultimo passaggio</small>
 <h2>Budget indicativo</h2>
-<p>Non serve un importo preciso: aiuta a evitare proposte fuori obiettivo.</p>
+<p>Serve a evitare proposte fuori obiettivo.</p>
 <label>Fascia di budget
 <select name="budget">
 <option value="under1000">Fino a € 1.000</option>
@@ -113,87 +185,118 @@ textarea{min-height:94px;padding:12px;resize:vertical}
 </form>
 
 <section class="card result" id="result">
-<small>Proposta personalizzata</small>
-<h2 id="resultTitle"></h2>
+<div class="result-badge">✓</div>
+<small>Proposta pronta</small>
+<h2>Perfetto!</h2>
+<p>Abbiamo preparato la soluzione più adatta al vostro matrimonio.</p>
+<h3 id="resultTitle"></h3>
 <div class="price" id="resultPrice"></div>
 <p id="resultExplanation"></p>
+<div class="summary-grid">
+<div><span>Proposta</span><strong>Pronta</strong></div>
+<div><span>Contratto</span><strong>Generato</strong></div>
+<div><span>Acconto</span><strong>Calcolato</strong></div>
+</div>
 <ul class="features" id="resultFeatures"></ul>
 <div class="result-actions">
 <a id="draftPdf" target="_blank">Apri bozza PDF</a>
-<a class="gold" id="contractLink">Continua con la prenotazione</a>
+<a class="gold" id="contractLink">Continua alla prenotazione</a>
 </div>
 </section>
 
-<p class="note">I prezzi e i contenuti mostrati derivano esclusivamente dai pacchetti configurati da Wedding Tattoo Experience.</p>
+<p class="note">Prezzi e contenuti derivano esclusivamente dai pacchetti configurati da Wedding Tattoo Experience.</p>
 </main>
+
 <script>
 const API='https://wte-cloud-api.onrender.com';
 const form=document.getElementById('wizard');
 const steps=[...document.querySelectorAll('.step')];
-const progress=document.getElementById('progressBar');
+const dots=document.getElementById('dots');
+const counter=document.getElementById('stepCounter');
 const back=document.getElementById('backBtn');
 const next=document.getElementById('nextBtn');
 let current=0;
 
+dots.innerHTML=steps.map((_,i)=>`<span class="dot" data-dot="${i}"></span>`).join('');
+
+function focusCurrent(){
+  const field=steps[current].querySelector('input:not([type=hidden]),select,textarea');
+  setTimeout(()=>field?.focus({preventScroll:true}),180);
+}
 function showStep(){
- steps.forEach((step,i)=>step.classList.toggle('active',i===current));
- progress.style.width=`${((current+1)/steps.length)*100}%`;
- back.style.visibility=current===0?'hidden':'visible';
- next.textContent=current===steps.length-1?'Prepara la proposta':'Continua';
- window.scrollTo({top:0,behavior:'smooth'});
+  steps.forEach((step,i)=>step.classList.toggle('active',i===current));
+  [...dots.children].forEach((dot,i)=>{
+    dot.classList.toggle('done',i<current);
+    dot.classList.toggle('active',i===current);
+  });
+  counter.textContent=`${current+1} / ${steps.length}`;
+  back.style.visibility=current===0?'hidden':'visible';
+  next.textContent=current===steps.length-1?'Prepara la proposta':'Continua';
+  window.scrollTo({top:0,behavior:'smooth'});
+  focusCurrent();
 }
 function validStep(){
- const fields=[...steps[current].querySelectorAll('input,select,textarea')];
- for(const field of fields){
-  if(!field.checkValidity()){field.reportValidity();return false}
- }
- return true;
+  const fields=[...steps[current].querySelectorAll('input,select,textarea')];
+  for(const field of fields){
+    if(!field.checkValidity()){field.reportValidity();return false}
+  }
+  return true;
 }
 document.querySelectorAll('.choice').forEach(button=>{
- button.onclick=()=>{
-  document.querySelectorAll('.choice').forEach(x=>x.classList.remove('selected'));
-  button.classList.add('selected');
-  form.elements.experience.value=button.dataset.value;
- };
+  button.onclick=()=>{
+    document.querySelectorAll('.choice').forEach(x=>x.classList.remove('selected'));
+    button.classList.add('selected');
+    form.elements.experience.value=button.dataset.value;
+    setTimeout(()=>{
+      if(current<steps.length-1){current++;showStep()}
+    },180);
+  };
 });
 back.onclick=()=>{if(current>0){current--;showStep()}};
 next.onclick=async()=>{
- if(!validStep())return;
- if(current<steps.length-1){current++;showStep();return}
- next.disabled=true;next.textContent='Preparazione…';
- try{
-  const raw=Object.fromEntries(new FormData(form));
-  const response=await fetch(`${API}/api/public/advisor/recommend`,{
-   method:'POST',
-   headers:{'Content-Type':'application/json','Accept':'application/json'},
-   body:JSON.stringify({
-    name:raw.name,
-    email:raw.email,
-    phone:raw.phone,
-    date:raw.date,
-    time:raw.time,
-    location:raw.location,
-    guests:Number(raw.guests),
-    experience:raw.experience,
-    budget:raw.budget,
-    notes:raw.notes
-   })
-  });
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(data.error||'Impossibile preparare la proposta.');
-  const rec=data.recommendation;
-  form.style.display='none';
-  document.getElementById('resultTitle').textContent=rec.title;
-  document.getElementById('resultPrice').textContent=rec.package.priceLabel;
-  document.getElementById('resultExplanation').textContent=rec.explanation;
-  document.getElementById('resultFeatures').innerHTML=(rec.package.features||[]).map(x=>`<li>${x}</li>`).join('');
-  document.getElementById('draftPdf').href=data.draftPdf;
-  document.getElementById('contractLink').href=data.contractUrl;
-  document.getElementById('result').classList.add('show');
-  progress.style.width='100%';
-  window.scrollTo({top:0,behavior:'smooth'});
- }catch(error){alert(error.message)}
- finally{next.disabled=false;next.textContent='Prepara la proposta'}
+  if(!validStep())return;
+  if(current<steps.length-1){current++;showStep();return}
+
+  next.disabled=true;next.textContent='Preparazione…';
+  try{
+    const raw=Object.fromEntries(new FormData(form));
+    const response=await fetch(`${API}/api/public/advisor/recommend`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        name:raw.name,
+        email:raw.email,
+        phone:raw.phone,
+        date:raw.date,
+        time:raw.time,
+        location:raw.location,
+        guests:Number(raw.guests),
+        experience:raw.experience,
+        budget:raw.budget,
+        notes:raw.notes
+      })
+    });
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||'Impossibile preparare la proposta.');
+
+    const rec=data.recommendation;
+    form.style.display='none';
+    document.getElementById('resultTitle').textContent=rec.title;
+    document.getElementById('resultPrice').textContent=rec.package.priceLabel;
+    document.getElementById('resultExplanation').textContent=rec.explanation;
+    document.getElementById('resultFeatures').innerHTML=
+      (rec.package.features||[]).map(x=>`<li>✓ ${x}</li>`).join('');
+    document.getElementById('draftPdf').href=data.draftPdf;
+    document.getElementById('contractLink').href=data.contractUrl;
+    document.getElementById('result').classList.add('show');
+    [...dots.children].forEach(dot=>dot.classList.add('done'));
+    counter.textContent='Completato';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }catch(error){
+    alert(error.message);
+  }finally{
+    next.disabled=false;next.textContent='Prepara la proposta';
+  }
 };
 showStep();
 </script>
