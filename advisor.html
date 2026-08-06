@@ -63,6 +63,12 @@ textarea{min-height:110px;padding:13px;resize:vertical}
   border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);
   color:#171006
 }
+.welcome{text-align:center;justify-content:center}
+.welcome-icon{width:68px;height:68px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(211,166,79,.42);color:var(--gold);font-size:30px}
+.welcome h2{margin:8px 0;font-family:Georgia,serif;font-size:31px;font-weight:400}
+.welcome p{color:var(--muted);line-height:1.55}
+.welcome-points{display:grid;gap:8px;margin:18px 0;text-align:left;color:#d6cab7;font-size:13px}
+.welcome-start{width:100%;min-height:54px;border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;font-weight:800}
 .result{display:none;text-align:center}
 .result.show{display:block}
 .result-badge{
@@ -92,14 +98,27 @@ textarea{min-height:110px;padding:13px;resize:vertical}
 <main>
 <div class="brand">Wedding Tattoo Experience</div>
 <h1>Troviamo il pacchetto giusto</h1>
-<p class="intro">Poche domande, una proposta chiara e il contratto già pronto.</p>
+<p class="intro">Meno di 2 minuti, nessun impegno e una proposta personalizzata.</p>
 
 <div class="progress-wrap">
   <div class="dots" id="dots"></div>
   <div class="step-counter" id="stepCounter">1 / 8</div>
 </div>
 
-<form class="card" id="wizard">
+<section class="card welcome" id="welcome">
+<div class="welcome-icon">✦</div>
+<small>Wedding Assistant</small>
+<h2>Benvenuti</h2>
+<p>Vi guiderò passo dopo passo fino alla proposta più adatta al vostro matrimonio.</p>
+<div class="welcome-points">
+<span>✓ Tempo richiesto: meno di 2 minuti</span>
+<span>✓ Nessun impegno</span>
+<span>✓ Contratto e acconto calcolati automaticamente</span>
+</div>
+<button class="welcome-start" id="startWizard" type="button">Iniziamo</button>
+</section>
+
+<form class="card" id="wizard" hidden>
 <section class="step active" data-step="1">
 <small>Iniziamo</small>
 <h2>Come ti chiami?</h2>
@@ -216,12 +235,37 @@ const counter=document.getElementById('stepCounter');
 const back=document.getElementById('backBtn');
 const next=document.getElementById('nextBtn');
 let current=0;
+const STORAGE_KEY='wte_advisor_v41';
+const welcome=document.getElementById('welcome');
+const startWizard=document.getElementById('startWizard');
 
 dots.innerHTML=steps.map((_,i)=>`<span class="dot" data-dot="${i}"></span>`).join('');
 
 function focusCurrent(){
   const field=steps[current].querySelector('input:not([type=hidden]),select,textarea');
   setTimeout(()=>field?.focus({preventScroll:true}),180);
+}
+function saveProgress(){
+  const values=Object.fromEntries(new FormData(form));
+  localStorage.setItem(STORAGE_KEY,JSON.stringify({current,values}));
+}
+function restoreProgress(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+    if(!saved)return false;
+    Object.entries(saved.values||{}).forEach(([name,value])=>{
+      const field=form.elements[name];
+      if(field)field.value=value;
+    });
+    current=Math.max(0,Math.min(Number(saved.current)||0,steps.length-1));
+    const experience=form.elements.experience?.value;
+    if(experience){
+      document.querySelectorAll('.choice').forEach(button=>{
+        button.classList.toggle('selected',button.dataset.value===experience);
+      });
+    }
+    return true;
+  }catch{return false}
 }
 function showStep(){
   steps.forEach((step,i)=>step.classList.toggle('active',i===current));
@@ -234,6 +278,7 @@ function showStep(){
   next.textContent=current===steps.length-1?'Prepara la proposta':'Continua';
   window.scrollTo({top:0,behavior:'smooth'});
   focusCurrent();
+  saveProgress();
 }
 function validStep(){
   const fields=[...steps[current].querySelectorAll('input,select,textarea')];
@@ -247,6 +292,7 @@ document.querySelectorAll('.choice').forEach(button=>{
     document.querySelectorAll('.choice').forEach(x=>x.classList.remove('selected'));
     button.classList.add('selected');
     form.elements.experience.value=button.dataset.value;
+    saveProgress();
     setTimeout(()=>{
       if(current<steps.length-1){current++;showStep()}
     },180);
@@ -255,7 +301,19 @@ document.querySelectorAll('.choice').forEach(button=>{
 back.onclick=()=>{if(current>0){current--;showStep()}};
 next.onclick=async()=>{
   if(!validStep())return;
-  if(current<steps.length-1){current++;showStep();return}
+  if(current<steps.length-1){current++;startWizard.onclick=()=>{
+  welcome.hidden=true;
+  form.hidden=false;
+  showStep();
+};
+const resumed=restoreProgress();
+if(resumed){
+  startWizard.textContent='Riprendi da dove eri rimasto';
+}
+document.querySelectorAll('input,select,textarea').forEach(field=>{
+  field.addEventListener('input',saveProgress);
+  field.addEventListener('change',saveProgress);
+});return}
 
   next.disabled=true;next.textContent='Preparazione…';
   try{
@@ -289,6 +347,7 @@ next.onclick=async()=>{
     document.getElementById('draftPdf').href=data.draftPdf;
     document.getElementById('contractLink').href=data.contractUrl;
     document.getElementById('result').classList.add('show');
+    localStorage.removeItem(STORAGE_KEY);
     [...dots.children].forEach(dot=>dot.classList.add('done'));
     counter.textContent='Completato';
     window.scrollTo({top:0,behavior:'smooth'});

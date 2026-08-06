@@ -9,6 +9,10 @@
 :root{--bg:#070503;--card:#100c08;--gold:#d3a64f;--text:#f3eadb;--muted:#a99a84;--line:rgba(211,166,79,.25);--ok:#9cc4a1}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}main{max-width:780px;margin:auto;padding:14px 12px 42px}
 header{padding:14px 2px}header small{color:var(--gold);font-size:9px;letter-spacing:.16em;text-transform:uppercase}h1{margin:6px 0;font-family:Georgia,serif;font-size:30px;font-weight:400}header p{margin:0;color:var(--muted)}
+.journey{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:14px}
+.journey span{padding:7px 4px;border:1px solid rgba(211,166,79,.15);font-size:8px;text-align:center;color:var(--muted)}
+.journey .done{color:var(--ok);border-color:rgba(156,196,161,.35)}
+.journey .current{color:var(--gold);border-color:var(--gold)}
 .summary,.terms,.sign{margin-top:11px;padding:14px;border:1px solid var(--line);background:var(--card)}.summary h2,.sign h2{font-family:Georgia,serif;font-size:25px;font-weight:400}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.summary-grid div{padding:8px;border-bottom:1px solid rgba(211,166,79,.12)}.summary-grid span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase}.summary-grid strong{display:block;margin-top:3px;font-size:12px}.clause{padding:11px 0;border-bottom:1px solid rgba(211,166,79,.12)}.clause h3{margin:0;color:var(--gold);font-size:13px}.clause p{margin:6px 0 0;color:#d5c9b7;font-size:12px;line-height:1.55}.accept{display:flex;gap:9px;align-items:flex-start;color:#d5c9b7;font-size:12px;line-height:1.5}.accept input{width:22px;height:22px;flex:0 0 auto}input[type=text]{width:100%;min-height:47px;padding:0 10px;border:1px solid var(--line);background:#090604;color:#fff}canvas{display:block;width:100%;height:180px;margin-top:10px;background:#fff;touch-action:none}.actions{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px}.actions button,.actions a{display:grid;place-items:center;min-height:48px;border:1px solid var(--line);background:#0b0805;color:#fff;text-decoration:none}.actions .gold{border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;font-weight:800}.success{display:none;margin-top:11px;padding:14px;border:1px solid rgba(156,196,161,.4);color:var(--ok);line-height:1.5}.success.show{display:block}
 @media(max-width:600px){.summary-grid,.actions{grid-template-columns:1fr}}
 </style>
@@ -19,6 +23,12 @@ header{padding:14px 2px}header small{color:var(--gold);font-size:9px;letter-spac
 <small>Wedding Tattoo Experience</small>
 <h1 id="title">Bozza di contratto</h1>
 <p id="status">Caricamento…</p>
+<div class="journey">
+<span class="done">1. Proposta</span>
+<span class="current">2. Contratto</span>
+<span>3. Acconto</span>
+<span>4. Area Sposi</span>
+</div>
 </header>
 <section class="summary">
 <h2>Riepilogo</h2>
@@ -96,7 +106,7 @@ $('confirm').onclick=async()=>{
  if(!$('accepted').checked)return alert('Devi accettare le condizioni.');
  if(!hasInk)return alert('Inserisci la firma.');
  const button=$('confirm');
- button.disabled=true;button.textContent='Registrazione…';
+ button.disabled=true;button.textContent='Registrazione sicura…';
  try{
   const response=await fetch(`${API}/api/public/contracts/${encodeURIComponent(token)}/accept`,{
    method:'POST',
@@ -114,6 +124,8 @@ $('confirm').onclick=async()=>{
   $('paymentLink').href=data.paymentUrl;
   $('paymentLink').hidden=!data.paymentUrl;
   if(data.coupleUrl)localStorage.setItem('wte_couple_url',data.coupleUrl);
+  $('title').textContent='Contratto accettato';
+  $('status').textContent='Firma registrata correttamente';
   $('success').innerHTML=
    `Contratto registrato. L’acconto è <strong>${new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format((data.depositCents||0)/100)}</strong> `+
    `con scadenza ${new Date(data.depositDueAt).toLocaleDateString('it-IT')}.`;
