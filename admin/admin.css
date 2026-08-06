@@ -2951,3 +2951,71 @@ html[data-role="collaborator"] #settingsBtn{display:none!important}
   font-weight:800;
   text-transform:uppercase;
 }
+
+/* WTE V3 Fase 1 - QR e votazioni invitati */
+.guest-voting-box{margin-top:12px;padding:12px;border:1px solid rgba(214,170,85,.24);background:rgba(12,9,6,.72)}
+.guest-voting-box>header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.guest-voting-box>header div{display:grid;gap:3px}
+.guest-voting-box>header span{font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:#a89679}
+.guest-voting-box>header strong{font-family:Georgia,serif;font-size:17px;color:#ead7b4}
+.guest-voting-box>header button{min-height:40px}
+.guest-voting-box>p{margin:8px 0;color:#9f917d;font-size:8px;line-height:1.5}
+.guest-voting-content{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center}
+.guest-voting-content img{width:96px;height:96px;padding:5px;background:#fff;object-fit:contain}
+.guest-voting-content input{width:100%;min-height:41px}
+.guest-voting-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.guest-voting-actions button:last-child{grid-column:1/-1}
+.guest-voting-meta{margin-top:8px;color:#b8a88f;font-size:8px;line-height:1.5}
+.guest-voting-ranking{display:grid;gap:4px;margin-top:8px}
+.guest-voting-ranking div{display:flex;justify-content:space-between;gap:8px;padding:6px;border-bottom:1px solid rgba(214,170,85,.12);font-size:8px}
+.guest-voting-ranking span{color:#b8a88f}
+@media(max-width:480px){
+ .guest-voting-content{grid-template-columns:76px 1fr}
+ .guest-voting-content img{width:76px;height:76px}
+}
+
+/* WTE V3 Fase 2 - Pagamenti */
+.payment-plan-box{margin-top:12px;padding:12px;border:1px solid rgba(214,170,85,.24);background:rgba(12,9,6,.72)}
+.payment-plan-box>header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.payment-plan-box>header div{display:grid;gap:3px}.payment-plan-box>header span{font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:#a89679}
+.payment-plan-box>header strong{font-family:Georgia,serif;font-size:17px;color:#ead7b4}
+.payment-plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.payment-plan-grid label{display:grid;gap:4px;color:#a99a84;font-size:7px;text-transform:uppercase}
+.payment-plan-grid label.wide{grid-column:1/-1}
+.payment-plan-grid input,#paymentPublicLink{width:100%;min-height:41px}
+.payment-plan-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.payment-status-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.payment-status-grid article{display:grid;gap:6px;padding:9px;border:1px solid rgba(214,170,85,.16)}
+.payment-status-grid article span{font-size:7px;text-transform:uppercase;color:#9f917d}
+.payment-status-grid article strong{font-size:10px;color:#e6d7bf}
+.payment-status-grid button{min-height:38px}
+.payment-plan-meta{margin-top:8px;color:#b8a88f;font-size:8px}
+.payment-outbox{display:grid;gap:4px;margin-top:8px}
+.payment-outbox div{display:flex;justify-content:space-between;gap:8px;padding:6px;border-bottom:1px solid rgba(214,170,85,.12);font-size:7px}
+.payment-outbox span{color:#9f917d;text-align:right}
+@media(max-width:480px){
+ .payment-plan-grid,.payment-status-grid{grid-template-columns:1fr}
+ .payment-plan-grid label.wide{grid-column:auto}
+}
+
+/* WTE V3 Fase 3 - Contratti e pacchetti */
+.contract-status-box,.package-manager-box{margin-top:12px;padding:12px;border:1px solid rgba(214,170,85,.24);background:rgba(12,9,6,.72)}
+.contract-status-box>header,.package-manager-box>header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.contract-status-box>header div,.package-manager-box>header div{display:grid;gap:3px}
+.contract-status-box span,.package-manager-box>header span{font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:#a89679}
+.contract-status-box strong,.package-manager-box>header strong{font-family:Georgia,serif;font-size:17px;color:#ead7b4}
+#contractStatusMeta{margin-top:8px;color:#b8a88f;font-size:8px;line-height:1.5}
+#packageManagerList{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.package-manager-card{display:grid;gap:6px;padding:9px;border:1px solid rgba(214,170,85,.16)}
+.package-manager-card header{display:flex;justify-content:space-between}.package-manager-card header span{color:#9f917d;font-size:7px}
+.package-manager-card label{display:grid;gap:4px;color:#9f917d;font-size:7px;text-transform:uppercase}
+.package-manager-card input{min-height:38px}
+@media(max-width:480px){#packageManagerList{grid-template-columns:1fr}}
+
+/* WTE V3 Fase 4 - Dashboard automazioni */
+.workflow-dashboard{margin:10px 0 14px;padding:12px;border:1px solid rgba(214,170,85,.28);background:rgba(12,9,6,.82)}
+.workflow-dashboard>header{display:flex;align-items:center;justify-content:space-between;gap:10px}.workflow-dashboard>header div{display:grid;gap:3px}.workflow-dashboard>header span{font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:#a89679}.workflow-dashboard>header strong{font-family:Georgia,serif;font-size:20px;color:#ead7b4}
+.workflow-setup{margin-top:9px;padding:8px;border:1px solid rgba(214,170,85,.18);font-size:8px;line-height:1.45}.workflow-setup.ready{border-color:rgba(143,181,150,.4);color:#a9cfaf}.workflow-setup.warning{border-color:rgba(218,163,67,.4);color:#d9bd82}
+.workflow-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}.workflow-kpis article{padding:9px;border:1px solid rgba(214,170,85,.14)}.workflow-kpis span{display:block;color:#9f917d;font-size:7px;text-transform:uppercase}.workflow-kpis strong{display:block;margin-top:4px;font-family:Georgia,serif;font-size:22px;color:#ead7b4}
+.workflow-columns{display:grid;grid-template-columns:1.2fr .8fr;gap:9px;margin-top:10px}.workflow-columns h3{margin:0 0 7px;color:#b9a88e;font-size:8px;text-transform:uppercase;letter-spacing:.12em}.workflow-list{display:grid;gap:6px}.workflow-item{display:grid;grid-template-columns:1fr auto;gap:8px;padding:9px;border:1px solid rgba(214,170,85,.14)}.workflow-item.critical{border-color:rgba(204,85,85,.45)}.workflow-item.warning{border-color:rgba(218,163,67,.35)}.workflow-item strong{display:block;font-size:9px;color:#eee3d3}.workflow-item span{display:block;margin-top:3px;color:#b8a88f;font-size:7px}.workflow-item p{margin:5px 0 0;color:#9f917d;font-size:7px;line-height:1.45}.workflow-item-actions{display:grid;gap:5px;align-content:start}.workflow-item-actions button{min-height:32px;font-size:7px}.workflow-upcoming{display:grid;width:100%;gap:3px;padding:9px;border:1px solid rgba(214,170,85,.14);background:#0c0906;color:#fff;text-align:left}.workflow-upcoming span,.workflow-upcoming small{color:#9f917d;font-size:7px}.workflow-empty{padding:12px;border:1px dashed rgba(214,170,85,.18);color:#9f917d;font-size:8px;text-align:center}
+@media(max-width:720px){.workflow-kpis{grid-template-columns:1fr 1fr}.workflow-columns{grid-template-columns:1fr}}

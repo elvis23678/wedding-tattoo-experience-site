@@ -7,7 +7,7 @@
 <meta content="#050403" name="theme-color"/>
 <meta content="noindex,nofollow" name="robots"/>
 <title>WTE Admin — Archivio pratiche</title>
-<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="./admin.css?v=2.2.0-client-crm" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="10.0-stabile-pulita" name="wte-version"/><meta content="WTE-V5-STABLE" name="wte-admin-build"/></head>
+<meta content="WTE-ADMIN-PHASE2B" name="version"/><meta content="WTE-ADMIN-PHASE2C" name="version"/><meta content="WTE-ADMIN-PHASE2D" name="version"/><meta content="WTE-ADMIN-PHASE2E" name="version"/><meta content="WTE-ADMIN-PHASE2G" name="version"/><link href="./admin.css?v=2.2.0-client-crm" rel="stylesheet"/><meta content="no-store, no-cache, must-revalidate, max-age=0" http-equiv="Cache-Control"/><meta content="no-cache" http-equiv="Pragma"/><meta content="0" http-equiv="Expires"/><meta content="3.0.0-phase4" name="wte-version"/><meta content="WTE-V5-STABLE" name="wte-admin-build"/></head>
 <body><div class="account-login" id="accountLogin">
 <form class="account-login-card" id="accountLoginForm">
 <div class="account-login-brand">
@@ -567,6 +567,76 @@
 <button id="reopenFlashSelectionBtn" type="button">Riapri selezione</button>
 </div>
 <div class="flash-selection-meta" id="flashSelectionMeta">Nessuna selezione collegata.</div>
+</section><section class="contract-status-box" id="contractStatusBox">
+<header>
+<div><span>Contratto e proposta</span><strong id="contractStatus">Nessun contratto collegato</strong></div>
+<button id="openContractPdfBtn" type="button">Apri PDF</button>
+</header>
+<div id="contractStatusMeta">Le pratiche create dall’assistente mostrano qui numero, firmatario e stato del contratto.</div>
+</section><section class="package-manager-box" id="packageManagerBox">
+<header>
+<div><span>Pacchetti assistente</span><strong>Prezzi e acconto</strong></div>
+<button id="reloadPackagesBtn" type="button">Aggiorna</button>
+</header>
+<div id="packageManagerList"></div>
+</section><section class="payment-plan-box" id="paymentPlanBox">
+<header>
+<div>
+<span>Pagamenti</span>
+<strong id="paymentPlanStatus">Non configurati</strong>
+</div>
+<button id="savePaymentPlanBtn" type="button">Salva piano</button>
+</header>
+<div class="payment-plan-grid">
+<label>Totale (€)<input id="paymentTotal" min="0" placeholder="0,00" step="0.01" type="number"/></label>
+<label>Acconto (€)<input id="paymentDeposit" min="0" placeholder="0,00" step="0.01" type="number"/></label>
+<label>Scadenza acconto<input id="paymentDepositDue" type="datetime-local"/></label>
+<label>Link pagamento acconto<input id="paymentDepositUrl" placeholder="https://..." type="url"/></label>
+<label class="wide">Link pagamento saldo<input id="paymentBalanceUrl" placeholder="https://..." type="url"/></label>
+</div>
+<input id="paymentPublicLink" placeholder="Link cliente pagamenti" readonly=""/>
+<div class="payment-plan-actions">
+<button id="copyPaymentLinkBtn" type="button">Copia link</button>
+<button id="openPaymentLinkBtn" type="button">Apri pagina</button>
+</div>
+<div class="payment-status-grid">
+<article>
+<span>Acconto</span>
+<strong id="depositPaymentStatus">In attesa</strong>
+<button id="markDepositPaidBtn" type="button">Registra pagamento</button>
+<button id="depositReceiptBtn" type="button">PDF pagamento</button>
+</article>
+<article>
+<span>Saldo</span>
+<strong id="balancePaymentStatus">In attesa</strong>
+<button id="markBalancePaidBtn" type="button">Registra pagamento</button>
+<button id="balanceReceiptBtn" type="button">PDF pagamento</button>
+</article>
+</div>
+<div class="payment-plan-meta" id="paymentPlanMeta">Nessun piano pagamenti collegato.</div>
+<div class="payment-outbox" id="paymentOutbox"></div>
+</section><section class="guest-voting-box" id="guestVotingBox">
+<header>
+<div>
+<span>QR invitati</span>
+<strong id="guestVotingStatus">Non creato</strong>
+</div>
+<button id="createGuestVotingBtn" type="button">Crea / recupera QR</button>
+</header>
+<p>Gli invitati vedono tutto il catalogo e scelgono un flash. La votazione si chiude automaticamente 15 giorni prima dell'evento.</p>
+<div class="guest-voting-content">
+<img alt="QR invitati" hidden="" id="guestVotingQr"/>
+<div>
+<input id="guestVotingLink" placeholder="Il link invitati comparirà qui" readonly=""/>
+<div class="guest-voting-actions">
+<button id="copyGuestVotingLinkBtn" type="button">Copia link</button>
+<button id="openGuestVotingLinkBtn" type="button">Apri catalogo</button>
+<button id="downloadGuestVotingPdfBtn" type="button">PDF Top 50</button>
+</div>
+</div>
+</div>
+<div class="guest-voting-meta" id="guestVotingMeta">Nessuna votazione collegata.</div>
+<div class="guest-voting-ranking" id="guestVotingRanking"></div>
 </section></div>
 <footer class="drawer-actions"><button id="openPdfBtn" type="button">Apri PDF</button><button id="whatsappBtn" type="button">WhatsApp</button><button id="duplicateBtn" type="button">Duplica</button><button class="danger" id="deleteBtn" type="button">Elimina</button><button id="saveNotesBtn" type="button">Salva modifiche</button><button class="gold" id="closeDetailBtn" type="button">Chiudi</button></footer>
 </aside>
@@ -816,7 +886,7 @@
 </div>
 <div class="cloud-backups-list" id="cloudBackupsList"></div>
 </section>
-</div><script defer="True" src="./premium.js?v=5.0.0-stable"></script><script defer="True" src="./workflow.js?v=9.0.0"></script><div aria-hidden="true" class="notifications-panel" id="notificationsPanel">
+</div><script defer="True" src="./premium.js?v=5.0.0-stable"></script><script defer="True" src="./workflow.js?v=9.0.0"></script><section class="workflow-dashboard" id="workflowDashboard"><header><div><span>Automazioni V3</span><strong>Da fare oggi</strong></div><button id="runWorkflowBtn" type="button">Esegui controllo</button></header><div class="workflow-setup" id="workflowSetup"></div><div class="workflow-kpis"><article><span>Pratiche</span><strong id="workflowTotal">0</strong></article><article><span>Pronte</span><strong id="workflowReady">0</strong></article><article><span>Eccezioni</span><strong id="workflowExceptions">0</strong></article><article><span>Messaggi in attesa</span><strong id="workflowMessages">0</strong></article></div><div class="workflow-columns"><section><h3>Serve attenzione</h3><div class="workflow-list" id="workflowExceptionList"></div></section><section><h3>Prossimi matrimoni</h3><div class="workflow-list" id="workflowUpcomingList"></div></section></div></section><div aria-hidden="true" class="notifications-panel" id="notificationsPanel">
 <div class="settings-backdrop" data-close-notifications=""></div>
 <section>
 <header><div><span>Centro notifiche</span><strong>Attività recenti</strong></div><button data-close-notifications="">×</button></header>
@@ -907,5 +977,5 @@
 <button type="submit">Salva nuova password</button>
 <small id="accountPasswordError"></small>
 </form>
-</div><script defer="True" src="./auth-session.js?v=8.0.0"></script></body>
+</div><script defer="True" src="./auth-session.js?v=8.0.0"></script><script defer="" src="./guest-voting.js?v=3.0.0"></script><script defer="" src="./payments-v3.js?v=3.0.0"></script><script defer="" src="./sales-v3.js?v=3.0.0"></script><script defer="" src="./workflow-v3.js?v=3.0.0"></script></body>
 </html>
