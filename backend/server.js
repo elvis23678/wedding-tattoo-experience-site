@@ -105,7 +105,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'4.0.0-phase-a', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'4.0.0-phase-b', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -2207,6 +2207,7 @@ async function applyPaidPayment({
   }
 
   const updated=await paymentPlanByPractice(practiceId);
+  await syncBookingStatus(practiceId);
   await updatePracticePaymentSummary(practiceId,updated);
 
   if(type==='deposit'){
@@ -2427,9 +2428,10 @@ app.post('/api/payment-plans', auth, async (req,res) => {
 
   const result=await pool.query(
     `INSERT INTO wte_payment_plans
-     (practice_id,token,total_cents,deposit_cents,balance_cents,
-      deposit_due_at,balance_due_at,deposit_payment_url,balance_payment_url)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+     (practice_id,token,couple_token,total_cents,deposit_cents,balance_cents,
+      deposit_due_at,balance_due_at,deposit_payment_url,balance_payment_url,
+      booking_status)
+     VALUES ($1,$2,$2,$3,$4,$5,$6,$7,$8,$9,'deposit_pending')
      ON CONFLICT (practice_id)
      DO UPDATE SET
        total_cents=EXCLUDED.total_cents,
@@ -3033,9 +3035,9 @@ async function createPaymentPlanFromContract(practiceId,customer,pack) {
 
   const result=await pool.query(
     `INSERT INTO wte_payment_plans
-     (practice_id,token,total_cents,deposit_cents,balance_cents,
-      deposit_due_at,balance_due_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7)
+     (practice_id,token,couple_token,total_cents,deposit_cents,balance_cents,
+      deposit_due_at,balance_due_at,booking_status)
+     VALUES ($1,$2,$2,$3,$4,$5,$6,$7,'deposit_pending')
      ON CONFLICT (practice_id)
      DO UPDATE SET
        total_cents=EXCLUDED.total_cents,
@@ -3359,6 +3361,8 @@ app.post('/api/public/contracts/:token/accept', publicRateLimit, async (req,res)
     ok:true,
     practiceId,
     paymentUrl,
+    coupleUrl:couplePublicUrl(plan.couple_token || plan.token),
+    successUrl:successPublicUrl(plan.couple_token || plan.token),
     depositCents:plan.deposit_cents,
     depositDueAt:plan.deposit_due_at,
     contractPdf:`${req.protocol}://${req.get('host')}${contractPdfUrl(req.params.token)}`
@@ -3539,6 +3543,196 @@ app.post('/api/message-outbox/:id/retry',auth,async(req,res)=>{
 });
 setTimeout(()=>{runWorkflowJob('phase4-startup',async()=>{await processPaymentReminders();await finalizeAllDueGuestEvents();const detection=await detectWorkflowExceptions();const dispatch=await dispatchPendingMessages();return{detection,dispatch};}).catch(error=>console.error('Phase 4 startup error',error));},10000);
 setInterval(()=>{runWorkflowJob('phase4-scheduled',async()=>{await processPaymentReminders();await finalizeAllDueGuestEvents();const detection=await detectWorkflowExceptions();const dispatch=await dispatchPendingMessages();return{detection,dispatch};}).catch(error=>console.error('Phase 4 scheduled error',error));},5*60*1000);
+
+
+// ============================================================
+// WTE V4 FASE B — prenotazione automatica e Area Sposi
+// ============================================================
+
+function couplePublicUrl(token) {
+  return `https://www.weddingtattooexperience.it/couple.html?token=${token}`;
+}
+
+function successPublicUrl(token) {
+  return `https://www.weddingtattooexperience.it/success.html?token=${token}`;
+}
+
+async function coupleBundleByToken(token) {
+  const result=await pool.query(
+    `SELECT pp.practice_id,pp.token,pp.couple_token,pp.currency,
+            pp.total_cents,pp.deposit_cents,pp.balance_cents,
+            pp.deposit_due_at,pp.balance_due_at,
+            pp.deposit_payment_url,pp.balance_payment_url,
+            pp.deposit_status,pp.balance_status,
+            pp.deposit_paid_at,pp.balance_paid_at,
+            pp.deposit_receipt_url,pp.balance_receipt_url,
+            pp.booking_status,
+            p.data,
+            ge.token AS guest_token,ge.status AS guest_status,
+            ge.closes_at,ge.final_codes,ge.finalized_at,
+            (
+              SELECT COUNT(*)::int
+              FROM wte_guest_votes gv
+              WHERE gv.event_token=ge.token
+            ) AS guest_votes,
+            (
+              SELECT COUNT(DISTINCT gv.flash_code)::int
+              FROM wte_guest_votes gv
+              WHERE gv.event_token=ge.token
+            ) AS unique_flash
+     FROM wte_payment_plans pp
+     JOIN wte_practices p ON p.id=pp.practice_id
+     LEFT JOIN wte_guest_events ge ON ge.practice_id=pp.practice_id
+     WHERE pp.couple_token=$1 OR pp.token=$1`,
+    [token]
+  );
+  return result.rows[0] || null;
+}
+
+async function syncBookingStatus(practiceId) {
+  const plan=await paymentPlanByPractice(practiceId);
+  if(!plan)return null;
+
+  let status='deposit_pending';
+  if(plan.deposit_status==='paid' && plan.balance_status==='paid'){
+    status='ready';
+  }else if(plan.deposit_status==='paid'){
+    status='balance_pending';
+  }
+
+  const result=await pool.query(
+    `UPDATE wte_payment_plans
+     SET booking_status=$2,
+         couple_token=COALESCE(couple_token,token),
+         updated_at=NOW()
+     WHERE practice_id=$1
+     RETURNING practice_id,token,couple_token,booking_status`,
+    [practiceId,status]
+  );
+  return result.rows[0] || null;
+}
+
+app.get('/api/public/couple/:token', async (req,res) => {
+  let bundle=await coupleBundleByToken(req.params.token);
+  if(!bundle){
+    return res.status(404).json({error:'Area Sposi non trovata.'});
+  }
+
+  await syncBookingStatus(bundle.practice_id);
+  bundle=await coupleBundleByToken(req.params.token);
+
+  const practice=bundle.data || {};
+  const contract=practice.contract || {};
+  const guestOpen=bundle.deposit_status==='paid' && Boolean(bundle.guest_token);
+  const finalCodes=Array.isArray(bundle.final_codes)?bundle.final_codes:[];
+
+  const steps=[
+    {
+      code:'contract',
+      label:'Contratto',
+      status:contract.status==='accepted'?'done':'pending'
+    },
+    {
+      code:'deposit',
+      label:'Acconto',
+      status:bundle.deposit_status==='paid'?'done':'current'
+    },
+    {
+      code:'guests',
+      label:'Scelta invitati',
+      status:
+        bundle.guest_status==='finalized'
+          ?'done'
+          :guestOpen?'current':'locked'
+    },
+    {
+      code:'balance',
+      label:'Saldo',
+      status:
+        bundle.balance_status==='paid'
+          ?'done'
+          :bundle.deposit_status==='paid'?'current':'locked'
+    },
+    {
+      code:'event',
+      label:'Matrimonio',
+      status:
+        bundle.deposit_status==='paid' && bundle.balance_status==='paid'
+          ?'current'
+          :'locked'
+    }
+  ];
+
+  res.setHeader('Cache-Control','no-store');
+  res.json({
+    booking:{
+      status:bundle.booking_status,
+      practiceId:bundle.practice_id,
+      customerName:practice.name || '',
+      eventDate:practice.date || '',
+      eventTime:practice.time || '',
+      location:practice.location || practice.city || '',
+      packageName:practice.package || '',
+      totalCents:bundle.total_cents,
+      depositCents:bundle.deposit_cents,
+      balanceCents:bundle.balance_cents,
+      depositStatus:bundle.deposit_status,
+      balanceStatus:bundle.balance_status,
+      depositDueAt:bundle.deposit_due_at,
+      balanceDueAt:bundle.balance_due_at,
+      depositPaidAt:bundle.deposit_paid_at,
+      balancePaidAt:bundle.balance_paid_at,
+      depositPaymentUrl:bundle.deposit_payment_url,
+      balancePaymentUrl:bundle.balance_payment_url,
+      contractPdf:contract.pdfUrl || '',
+      depositReceiptUrl:bundle.deposit_receipt_url || '',
+      balanceReceiptUrl:bundle.balance_receipt_url || '',
+      coupleUrl:couplePublicUrl(bundle.couple_token || bundle.token),
+      successUrl:successPublicUrl(bundle.couple_token || bundle.token)
+    },
+    guest:{
+      enabled:guestOpen,
+      status:bundle.guest_status || 'locked',
+      votes:Number(bundle.guest_votes||0),
+      uniqueFlash:Number(bundle.unique_flash||0),
+      finalCount:finalCodes.length,
+      closesAt:bundle.closes_at,
+      catalogUrl:guestOpen?guestPublicUrl(bundle.guest_token):'',
+      qrUrl:guestOpen
+        ?`https://wte-cloud-api.onrender.com/api/public/guest-event/${bundle.guest_token}/qr.svg`
+        :'',
+      finalPdf:
+        bundle.guest_status==='finalized'
+          ?`https://wte-cloud-api.onrender.com/api/guest-events/${bundle.guest_token}/pdf`
+          :''
+    },
+    steps
+  });
+});
+
+app.get('/api/public/booking-success/:token', async (req,res) => {
+  const bundle=await coupleBundleByToken(req.params.token);
+  if(!bundle){
+    return res.status(404).json({error:'Prenotazione non trovata.'});
+  }
+
+  const practice=bundle.data || {};
+  const confirmed=bundle.deposit_status==='paid';
+
+  res.setHeader('Cache-Control','no-store');
+  res.json({
+    confirmed,
+    booking:{
+      customerName:practice.name || '',
+      eventDate:practice.date || '',
+      packageName:practice.package || '',
+      depositCents:bundle.deposit_cents,
+      depositStatus:bundle.deposit_status,
+      coupleUrl:couplePublicUrl(bundle.couple_token || bundle.token)
+    }
+  });
+});
+
 
 app.delete('/api/practices/:id', auth, async (req,res) => {
   await pool.query('DELETE FROM wte_practices WHERE id = $1', [req.params.id]);

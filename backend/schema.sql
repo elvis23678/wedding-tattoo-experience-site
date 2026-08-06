@@ -374,3 +374,23 @@ CREATE TABLE IF NOT EXISTS wte_workflow_runs (
   finished_at TIMESTAMPTZ,
   details JSONB NOT NULL DEFAULT '{}'::jsonb
 );
+
+
+-- WTE V4 FASE B: area sposi e prenotazione automatica
+ALTER TABLE wte_payment_plans
+  ADD COLUMN IF NOT EXISTS couple_token TEXT UNIQUE,
+  ADD COLUMN IF NOT EXISTS booking_status TEXT NOT NULL DEFAULT 'contract_accepted'
+    CHECK (booking_status IN (
+      'contract_accepted',
+      'deposit_pending',
+      'confirmed',
+      'balance_pending',
+      'ready'
+    ));
+
+UPDATE wte_payment_plans
+SET couple_token=token
+WHERE couple_token IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_wte_payment_plans_couple_token
+ON wte_payment_plans(couple_token);
