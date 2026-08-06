@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070503">
+<title>Contratto - Wedding Tattoo Experience</title>
+<style>
+:root{--bg:#070503;--card:#100c08;--gold:#d3a64f;--text:#f3eadb;--muted:#a99a84;--line:rgba(211,166,79,.25);--ok:#9cc4a1}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}main{max-width:780px;margin:auto;padding:14px 12px 42px}
+header{padding:14px 2px}header small{color:var(--gold);font-size:9px;letter-spacing:.16em;text-transform:uppercase}h1{margin:6px 0;font-family:Georgia,serif;font-size:30px;font-weight:400}header p{margin:0;color:var(--muted)}
+.summary,.terms,.sign{margin-top:11px;padding:14px;border:1px solid var(--line);background:var(--card)}.summary h2,.sign h2{font-family:Georgia,serif;font-size:25px;font-weight:400}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.summary-grid div{padding:8px;border-bottom:1px solid rgba(211,166,79,.12)}.summary-grid span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase}.summary-grid strong{display:block;margin-top:3px;font-size:12px}.clause{padding:11px 0;border-bottom:1px solid rgba(211,166,79,.12)}.clause h3{margin:0;color:var(--gold);font-size:13px}.clause p{margin:6px 0 0;color:#d5c9b7;font-size:12px;line-height:1.55}.accept{display:flex;gap:9px;align-items:flex-start;color:#d5c9b7;font-size:12px;line-height:1.5}.accept input{width:22px;height:22px;flex:0 0 auto}input[type=text]{width:100%;min-height:47px;padding:0 10px;border:1px solid var(--line);background:#090604;color:#fff}canvas{display:block;width:100%;height:180px;margin-top:10px;background:#fff;touch-action:none}.actions{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px}.actions button,.actions a{display:grid;place-items:center;min-height:48px;border:1px solid var(--line);background:#0b0805;color:#fff;text-decoration:none}.actions .gold{border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;font-weight:800}.success{display:none;margin-top:11px;padding:14px;border:1px solid rgba(156,196,161,.4);color:var(--ok);line-height:1.5}.success.show{display:block}
+@media(max-width:600px){.summary-grid,.actions{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<small>Wedding Tattoo Experience</small>
+<h1 id="title">Bozza di contratto</h1>
+<p id="status">Caricamento…</p>
+</header>
+<section class="summary">
+<h2>Riepilogo</h2>
+<div class="summary-grid" id="summary"></div>
+</section>
+<section class="terms" id="terms"></section>
+<section class="sign" id="signSection">
+<h2>Accettazione e firma</h2>
+<input id="signerName" type="text" placeholder="Nome e cognome del firmatario">
+<label class="accept"><input id="accepted" type="checkbox"> Confermo di aver letto e accettato integralmente le condizioni riportate nel contratto.</label>
+<p>Firma nel riquadro bianco:</p>
+<canvas id="signature"></canvas>
+<div class="actions">
+<button id="clear" type="button">Cancella firma</button>
+<button class="gold" id="confirm" type="button">Accetta e firma</button>
+</div>
+</section>
+<div class="success" id="success"></div>
+<div class="actions">
+<a id="pdfLink" target="_blank">Scarica il contratto PDF</a>
+<a class="gold" id="paymentLink" hidden>Vai al pagamento dell’acconto</a>
+</div>
+</main>
+<script>
+const API='https://wte-cloud-api.onrender.com';
+const token=new URLSearchParams(location.search).get('token');
+const $=id=>document.getElementById(id);
+const canvas=$('signature'),ctx=canvas.getContext('2d');
+let contract=null,drawing=false,hasInk=false;
+function resize(){
+ const rect=canvas.getBoundingClientRect();
+ const ratio=Math.min(devicePixelRatio||1,2);
+ canvas.width=Math.round(rect.width*ratio);
+ canvas.height=Math.round(rect.height*ratio);
+ ctx.setTransform(ratio,0,0,ratio,0,0);
+ ctx.lineWidth=2;ctx.lineCap='round';ctx.strokeStyle='#111';
+}
+function position(event){
+ const rect=canvas.getBoundingClientRect();
+ return[event.clientX-rect.left,event.clientY-rect.top];
+}
+canvas.onpointerdown=event=>{drawing=true;hasInk=true;ctx.beginPath();ctx.moveTo(...position(event));canvas.setPointerCapture?.(event.pointerId)};
+canvas.onpointermove=event=>{if(!drawing)return;ctx.lineTo(...position(event));ctx.stroke()};
+canvas.onpointerup=canvas.onpointercancel=canvas.onpointerleave=()=>drawing=false;
+$('clear').onclick=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);hasInk=false};
+addEventListener('resize',resize);
+async function init(){
+ if(!token)throw new Error('Link contratto non valido.');
+ const response=await fetch(`${API}/api/public/contracts/${encodeURIComponent(token)}`,{cache:'no-store'});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||'Contratto non disponibile.');
+ contract=data.contract;
+ $('pdfLink').href=data.pdf;
+ $('status').textContent=`Contratto ${contract.contractNumber}`;
+ const customer=contract.customer||{},pack=contract.package||{};
+ const fields=[
+  ['Cliente',customer.name],['Data evento',customer.date],['Ora',customer.time],
+  ['Luogo',customer.location],['Invitati',customer.guests],
+  ['Pacchetto',pack.name],['Importo',pack.price_cents?new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(pack.price_cents/100):'Su misura']
+ ];
+ $('summary').innerHTML=fields.map(([label,value])=>`<div><span>${label}</span><strong>${value||'—'}</strong></div>`).join('');
+ $('terms').innerHTML=(contract.clauses||[]).map((clause,index)=>`<article class="clause"><h3>${index+1}. ${clause.title}</h3><p>${clause.text}</p></article>`).join('');
+ $('signerName').value=contract.signerName||customer.name||'';
+ if(contract.status==='accepted'){
+  $('title').textContent='Contratto accettato';
+  $('status').textContent=`Firmato il ${new Date(contract.acceptedAt).toLocaleString('it-IT')}`;
+  $('signSection').style.display='none';
+  $('success').textContent='Il contratto risulta già accettato. Puoi scaricarne una copia firmata.';
+  $('success').classList.add('show');
+ }
+ requestAnimationFrame(resize);
+}
+$('confirm').onclick=async()=>{
+ if(!$('signerName').value.trim())return alert('Inserisci il nome del firmatario.');
+ if(!$('accepted').checked)return alert('Devi accettare le condizioni.');
+ if(!hasInk)return alert('Inserisci la firma.');
+ const button=$('confirm');
+ button.disabled=true;button.textContent='Registrazione…';
+ try{
+  const response=await fetch(`${API}/api/public/contracts/${encodeURIComponent(token)}/accept`,{
+   method:'POST',
+   headers:{'Content-Type':'application/json','Accept':'application/json'},
+   body:JSON.stringify({
+    signerName:$('signerName').value.trim(),
+    signatureData:canvas.toDataURL('image/png'),
+    accepted:true
+   })
+  });
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||'Firma non registrata.');
+  $('signSection').style.display='none';
+  $('pdfLink').href=data.contractPdf;
+  $('paymentLink').href=data.paymentUrl;
+  $('paymentLink').hidden=!data.paymentUrl;
+  $('success').innerHTML=
+   `Contratto registrato. L’acconto è <strong>${new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format((data.depositCents||0)/100)}</strong> `+
+   `con scadenza ${new Date(data.depositDueAt).toLocaleDateString('it-IT')}.`;
+  $('success').classList.add('show');
+ }catch(error){
+  alert(error.message);
+ }finally{
+  button.disabled=false;button.textContent='Accetta e firma';
+ }
+};
+init().catch(error=>{
+ $('status').textContent=error.message;
+ $('signSection').style.display='none';
+});
+</script>
+</body>
+</html>

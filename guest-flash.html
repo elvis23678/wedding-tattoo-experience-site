@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070503">
+<title>Scegli il tuo flash - Wedding Tattoo Experience</title>
+<style>
+:root{--bg:#070503;--card:#100c08;--gold:#d3a64f;--text:#f3eadb;--muted:#a99a84;--line:rgba(211,166,79,.25);--ok:#9cc4a1}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0,rgba(211,166,79,.09),transparent 30%),var(--bg);color:var(--text);font-family:Arial,sans-serif}
+header{position:sticky;top:0;z-index:10;padding:12px 14px;background:rgba(7,5,3,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
+header small{color:var(--gold);font-size:9px;letter-spacing:.16em;text-transform:uppercase}
+header h1{margin:5px 0 2px;font-family:Georgia,serif;font-size:25px;font-weight:400}
+header p{margin:0;color:var(--muted);font-size:11px}.chosen{color:var(--ok)!important}
+main{max-width:1120px;margin:auto;padding:12px}.notice{padding:12px;border:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.5}
+.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.toolbar input,.toolbar select{min-height:45px;padding:0 10px;border:1px solid var(--line);background:#0d0906;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:11px}.card{padding:7px;border:1px solid var(--line);background:var(--card)}.card.selected{outline:2px solid var(--gold)}
+.card img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff}.card strong{display:block;margin-top:7px;font-size:13px}.card span{display:block;min-height:28px;margin-top:3px;color:var(--muted);font-size:11px}
+.card button{width:100%;min-height:41px;border:0;background:#1a130c;color:#fff;font-weight:700}.card.selected button{background:var(--gold);color:#171006}
+.empty{grid-column:1/-1;padding:40px 15px;text-align:center;border:1px dashed var(--line);color:var(--muted)}
+.confirmbar{position:sticky;bottom:0;z-index:9;display:none;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(7,5,3,.97);border-top:1px solid var(--line)}.confirmbar.show{display:block}
+.confirmbar button{width:100%;min-height:50px;border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;font-weight:800}
+@media(min-width:720px){.grid{grid-template-columns:repeat(4,1fr)}.toolbar{grid-template-columns:2fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+<small>Wedding Tattoo Experience</small>
+<h1>Scegli il tatuaggio che preferisci</h1>
+<p id="headerStatus">Caricamento del catalogo…</p>
+</header>
+<main>
+<div class="notice" id="notice">Apri un flash e seleziona la tua preferenza. Potrai cambiarla fino alla chiusura della votazione.</div>
+<div class="toolbar">
+<input id="search" type="search" placeholder="Cerca codice o soggetto">
+<select id="category"><option value="">Tutte le categorie</option></select>
+</div>
+<div class="grid" id="grid"></div>
+</main>
+<div class="confirmbar" id="confirmBar">
+<button id="confirmBtn" type="button">Conferma la mia scelta</button>
+</div>
+<script>
+const API='https://wte-cloud-api.onrender.com';
+const token=new URLSearchParams(location.search).get('token');
+const $=id=>document.getElementById(id);
+let eventData=null,catalog=[],selectedCode='',savedCode='';
+
+function voterKey(){
+ let key=localStorage.getItem('wte_guest_voter_key_v3');
+ if(!key){
+  key=(crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`).replace(/[^a-zA-Z0-9-]/g,'');
+  localStorage.setItem('wte_guest_voter_key_v3',key);
+ }
+ return key;
+}
+async function json(url,options={}){
+ const response=await fetch(url,{
+  cache:'no-store',
+  ...options,
+  headers:{'Content-Type':'application/json','Accept':'application/json',...(options.headers||{})}
+ });
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||`Errore ${response.status}`);
+ return data;
+}
+function categories(){
+ const values=[...new Set(catalog.map(x=>x.category).filter(Boolean))].sort();
+ $('category').innerHTML='<option value="">Tutte le categorie</option>'+
+  values.map(value=>`<option>${value}</option>`).join('');
+}
+function filtered(){
+ const q=$('search').value.trim().toLowerCase();
+ const category=$('category').value;
+ return catalog.filter(item=>{
+  const text=[item.code,item.title,item.category,...(item.tags||[])].join(' ').toLowerCase();
+  return(!q||text.includes(q))&&(!category||item.category===category);
+ });
+}
+function render(){
+ const grid=$('grid');grid.innerHTML='';
+ const list=filtered();
+ if(!list.length){grid.innerHTML='<div class="empty">Nessun flash trovato.</div>';return}
+ list.forEach(item=>{
+  const card=document.createElement('article');
+  card.className='card'+(selectedCode===item.code?' selected':'');
+  const image=`${API}/api/public/flash-catalog/${item.id}/image?v=${encodeURIComponent(item.updated_at||'3')}`;
+  card.innerHTML=`<img loading="lazy" decoding="async" src="${image}" alt="${item.code}">
+    <strong>${item.code}</strong>
+    <span>${item.title||item.category||''}</span>
+    <button type="button">${selectedCode===item.code?'Selezionato':'Scegli questo'}</button>`;
+  card.querySelector('button').disabled=eventData?.status!=='open';
+  card.querySelector('button').onclick=()=>{
+   selectedCode=item.code;
+   render();
+   $('confirmBar').classList.add('show');
+   $('confirmBtn').textContent=savedCode
+    ? 'Aggiorna la mia scelta'
+    : 'Conferma la mia scelta';
+  };
+  grid.appendChild(card);
+ });
+}
+async function init(){
+ if(!token)throw new Error('QR non valido.');
+ const [eventResponse,catalogResponse,voteResponse]=await Promise.all([
+  json(`${API}/api/public/guest-event/${encodeURIComponent(token)}`),
+  json(`${API}/api/public/flash-catalog?v=3`),
+  json(`${API}/api/public/guest-event/${encodeURIComponent(token)}/vote?voterKey=${encodeURIComponent(voterKey())}`)
+ ]);
+ eventData=eventResponse.event;
+ catalog=catalogResponse.items||[];
+ savedCode=voteResponse.vote?.flash_code||'';
+ selectedCode=savedCode;
+ categories();render();
+
+ const closeDate=new Date(eventData.closesAt).toLocaleDateString('it-IT');
+ if(eventData.status==='finalized'){
+  $('headerStatus').textContent=`Votazione chiusa il ${closeDate}`;
+  $('notice').textContent='La selezione dei flash per questo matrimonio è conclusa.';
+ }else if(savedCode){
+  $('headerStatus').textContent=`Scelta registrata: ${savedCode} · chiusura ${closeDate}`;
+  $('headerStatus').classList.add('chosen');
+  $('notice').textContent='La tua preferenza è registrata. Puoi cambiarla fino alla data di chiusura.';
+ }else{
+  $('headerStatus').textContent=`Selezione aperta fino al ${closeDate}`;
+ }
+}
+$('search').oninput=render;
+$('category').onchange=render;
+$('confirmBtn').onclick=async()=>{
+ if(!selectedCode)return;
+ const button=$('confirmBtn');
+ button.disabled=true;button.textContent='Salvataggio…';
+ try{
+  const result=await json(`${API}/api/public/guest-event/${encodeURIComponent(token)}/vote`,{
+   method:'POST',
+   body:JSON.stringify({voterKey:voterKey(),flashCode:selectedCode})
+  });
+  savedCode=result.vote.flash_code;
+  $('headerStatus').textContent=`Scelta registrata: ${savedCode}`;
+  $('headerStatus').classList.add('chosen');
+  $('notice').textContent='Grazie. La tua preferenza è stata registrata e potrai cambiarla fino alla chiusura.';
+  $('confirmBar').classList.remove('show');
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+ }catch(error){
+  alert(error.message);
+ }finally{
+  button.disabled=false;button.textContent='Aggiorna la mia scelta';
+ }
+};
+init().catch(error=>{
+ $('headerStatus').textContent='Catalogo non disponibile';
+ $('notice').textContent=error.message;
+ $('grid').innerHTML='<div class="empty">Impossibile aprire questa votazione.</div>';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070503">
+<title>Pagamenti - Wedding Tattoo Experience</title>
+<style>
+:root{--bg:#070503;--card:#100c08;--gold:#d3a64f;--text:#f3eadb;--muted:#a99a84;--line:rgba(211,166,79,.25);--ok:#9cc4a1}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0,rgba(211,166,79,.09),transparent 30%),var(--bg);color:var(--text);font-family:Arial,sans-serif}
+main{max-width:720px;margin:auto;padding:18px 12px 40px}header{padding:18px 4px}header small{color:var(--gold);font-size:9px;letter-spacing:.16em;text-transform:uppercase}h1{margin:7px 0 5px;font-family:Georgia,serif;font-size:32px;font-weight:400}header p{margin:0;color:var(--muted);line-height:1.5}
+.summary{padding:14px;border:1px solid var(--line);background:var(--card)}.summary strong{display:block;font-family:Georgia,serif;font-size:20px;font-weight:400}.summary span{display:block;margin-top:5px;color:var(--muted);font-size:12px}
+.cards{display:grid;gap:11px;margin-top:12px}.payment-card{padding:15px;border:1px solid var(--line);background:var(--card)}.payment-card header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:0}.payment-card h2{margin:0;font-family:Georgia,serif;font-size:25px;font-weight:400}.amount{color:var(--gold);font-size:19px;font-weight:800}.status{margin-top:10px;padding:9px;border:1px solid var(--line);color:var(--muted);font-size:12px}.status.paid{border-color:rgba(156,196,161,.4);color:var(--ok)}.details{display:grid;gap:5px;margin-top:10px;color:var(--muted);font-size:12px}.action{display:grid;place-items:center;width:100%;min-height:49px;margin-top:12px;border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;text-decoration:none;font-weight:800}.action.disabled{background:#211a13;color:#756b5d;pointer-events:none}.notice{margin-top:14px;padding:12px;border:1px solid var(--line);color:var(--muted);font-size:11px;line-height:1.5}
+</style>
+</head>
+<body>
+<main>
+<header>
+<small>Wedding Tattoo Experience</small>
+<h1>Pagamenti della pratica</h1>
+<p id="intro">Caricamento dei dati…</p>
+</header>
+<section class="summary">
+<strong id="eventName">Pratica Wedding</strong>
+<span id="eventDetails"></span>
+</section>
+<div class="cards">
+<section class="payment-card">
+<header><h2>Acconto</h2><div class="amount" id="depositAmount">—</div></header>
+<div class="status" id="depositStatus">In attesa</div>
+<div class="details"><span id="depositDue"></span></div>
+<a class="action disabled" id="depositAction">Paga l’acconto</a>
+</section>
+<section class="payment-card">
+<header><h2>Saldo</h2><div class="amount" id="balanceAmount">—</div></header>
+<div class="status" id="balanceStatus">In attesa</div>
+<div class="details"><span id="balanceDue"></span></div>
+<a class="action disabled" id="balanceAction">Paga il saldo</a>
+</section>
+</div>
+<div class="notice">
+I pagamenti sono collegati automaticamente alla pratica. Quando il provider conferma
+l’operazione, lo stato viene aggiornato senza necessità di inviare ricevute allo staff.
+</div>
+</main>
+<script>
+const API='https://wte-cloud-api.onrender.com';
+const token=new URLSearchParams(location.search).get('token');
+const $=id=>document.getElementById(id);
+const euro=cents=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(cents||0)/100);
+function date(value){return value?new Date(value).toLocaleDateString('it-IT'):'Da definire'}
+function setPayment(prefix,status,url,dueAt){
+ const box=$(`${prefix}Status`),action=$(`${prefix}Action`);
+ if(status==='paid'){
+  box.textContent='Pagamento ricevuto';
+  box.classList.add('paid');
+  action.textContent='Pagamento completato';
+  action.classList.add('disabled');
+  action.removeAttribute('href');
+ }else{
+  box.textContent='Pagamento in attesa';
+  if(url){
+   action.href=url;
+   action.target='_blank';
+   action.rel='noopener';
+   action.classList.remove('disabled');
+  }else{
+   action.textContent='Istruzioni di pagamento non ancora disponibili';
+  }
+ }
+ $(`${prefix}Due`).textContent=`Scadenza: ${date(dueAt)}`;
+}
+async function init(){
+ if(!token)throw new Error('Link pagamento non valido.');
+ const response=await fetch(`${API}/api/public/payment-plan/${encodeURIComponent(token)}`,{cache:'no-store'});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||'Impossibile caricare la pratica.');
+
+ $('intro').textContent='Qui trovi importi, scadenze e stato aggiornato dei pagamenti.';
+ $('eventName').textContent=data.practice.name||'Pratica Wedding';
+ $('eventDetails').textContent=[data.practice.date,data.practice.location].filter(Boolean).join(' · ');
+ $('depositAmount').textContent=euro(data.plan.depositCents);
+ $('balanceAmount').textContent=euro(data.plan.balanceCents);
+ setPayment('deposit',data.plan.depositStatus,data.plan.depositPaymentUrl,data.plan.depositDueAt);
+ setPayment('balance',data.plan.balanceStatus,data.plan.balancePaymentUrl,data.plan.balanceDueAt);
+}
+init().catch(error=>{
+ $('intro').textContent=error.message;
+ document.querySelector('.cards').style.display='none';
+});
+</script>
+</body>
+</html>
