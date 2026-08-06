@@ -1,11 +1,13 @@
 {
   "name": "wte-cloud-api",
-  "version": "4.6.0",
+  "version": "4.9.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "init-db": "node init-db.js"
+    "init-db": "node init-db.js",
+    "smoke": "node release-smoke-test.js",
+    "backup:check": "node -e \"console.log('Backup disponibile da /api/release/backup')\""
   },
   "engines": {
     "node": ">=20"

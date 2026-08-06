@@ -587,3 +587,88 @@ WHERE stripe_deposit_session_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_wte_payment_plans_stripe_balance
 ON wte_payment_plans(stripe_balance_session_id)
 WHERE stripe_balance_session_id IS NOT NULL;
+
+
+-- WTE Release 1.0 Punto 3: disponibilità e protezione date
+CREATE TABLE IF NOT EXISTS wte_date_reservations (
+  id BIGSERIAL PRIMARY KEY,
+  event_date DATE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'hold'
+    CHECK (status IN (
+      'hold',
+      'confirmed',
+      'released',
+      'expired',
+      'cancelled'
+    )),
+  hold_token TEXT UNIQUE NOT NULL,
+  practice_id TEXT
+    REFERENCES wte_practices(id) ON DELETE SET NULL,
+  contract_token TEXT,
+  customer_name TEXT NOT NULL DEFAULT '',
+  customer_email TEXT NOT NULL DEFAULT '',
+  expires_at TIMESTAMPTZ,
+  confirmed_at TIMESTAMPTZ,
+  released_at TIMESTAMPTZ,
+  release_reason TEXT NOT NULL DEFAULT '',
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_wte_date_reservations_active_date
+ON wte_date_reservations(event_date)
+WHERE status IN ('hold','confirmed');
+
+CREATE INDEX IF NOT EXISTS idx_wte_date_reservations_expiry
+ON wte_date_reservations(status,expires_at);
+
+CREATE INDEX IF NOT EXISTS idx_wte_date_reservations_practice
+ON wte_date_reservations(practice_id);
+
+
+-- WTE Release 1.0 Punto 5: controllo rilascio, manutenzione e rollback
+CREATE TABLE IF NOT EXISTS wte_release_control (
+  id INTEGER PRIMARY KEY CHECK (id=1),
+  release_name TEXT NOT NULL DEFAULT '1.0.0',
+  maintenance_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  maintenance_message TEXT NOT NULL DEFAULT '',
+  booking_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_by TEXT NOT NULL DEFAULT 'system',
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO wte_release_control
+(id,release_name,maintenance_enabled,maintenance_message,booking_enabled)
+VALUES (1,'1.0.0',FALSE,'',TRUE)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS wte_release_deployments (
+  id BIGSERIAL PRIMARY KEY,
+  release_name TEXT NOT NULL,
+  deployment_id TEXT NOT NULL,
+  commit_hash TEXT NOT NULL DEFAULT '',
+  environment TEXT NOT NULL DEFAULT 'production',
+  status TEXT NOT NULL DEFAULT 'active'
+    CHECK (status IN ('active','superseded','rolled_back','failed')),
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wte_release_deployments_recent
+ON wte_release_deployments(id DESC);
+
+CREATE TABLE IF NOT EXISTS wte_release_rollbacks (
+  id BIGSERIAL PRIMARY KEY,
+  target_deployment_id TEXT NOT NULL,
+  target_release TEXT NOT NULL,
+  requested_by TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'requested'
+    CHECK (status IN ('requested','completed','cancelled','failed')),
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

@@ -14,6 +14,10 @@ import { createWorkflowEngine, WORKFLOW_STATES, WORKFLOW_TRANSITIONS } from './w
 import { createSchedulerEngine } from './scheduler-engine.js';
 import { createNotificationEngine } from './notification-engine.js';
 import { createPdfEngine } from './pdf-engine.js';
+import { createDateAvailabilityEngine } from './date-availability-engine.js';
+import { createReleaseDiagnostics } from './release-diagnostics.js';
+import { createReleaseManager } from './release-manager.js';
+import { createReleaseBackup } from './release-backup.js';
 import Stripe from 'stripe';
 
 const { Pool } = pg;
@@ -70,6 +74,34 @@ const notifications = createNotificationEngine({
 const pdfEngine = createPdfEngine({
   pool,
   logger:console
+});
+
+const dateAvailability = createDateAvailabilityEngine({
+  pool,
+  holdMinutes:Number(process.env.DATE_HOLD_MINUTES||30),
+  logger:console
+});
+
+const releaseDiagnostics = createReleaseDiagnostics({
+  pool,
+  workflow,
+  scheduler,
+  notifications,
+  pdfEngine,
+  dateAvailability,
+  stripe,
+  env:process.env
+});
+
+const releaseManager = createReleaseManager({
+  pool,
+  env:process.env,
+  logger:console
+});
+
+const releaseBackup = createReleaseBackup({
+  pool,
+  releaseManager
 });
 
 const scheduler = createSchedulerEngine({
@@ -211,6 +243,14 @@ app.post(
           }
         });
 
+        if(paymentType==='deposit'){
+          await dateAvailability.confirmForPractice(practiceId,{
+            provider:'stripe',
+            stripeEventId:event.id,
+            checkoutSessionId:session.id
+          });
+        }
+
         await pool.query(
           `UPDATE wte_payment_plans
            SET stripe_customer_id=COALESCE($2,stripe_customer_id),
@@ -296,7 +336,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'4.6.0-stripe-checkout', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'4.9.0-release-management', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -2890,6 +2930,15 @@ async function createStripeCheckoutSession(plan,paymentType) {
 }
 
 app.post('/api/public/payment-plan/:token/checkout', async (req,res) => {
+  try{
+    await releaseManager.assertBookingAllowed();
+  }catch(error){
+    return res.status(error.statusCode||503).json({
+      error:error.message,
+      code:error.code||'BOOKING_DISABLED'
+    });
+  }
+
   const parsed=z.object({
     type:z.enum(['deposit','balance'])
   }).safeParse(req.body);
@@ -2911,6 +2960,10 @@ app.post('/api/public/payment-plan/:token/checkout', async (req,res) => {
       return res.status(409).json({
         error:'Il saldo sarà disponibile dopo la registrazione dell’acconto.'
       });
+    }
+
+    if(parsed.data.type==='deposit'){
+      await dateAvailability.ensureCheckoutAllowed(plan.practice_id);
     }
 
     const session=await createStripeCheckoutSession(
@@ -3472,7 +3525,217 @@ app.get('/api/public/packages', async (_req,res) => {
   });
 });
 
+
+// ============================================================
+// WTE Release 1.0 Punto 3 — Disponibilità date
+// ============================================================
+
+
+// ============================================================
+// WTE Release 1.0 Punto 4 — stato pubblico e diagnostica
+// ============================================================
+
+app.get('/api/public/release-status', async (_req,res) => {
+  try{
+    const report=await releaseDiagnostics.run();
+
+    res.setHeader('Cache-Control','no-store');
+    res.status(report.ok?200:503).json({
+      ok:report.ok,
+      release:report.release,
+      environment:report.environment,
+      services:{
+        website:true,
+        api:Boolean(report.checks.database?.ok),
+        database:Boolean(report.checks.database?.ok),
+        payments:Boolean(report.checks.configuration?.checks?.stripeSecretKey),
+        automations:Boolean(report.checks.modules?.scheduler),
+        documents:Boolean(report.checks.modules?.pdfEngine),
+        dateProtection:Boolean(report.checks.modules?.dateAvailability)
+      },
+      checkedAt:report.finishedAt
+    });
+  }catch(error){
+    res.status(503).json({
+      ok:false,
+      error:'Stato del servizio temporaneamente non disponibile.'
+    });
+  }
+});
+
+
+app.get('/api/public/release-info', async (_req,res) => {
+  try{
+    const state=await releaseManager.current();
+    res.setHeader('Cache-Control','no-store');
+    res.json({
+      release:state.release_name,
+      maintenance:state.maintenance_enabled,
+      message:state.maintenance_message,
+      bookingEnabled:state.booking_enabled,
+      updatedAt:state.updated_at
+    });
+  }catch(error){
+    res.status(503).json({
+      error:'Informazioni release non disponibili.'
+    });
+  }
+});
+
+app.get('/api/release/control', auth, adminOnly, async (_req,res) => {
+  try{
+    const [control,deployments,backupCounts]=await Promise.all([
+      releaseManager.current(),
+      releaseManager.deployments(30),
+      releaseBackup.counts()
+    ]);
+    res.json({control,deployments,backupCounts});
+  }catch(error){
+    res.status(500).json({error:error.message});
+  }
+});
+
+app.post('/api/release/maintenance', auth, adminOnly, async (req,res) => {
+  try{
+    const control=await releaseManager.setMaintenance(
+      Boolean(req.body?.enabled),
+      {
+        message:String(req.body?.message||''),
+        updatedBy:req.user?.email||req.user?.name||'admin'
+      }
+    );
+    res.json({control});
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'RELEASE_ERROR'
+    });
+  }
+});
+
+app.post('/api/release/bookings', auth, adminOnly, async (req,res) => {
+  try{
+    const control=await releaseManager.setBooking(
+      Boolean(req.body?.enabled),
+      {
+        updatedBy:req.user?.email||req.user?.name||'admin'
+      }
+    );
+    res.json({control});
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'RELEASE_ERROR'
+    });
+  }
+});
+
+app.get('/api/release/backup', auth, adminOnly, async (req,res) => {
+  try{
+    const backup=await releaseBackup.exportJson({
+      includeSensitive:String(req.query.sensitive||'false')==='true'
+    });
+
+    res.setHeader('Content-Type','application/json; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${backup.filename}"`
+    );
+    res.setHeader('X-WTE-Checksum-SHA256',backup.checksum);
+    res.send(backup.json);
+  }catch(error){
+    res.status(500).json({error:error.message});
+  }
+});
+
+app.post('/api/release/rollback', auth, adminOnly, async (req,res) => {
+  try{
+    const result=await releaseManager.markRollback({
+      targetDeploymentId:String(req.body?.targetDeploymentId||''),
+      updatedBy:req.user?.email||req.user?.name||'admin',
+      notes:String(req.body?.notes||'')
+    });
+    res.status(201).json(result);
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'RELEASE_ERROR'
+    });
+  }
+});
+
+
+app.get('/api/release/diagnostics', auth, adminOnly, async (_req,res) => {
+  try{
+    const report=await releaseDiagnostics.run();
+    res.status(report.ok?200:503).json(report);
+  }catch(error){
+    res.status(500).json({
+      ok:false,
+      error:error.message||'Diagnostica non disponibile.'
+    });
+  }
+});
+
+
+app.get('/api/public/availability/:date', publicRateLimit, async (req,res) => {
+  try{
+    const result=await dateAvailability.check(req.params.date,{
+      holdToken:String(req.query.holdToken||'')
+    });
+    res.setHeader('Cache-Control','no-store');
+    res.json(result);
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'AVAILABILITY_ERROR'
+    });
+  }
+});
+
+app.get('/api/date-reservations', auth, async (req,res) => {
+  try{
+    const reservations=await dateAvailability.list({
+      from:String(req.query.from||''),
+      to:String(req.query.to||''),
+      status:String(req.query.status||''),
+      limit:Number(req.query.limit||200)
+    });
+    res.json({reservations});
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'AVAILABILITY_ERROR'
+    });
+  }
+});
+
+app.post('/api/date-reservations/:practiceId/release', auth, adminOnly, async (req,res) => {
+  try{
+    const reservation=await dateAvailability.release({
+      practiceId:req.params.practiceId,
+      reason:String(req.body?.reason||'rilasciata_dallo_staff')
+    });
+    res.json({reservation});
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'AVAILABILITY_ERROR'
+    });
+  }
+});
+
+
 app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
+  try{
+    await releaseManager.assertBookingAllowed();
+  }catch(error){
+    return res.status(error.statusCode||503).json({
+      error:error.message,
+      code:error.code||'BOOKING_DISABLED'
+    });
+  }
+
   const parsed=z.object({
     name:z.string().min(2).max(180),
     email:z.string().email(),
@@ -3492,6 +3755,16 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
   if(!parsed.success){
     return res.status(400).json({
       error:'Completa correttamente tutti i dati dell’evento.'
+    });
+  }
+
+  const availability=await dateAvailability.check(parsed.data.date,{
+    holdToken:String(req.body?.holdToken||'')
+  });
+  if(!availability.available){
+    return res.status(409).json({
+      error:'La data scelta non è più disponibile. Seleziona un altro giorno.',
+      code:'DATE_NOT_AVAILABLE'
     });
   }
 
@@ -3531,6 +3804,16 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
   const contractToken=crypto.randomBytes(24).toString('hex');
   const number=contractNumber();
   const clauses=defaultContractClauses();
+
+  const dateHold=await dateAvailability.createHold({
+    eventDate:normalizedData.date,
+    customerName:normalizedData.name,
+    customerEmail:normalizedData.email,
+    contractToken,
+    existingHoldToken:String(req.body?.holdToken||'')
+  });
+  normalizedData.holdToken=dateHold.hold_token;
+  normalizedData.holdExpiresAt=dateHold.expires_at;
 
   await pool.query(
     `INSERT INTO wte_sales_sessions
@@ -3594,6 +3877,12 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
     contractToken,
     contractUrl,
     draftPdf:absoluteApiUrl(contractPdfUrl(contractToken)),
+    availability:{
+      holdToken:dateHold.hold_token,
+      status:dateHold.status,
+      expiresAt:dateHold.expires_at,
+      holdMinutes:dateAvailability.holdMinutes
+    },
     recommendation:{
       ...recommendation,
       package:{
@@ -3719,6 +4008,13 @@ app.post('/api/public/contracts/:token/accept', publicRateLimit, async (req,res)
        VALUES ($1,$2::jsonb,NOW())`,
       [practiceId,JSON.stringify(practice)]
     );
+
+    await dateAvailability.attachToPractice(client,{
+      eventDate:customer.date,
+      holdToken:String(customer.holdToken||''),
+      practiceId,
+      contractToken:req.params.token
+    });
 
     await client.query(
       `UPDATE wte_contracts
@@ -4584,6 +4880,13 @@ app.use((error,_req,res,_next) => {
   console.error(error);
   res.status(500).json({error:'Errore interno del server.'});
 });
+
+releaseManager.registerDeployment({
+  releaseName:process.env.WTE_RELEASE||'1.0.0',
+  commit:process.env.RENDER_GIT_COMMIT||'',
+  environment:process.env.NODE_ENV||'production',
+  notes:'Avvio automatico del servizio'
+}).catch(error=>console.error('Release registration error',error));
 
 scheduler.start();
 
