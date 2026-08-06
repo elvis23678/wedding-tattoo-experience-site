@@ -113,6 +113,7 @@ $('confirm').onclick=async()=>{
   $('pdfLink').href=data.contractPdf;
   $('paymentLink').href=data.paymentUrl;
   $('paymentLink').hidden=!data.paymentUrl;
+  if(data.coupleUrl)localStorage.setItem('wte_couple_url',data.coupleUrl);
   $('success').innerHTML=
    `Contratto registrato. L’acconto è <strong>${new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format((data.depositCents||0)/100)}</strong> `+
    `con scadenza ${new Date(data.depositDueAt).toLocaleDateString('it-IT')}.`;

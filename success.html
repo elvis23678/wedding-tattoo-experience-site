@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070503"><title>Prenotazione confermata</title>
+<style>
+:root{--bg:#070503;--card:#100c08;--gold:#d3a64f;--text:#f3eadb;--muted:#a99a84;--line:rgba(211,166,79,.25);--ok:#9cc4a1}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 50% 0,rgba(156,196,161,.12),transparent 32%),var(--bg);color:var(--text);font-family:Arial,sans-serif}
+main{width:min(680px,calc(100% - 26px));padding:24px;border:1px solid var(--line);background:var(--card);text-align:center}.icon{width:78px;height:78px;margin:auto;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(156,196,161,.45);color:var(--ok);font-size:38px}
+small{display:block;margin-top:18px;color:var(--gold);letter-spacing:.16em;text-transform:uppercase}h1{margin:8px 0;font-family:Georgia,serif;font-size:34px;font-weight:400}p{color:var(--muted);line-height:1.6}
+.items{display:grid;gap:7px;margin:18px 0;text-align:left}.items div{padding:9px;border-bottom:1px solid rgba(211,166,79,.12)}
+a{display:grid;place-items:center;min-height:54px;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;text-decoration:none;font-weight:800}
+.wait{color:var(--gold)}
+</style></head>
+<body><main>
+<div class="icon">✓</div><small>Wedding Tattoo Experience</small>
+<h1 id="title">Verifica della prenotazione</h1>
+<p id="message" class="wait">Attendiamo la conferma automatica del pagamento…</p>
+<div class="items">
+<div>✓ Contratto collegato alla pratica</div>
+<div>✓ Ricevuta archiviata automaticamente</div>
+<div>✓ QR invitati generato dopo l’acconto</div>
+<div>✓ Area Sposi sempre aggiornata</div>
+</div>
+<a id="coupleLink" hidden>Vai alla tua Area Sposi</a>
+</main>
+<script>
+const API='https://wte-cloud-api.onrender.com';
+const token=new URLSearchParams(location.search).get('token');
+const title=document.getElementById('title'),message=document.getElementById('message'),link=document.getElementById('coupleLink');
+let timer;
+async function load(){
+ const response=await fetch(`${API}/api/public/booking-success/${encodeURIComponent(token||'')}`,{cache:'no-store'});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||'Prenotazione non trovata.');
+ if(data.confirmed){
+  title.textContent='Prenotazione confermata!';
+  message.textContent=`Grazie ${data.booking.customerName||''}. L’acconto è stato ricevuto e la pratica è attiva.`;
+  message.classList.remove('wait');
+  link.href=data.booking.coupleUrl;link.hidden=false;
+  clearInterval(timer);
+ }else{
+  title.textContent='Pagamento in elaborazione';
+  message.textContent='La pagina si aggiornerà automaticamente non appena il provider confermerà l’acconto.';
+ }
+}
+load().catch(error=>message.textContent=error.message);
+timer=setInterval(()=>load().catch(()=>{}),5000);
+</script></body></html>
