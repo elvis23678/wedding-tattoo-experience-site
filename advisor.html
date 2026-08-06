@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#070503">
 <title>Trova il pacchetto giusto - Wedding Tattoo Experience</title>
+<meta name="wte-release" content="4.1.2-final">
 <style>
 :root{
   --bg:#070503;--card:#100c08;--gold:#d3a64f;--gold2:#f0ddb0;
@@ -63,12 +64,6 @@ textarea{min-height:110px;padding:13px;resize:vertical}
   border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);
   color:#171006
 }
-.welcome{text-align:center;justify-content:center}
-.welcome-icon{width:68px;height:68px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(211,166,79,.42);color:var(--gold);font-size:30px}
-.welcome h2{margin:8px 0;font-family:Georgia,serif;font-size:31px;font-weight:400}
-.welcome p{color:var(--muted);line-height:1.55}
-.welcome-points{display:grid;gap:8px;margin:18px 0;text-align:left;color:#d6cab7;font-size:13px}
-.welcome-start{width:100%;min-height:54px;border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;font-weight:800}
 .result{display:none;text-align:center}
 .result.show{display:block}
 .result-badge{
@@ -105,20 +100,7 @@ textarea{min-height:110px;padding:13px;resize:vertical}
   <div class="step-counter" id="stepCounter">1 / 8</div>
 </div>
 
-<section class="card welcome" id="welcome">
-<div class="welcome-icon">✦</div>
-<small>Wedding Assistant</small>
-<h2>Benvenuti</h2>
-<p>Vi guiderò passo dopo passo fino alla proposta più adatta al vostro matrimonio.</p>
-<div class="welcome-points">
-<span>✓ Tempo richiesto: meno di 2 minuti</span>
-<span>✓ Nessun impegno</span>
-<span>✓ Contratto e acconto calcolati automaticamente</span>
-</div>
-<button class="welcome-start" id="startWizard" type="button">Iniziamo</button>
-</section>
-
-<form class="card" id="wizard" hidden>
+<form class="card" id="wizard">
 <section class="step active" data-step="1">
 <small>Iniziamo</small>
 <h2>Come ti chiami?</h2>
@@ -236,8 +218,6 @@ const back=document.getElementById('backBtn');
 const next=document.getElementById('nextBtn');
 let current=0;
 const STORAGE_KEY='wte_advisor_v41';
-const welcome=document.getElementById('welcome');
-const startWizard=document.getElementById('startWizard');
 
 dots.innerHTML=steps.map((_,i)=>`<span class="dot" data-dot="${i}"></span>`).join('');
 
@@ -298,24 +278,25 @@ document.querySelectorAll('.choice').forEach(button=>{
     },180);
   };
 });
-back.onclick=()=>{if(current>0){current--;showStep()}};
+back.onclick=()=>{
+  if(current>0){
+    current--;
+    showStep();
+  }
+};
+
 next.onclick=async()=>{
   if(!validStep())return;
-  if(current<steps.length-1){current++;startWizard.onclick=()=>{
-  welcome.hidden=true;
-  form.hidden=false;
-  showStep();
-};
-const resumed=restoreProgress();
-if(resumed){
-  startWizard.textContent='Riprendi da dove eri rimasto';
-}
-document.querySelectorAll('input,select,textarea').forEach(field=>{
-  field.addEventListener('input',saveProgress);
-  field.addEventListener('change',saveProgress);
-});return}
 
-  next.disabled=true;next.textContent='Preparazione…';
+  if(current<steps.length-1){
+    current++;
+    showStep();
+    return;
+  }
+
+  next.disabled=true;
+  next.textContent='Preparazione…';
+
   try{
     const raw=Object.fromEntries(new FormData(form));
     const response=await fetch(`${API}/api/public/advisor/recommend`,{
@@ -334,6 +315,7 @@ document.querySelectorAll('input,select,textarea').forEach(field=>{
         notes:raw.notes
       })
     });
+
     const data=await response.json().catch(()=>({}));
     if(!response.ok)throw new Error(data.error||'Impossibile preparare la proposta.');
 
@@ -342,8 +324,7 @@ document.querySelectorAll('input,select,textarea').forEach(field=>{
     document.getElementById('resultTitle').textContent=rec.title;
     document.getElementById('resultPrice').textContent=rec.package.priceLabel;
     document.getElementById('resultExplanation').textContent=rec.explanation;
-    document.getElementById('resultFeatures').innerHTML=
-      (rec.package.features||[]).map(x=>`<li>✓ ${x}</li>`).join('');
+    document.getElementById('resultFeatures').innerHTML=(rec.package.features||[]).map(x=>`<li>✓ ${x}</li>`).join('');
     document.getElementById('draftPdf').href=data.draftPdf;
     document.getElementById('contractLink').href=data.contractUrl;
     document.getElementById('result').classList.add('show');
@@ -354,9 +335,16 @@ document.querySelectorAll('input,select,textarea').forEach(field=>{
   }catch(error){
     alert(error.message);
   }finally{
-    next.disabled=false;next.textContent='Prepara la proposta';
+    next.disabled=false;
+    next.textContent='Prepara la proposta';
   }
 };
+
+const resumed=restoreProgress();
+document.querySelectorAll('input,select,textarea').forEach(field=>{
+  field.addEventListener('input',saveProgress);
+  field.addEventListener('change',saveProgress);
+});
 showStep();
 </script>
 </body>
