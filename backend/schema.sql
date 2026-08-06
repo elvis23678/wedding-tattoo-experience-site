@@ -572,3 +572,18 @@ CREATE TABLE IF NOT EXISTS wte_generated_documents (
 
 CREATE INDEX IF NOT EXISTS idx_wte_generated_documents_practice
 ON wte_generated_documents(practice_id,document_type);
+
+
+-- WTE V4: Stripe Checkout
+ALTER TABLE wte_payment_plans
+  ADD COLUMN IF NOT EXISTS stripe_deposit_session_id TEXT,
+  ADD COLUMN IF NOT EXISTS stripe_balance_session_id TEXT,
+  ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_wte_payment_plans_stripe_deposit
+ON wte_payment_plans(stripe_deposit_session_id)
+WHERE stripe_deposit_session_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_wte_payment_plans_stripe_balance
+ON wte_payment_plans(stripe_balance_session_id)
+WHERE stripe_balance_session_id IS NOT NULL;

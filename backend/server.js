@@ -14,10 +14,12 @@ import { createWorkflowEngine, WORKFLOW_STATES, WORKFLOW_TRANSITIONS } from './w
 import { createSchedulerEngine } from './scheduler-engine.js';
 import { createNotificationEngine } from './notification-engine.js';
 import { createPdfEngine } from './pdf-engine.js';
+import Stripe from 'stripe';
 
 const { Pool } = pg;
 
 const app = express();
+app.set('trust proxy',1);
 const PORT = Number(process.env.PORT || 3000);
 const JWT_SECRET = process.env.JWT_SECRET;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -30,6 +32,11 @@ const OUTBOUND_EMAIL_WEBHOOK_URL = process.env.OUTBOUND_EMAIL_WEBHOOK_URL || '';
 const OUTBOUND_WHATSAPP_WEBHOOK_URL = process.env.OUTBOUND_WHATSAPP_WEBHOOK_URL || '';
 const OUTBOUND_WEBHOOK_SECRET = process.env.OUTBOUND_WEBHOOK_SECRET || '';
 const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || 'https://www.weddingtattooexperience.it';
+const PUBLIC_API_URL = (process.env.PUBLIC_API_URL || 'https://wte-cloud-api.onrender.com').replace(/\/$/,'');
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+const STRIPE_CURRENCY = String(process.env.STRIPE_CURRENCY || 'eur').toLowerCase();
+const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 if (!JWT_SECRET || !ADMIN_PASSWORD || !DATABASE_URL) {
   throw new Error('Mancano JWT_SECRET, ADMIN_PASSWORD o DATABASE_URL.');
@@ -114,6 +121,131 @@ app.use(cors({
   methods:['GET','POST','PATCH','DELETE','OPTIONS'],
   allowedHeaders:['Content-Type','Authorization','X-WTE-Device']
 }));
+
+// Stripe richiede il body RAW per verificare la firma del webhook.
+app.post(
+  '/api/stripe/webhook',
+  express.raw({type:'application/json'}),
+  async (req,res) => {
+    if(!stripe || !STRIPE_WEBHOOK_SECRET){
+      return res.status(503).send('Stripe non configurato.');
+    }
+
+    const signature=String(req.headers['stripe-signature']||'');
+    let event;
+
+    try{
+      event=stripe.webhooks.constructEvent(
+        req.body,
+        signature,
+        STRIPE_WEBHOOK_SECRET
+      );
+    }catch(error){
+      console.error('Stripe webhook signature error',error.message);
+      return res.status(400).send(`Webhook Error: ${error.message}`);
+    }
+
+    try{
+      const supported=[
+        'checkout.session.completed',
+        'checkout.session.async_payment_succeeded',
+        'checkout.session.async_payment_failed',
+        'checkout.session.expired'
+      ];
+
+      if(!supported.includes(event.type)){
+        return res.json({received:true,ignored:true});
+      }
+
+      const session=event.data.object;
+      const practiceId=String(session.metadata?.practiceId||'');
+      const paymentType=
+        session.metadata?.paymentType==='balance'?'balance':'deposit';
+
+      if(!practiceId){
+        return res.status(400).json({
+          error:'Metadata practiceId mancante.'
+        });
+      }
+
+      if(
+        event.type==='checkout.session.completed' ||
+        event.type==='checkout.session.async_payment_succeeded'
+      ){
+        if(session.payment_status!=='paid'){
+          return res.json({received:true,processed:false});
+        }
+
+        let receiptUrl='';
+        let providerReference=String(session.payment_intent||session.id);
+
+        if(session.payment_intent){
+          try{
+            const paymentIntent=await stripe.paymentIntents.retrieve(
+              String(session.payment_intent),
+              {expand:['latest_charge']}
+            );
+            const charge=paymentIntent.latest_charge;
+            if(charge && typeof charge!=='string'){
+              receiptUrl=String(charge.receipt_url||'');
+              providerReference=String(charge.id||paymentIntent.id);
+            }
+          }catch(error){
+            console.error('Stripe receipt retrieve error',error.message);
+          }
+        }
+
+        await applyPaidPayment({
+          practiceId,
+          paymentType,
+          amountCents:Number(session.amount_total||0),
+          provider:'stripe',
+          reference:providerReference,
+          receiptUrl,
+          eventKey:event.id,
+          occurredAt:new Date(event.created*1000),
+          payload:{
+            stripeEventId:event.id,
+            checkoutSessionId:session.id,
+            paymentIntentId:String(session.payment_intent||'')
+          }
+        });
+
+        await pool.query(
+          `UPDATE wte_payment_plans
+           SET stripe_customer_id=COALESCE($2,stripe_customer_id),
+               updated_at=NOW()
+           WHERE practice_id=$1`,
+          [practiceId,String(session.customer||'')||null]
+        );
+      }else{
+        await pool.query(
+          `INSERT INTO wte_payment_events
+           (event_key,practice_id,payment_type,status,amount_cents,currency,
+            provider,provider_reference,receipt_url,payload,occurred_at)
+           VALUES ($1,$2,$3,$4,$5,$6,'stripe',$7,'',$8::jsonb,NOW())
+           ON CONFLICT (event_key) DO NOTHING`,
+          [
+            event.id,
+            practiceId,
+            paymentType,
+            event.type==='checkout.session.expired'?'cancelled':'failed',
+            Number(session.amount_total||0),
+            String(session.currency||STRIPE_CURRENCY).toUpperCase(),
+            String(session.id||''),
+            JSON.stringify({stripeEventId:event.id,type:event.type})
+          ]
+        );
+      }
+
+      return res.json({received:true});
+    }catch(error){
+      console.error('Stripe webhook processing error',error);
+      return res.status(500).json({error:'Elaborazione webhook fallita.'});
+    }
+  }
+);
+
 app.use(express.json({limit:'5mb'}));
 
 const PracticeSchema = z.object({
@@ -164,7 +296,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'4.5.0-pdf-engine', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'4.6.0-stripe-checkout', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -2027,6 +2159,7 @@ async function paymentPlanByPractice(practiceId) {
             deposit_status,balance_status,deposit_paid_at,balance_paid_at,
             deposit_provider,balance_provider,deposit_reference,balance_reference,
             deposit_receipt_url,balance_receipt_url,
+            stripe_deposit_session_id,stripe_balance_session_id,stripe_customer_id,
             reminder_30_sent_at,reminder_7_sent_at,created_at,updated_at
      FROM wte_payment_plans WHERE practice_id=$1`,
     [practiceId]
@@ -2041,6 +2174,7 @@ async function paymentPlanByToken(token) {
             deposit_status,balance_status,deposit_paid_at,balance_paid_at,
             deposit_provider,balance_provider,deposit_reference,balance_reference,
             deposit_receipt_url,balance_receipt_url,
+            stripe_deposit_session_id,stripe_balance_session_id,stripe_customer_id,
             reminder_30_sent_at,reminder_7_sent_at,created_at,updated_at
      FROM wte_payment_plans WHERE token=$1`,
     [token]
@@ -2654,6 +2788,171 @@ app.get('/api/payment-plans/:id/receipt', auth, async (req,res) => {
   return pdfEngine.render(type,req.params.id,{res});
 });
 
+
+function stripeSuccessUrl(token) {
+  return `${PUBLIC_SITE_URL}/success.html?token=${encodeURIComponent(token)}`+
+    `&session_id={CHECKOUT_SESSION_ID}`;
+}
+
+function stripeCancelUrl(token) {
+  return `${PUBLIC_SITE_URL}/payment.html?token=${encodeURIComponent(token)}`+
+    `&cancelled=1`;
+}
+
+async function createStripeCheckoutSession(plan,paymentType) {
+  if(!stripe){
+    const error=new Error('Stripe non configurato.');
+    error.statusCode=503;
+    throw error;
+  }
+
+  const type=paymentType==='balance'?'balance':'deposit';
+  const amount=type==='deposit'
+    ?Number(plan.deposit_cents||0)
+    :Number(plan.balance_cents||0);
+
+  const status=type==='deposit'
+    ?plan.deposit_status
+    :plan.balance_status;
+
+  if(status==='paid'){
+    const error=new Error('Questo pagamento risulta già completato.');
+    error.statusCode=409;
+    throw error;
+  }
+
+  if(amount<50){
+    const error=new Error('Importo Stripe non valido.');
+    error.statusCode=400;
+    throw error;
+  }
+
+  const contact=await practiceContact(plan.practice_id);
+  const label=type==='deposit'
+    ?'Acconto Wedding Tattoo Experience'
+    :'Saldo Wedding Tattoo Experience';
+
+  const session=await stripe.checkout.sessions.create({
+    mode:'payment',
+    locale:'it',
+    customer_email:contact.email||undefined,
+    success_url:stripeSuccessUrl(plan.token),
+    cancel_url:stripeCancelUrl(plan.token),
+    client_reference_id:plan.practice_id,
+    line_items:[{
+      quantity:1,
+      price_data:{
+        currency:STRIPE_CURRENCY,
+        unit_amount:amount,
+        product_data:{
+          name:label,
+          description:[
+            contact.practice.name||'',
+            contact.practice.date||'',
+            contact.practice.location||contact.practice.city||''
+          ].filter(Boolean).join(' · ')
+        }
+      }
+    }],
+    metadata:{
+      practiceId:plan.practice_id,
+      paymentType:type,
+      paymentToken:plan.token
+    },
+    payment_intent_data:{
+      metadata:{
+        practiceId:plan.practice_id,
+        paymentType:type,
+        paymentToken:plan.token
+      }
+    }
+  });
+
+  const sessionColumn=
+    type==='deposit'
+      ?'stripe_deposit_session_id'
+      :'stripe_balance_session_id';
+  const urlColumn=
+    type==='deposit'
+      ?'deposit_payment_url'
+      :'balance_payment_url';
+
+  await pool.query(
+    `UPDATE wte_payment_plans
+     SET ${sessionColumn}=$2,
+         ${urlColumn}=$3,
+         updated_at=NOW()
+     WHERE practice_id=$1`,
+    [plan.practice_id,session.id,session.url||'']
+  );
+
+  return session;
+}
+
+app.post('/api/public/payment-plan/:token/checkout', async (req,res) => {
+  const parsed=z.object({
+    type:z.enum(['deposit','balance'])
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Tipo pagamento non valido.'});
+  }
+
+  try{
+    const plan=await paymentPlanByToken(req.params.token);
+    if(!plan){
+      return res.status(404).json({error:'Link pagamento non valido.'});
+    }
+
+    if(
+      parsed.data.type==='balance' &&
+      plan.deposit_status!=='paid'
+    ){
+      return res.status(409).json({
+        error:'Il saldo sarà disponibile dopo la registrazione dell’acconto.'
+      });
+    }
+
+    const session=await createStripeCheckoutSession(
+      plan,
+      parsed.data.type
+    );
+
+    return res.status(201).json({
+      checkoutUrl:session.url,
+      sessionId:session.id
+    });
+  }catch(error){
+    console.error('Stripe checkout error',error);
+    return res.status(error.statusCode||500).json({
+      error:error.message||'Impossibile avviare Stripe Checkout.'
+    });
+  }
+});
+
+app.get('/api/public/stripe-session/:sessionId', async (req,res) => {
+  if(!stripe){
+    return res.status(503).json({error:'Stripe non configurato.'});
+  }
+
+  try{
+    const session=await stripe.checkout.sessions.retrieve(
+      req.params.sessionId
+    );
+
+    return res.json({
+      id:session.id,
+      status:session.status,
+      paymentStatus:session.payment_status,
+      practiceId:session.metadata?.practiceId||'',
+      paymentType:session.metadata?.paymentType||''
+    });
+  }catch(error){
+    return res.status(404).json({error:'Sessione Stripe non trovata.'});
+  }
+});
+
+
 app.get('/api/public/payment-plan/:token', async (req,res) => {
   const plan=await paymentPlanByToken(req.params.token);
   if(!plan)return res.status(404).json({error:'Link pagamento non valido.'});
@@ -2794,6 +3093,11 @@ setInterval(()=>{
 
 function salesPublicUrl(token) {
   return `https://www.weddingtattooexperience.it/contract.html?token=${token}`;
+}
+
+function absoluteApiUrl(path='') {
+  const clean=String(path||'').startsWith('/')?String(path):`/${path}`;
+  return `${PUBLIC_API_URL}${clean}`;
 }
 
 function contractPdfUrl(token) {
@@ -3289,7 +3593,7 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
     salesToken,
     contractToken,
     contractUrl,
-    draftPdf:`${req.protocol}://${req.get('host')}${contractPdfUrl(contractToken)}`,
+    draftPdf:absoluteApiUrl(contractPdfUrl(contractToken)),
     recommendation:{
       ...recommendation,
       package:{
@@ -3329,7 +3633,7 @@ app.get('/api/public/contracts/:token', async (req,res) => {
       recommendation:bundle.recommendation,
       aiUsed:bundle.ai_used
     },
-    pdf:`${req.protocol}://${req.get('host')}${contractPdfUrl(req.params.token)}`
+    pdf:absoluteApiUrl(contractPdfUrl(req.params.token))
   });
 });
 
@@ -3367,7 +3671,7 @@ app.post('/api/public/contracts/:token/accept', publicRateLimit, async (req,res)
       existing:true,
       practiceId:bundle.practice_id,
       paymentUrl:plan?paymentPublicUrl(plan.token):'',
-      contractPdf:`${req.protocol}://${req.get('host')}${contractPdfUrl(req.params.token)}`
+      contractPdf:absoluteApiUrl(contractPdfUrl(req.params.token))
     });
   }
 
@@ -3402,7 +3706,7 @@ app.post('/api/public/contracts/:token/accept', publicRateLimit, async (req,res)
       status:'accepted',
       acceptedAt:new Date().toISOString(),
       signerName:parsed.data.signerName,
-      pdfUrl:`https://wte-cloud-api.onrender.com${contractPdfUrl(req.params.token)}`
+      pdfUrl:absoluteApiUrl(contractPdfUrl(req.params.token))
     }
   };
 
@@ -3500,7 +3804,7 @@ app.post('/api/public/contracts/:token/accept', publicRateLimit, async (req,res)
     successUrl:successPublicUrl(plan.couple_token || plan.token),
     depositCents:plan.deposit_cents,
     depositDueAt:plan.deposit_due_at,
-    contractPdf:`${req.protocol}://${req.get('host')}${contractPdfUrl(req.params.token)}`
+    contractPdf:absoluteApiUrl(contractPdfUrl(req.params.token))
   });
 });
 
