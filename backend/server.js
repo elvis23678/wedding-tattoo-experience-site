@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
 import pg from 'pg';
 import { z } from 'zod';
 
@@ -18,6 +19,13 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const DATABASE_URL = process.env.DATABASE_URL;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://www.weddingtattooexperience.it';
+const PAYMENT_WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || '';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-5.6';
+const OUTBOUND_EMAIL_WEBHOOK_URL = process.env.OUTBOUND_EMAIL_WEBHOOK_URL || '';
+const OUTBOUND_WHATSAPP_WEBHOOK_URL = process.env.OUTBOUND_WHATSAPP_WEBHOOK_URL || '';
+const OUTBOUND_WEBHOOK_SECRET = process.env.OUTBOUND_WEBHOOK_SECRET || '';
+const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || 'https://www.weddingtattooexperience.it';
 
 if (!JWT_SECRET || !ADMIN_PASSWORD || !DATABASE_URL) {
   throw new Error('Mancano JWT_SECRET, ADMIN_PASSWORD o DATABASE_URL.');
@@ -97,7 +105,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'2.1.1', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'3.0.0-phase4', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -503,6 +511,8 @@ app.get('/api/public/flash-catalog/:id/image', async (req,res) => {
   if (!result.rowCount) return res.status(404).end();
 
   // Consente al dominio pubblico di mostrare le immagini servite dall'API Render.
+  res.setHeader('Cross-Origin-Resource-Policy','cross-origin');
+  res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Cross-Origin-Resource-Policy','cross-origin');
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Content-Type',result.rows[0].image_mime);
@@ -965,7 +975,9 @@ function euroPdf(value) {
 }
 
 function practicePayload(row) {
-  return row?.payload && typeof row.payload === 'object' ? row.payload : {};
+  if (row?.data && typeof row.data === 'object') return row.data;
+  if (row?.payload && typeof row.payload === 'object') return row.payload;
+  return {};
 }
 
 async function flashSessionBundle(token) {
@@ -979,7 +991,7 @@ async function flashSessionBundle(token) {
 
   const session = sessionResult.rows[0];
   const practiceResult = await pool.query(
-    'SELECT id,payload,created_at,updated_at FROM wte_practices WHERE id=$1',
+    'SELECT id,data,updated_at FROM wte_practices WHERE id=$1',
     [session.practice_id]
   );
   const practiceRow = practiceResult.rows[0] || null;
@@ -1328,6 +1340,2189 @@ app.get('/api/flash-sessions/practice/:id', auth, async (req,res) => {
   );
   res.json({sessions:result.rows});
 });
+
+
+app.delete('/api/practices', auth, adminOnly, async (req,res) => {
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const countResult=await client.query('SELECT COUNT(*)::int AS count FROM wte_practices');
+    const deletedPractices=Number(countResult.rows[0]?.count||0);
+    await client.query('DELETE FROM wte_flash_sessions');
+    await client.query(
+      `DELETE FROM wte_notifications
+       WHERE practice_id IS NOT NULL
+          OR type IN ('new_practice','flash_link','flash_completed','flash_reopened')`
+    );
+    await client.query('DELETE FROM wte_activity_log WHERE practice_id IS NOT NULL');
+    await client.query('DELETE FROM wte_practices');
+    await client.query('COMMIT');
+
+    await logActivity(req,'Archivio pratiche azzerato',null,{deletedPractices});
+    res.json({ok:true,deletedPractices});
+  }catch(error){
+    await client.query('ROLLBACK');
+    console.error('Archive reset error',error);
+    res.status(500).json({error:'Errore durante l’azzeramento dell’archivio Cloud.'});
+  }finally{
+    client.release();
+  }
+});
+
+
+
+// ============================================================
+// WTE V3 FASE 1 — QR invitati, votazioni e Top 50 automatico
+// ============================================================
+
+function validIsoDate(value) {
+  const text=String(value || '').trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : '';
+}
+
+function guestPublicUrl(token) {
+  return `https://www.weddingtattooexperience.it/guest-flash.html?token=${token}`;
+}
+
+function guestPdfUrl(token) {
+  return `/api/guest-events/${token}/pdf`;
+}
+
+async function guestRanking(token, limit=50) {
+  const result=await pool.query(
+    `SELECT v.flash_code AS code,
+            COUNT(*)::int AS votes,
+            MIN(v.created_at) AS first_vote,
+            COALESCE(c.title,'') AS title,
+            COALESCE(c.category,'') AS category,
+            c.id AS catalog_id
+     FROM wte_guest_votes v
+     LEFT JOIN wte_flash_catalog c ON c.code=v.flash_code
+     WHERE v.event_token=$1
+     GROUP BY v.flash_code,c.title,c.category,c.id
+     ORDER BY votes DESC,first_vote ASC,v.flash_code ASC
+     LIMIT $2`,
+    [token,limit]
+  );
+  return result.rows;
+}
+
+async function guestEventStats(token) {
+  const totals=await pool.query(
+    `SELECT COUNT(*)::int AS votes,
+            COUNT(DISTINCT flash_code)::int AS unique_flash
+     FROM wte_guest_votes WHERE event_token=$1`,
+    [token]
+  );
+  return totals.rows[0] || {votes:0,unique_flash:0};
+}
+
+async function finalizeGuestEvent(token, reason='automatic') {
+  const client=await pool.connect();
+
+  try{
+    await client.query('BEGIN');
+
+    const eventResult=await client.query(
+      `SELECT token,practice_id,event_date,closes_at,max_flash,status,final_codes
+       FROM wte_guest_events
+       WHERE token=$1
+       FOR UPDATE`,
+      [token]
+    );
+
+    if(!eventResult.rowCount){
+      await client.query('ROLLBACK');
+      return null;
+    }
+
+    const event=eventResult.rows[0];
+    if(event.status==='finalized'){
+      await client.query('COMMIT');
+      return event;
+    }
+
+    const rankingResult=await client.query(
+      `SELECT flash_code AS code,COUNT(*)::int AS votes,MIN(created_at) AS first_vote
+       FROM wte_guest_votes
+       WHERE event_token=$1
+       GROUP BY flash_code
+       ORDER BY votes DESC,first_vote ASC,flash_code ASC
+       LIMIT $2`,
+      [token,event.max_flash]
+    );
+
+    const finalCodes=rankingResult.rows.map(row=>row.code);
+
+    const updated=await client.query(
+      `UPDATE wte_guest_events
+       SET status='finalized',
+           final_codes=$2::jsonb,
+           finalized_at=NOW(),
+           updated_at=NOW()
+       WHERE token=$1
+       RETURNING token,practice_id,event_date,closes_at,max_flash,status,
+                 final_codes,finalized_at,created_at,updated_at`,
+      [token,JSON.stringify(finalCodes)]
+    );
+
+    const publicUrl=guestPublicUrl(token);
+    const pdfUrl=guestPdfUrl(token);
+
+    await client.query(
+      `UPDATE wte_practices
+       SET data=jsonb_set(
+         COALESCE(data,'{}'::jsonb),
+         '{guestVoting}',
+         $2::jsonb,
+         TRUE
+       ),
+       updated_at=NOW()
+       WHERE id=$1`,
+      [
+        event.practice_id,
+        JSON.stringify({
+          token,
+          status:'finalized',
+          eventDate:event.event_date,
+          closesAt:event.closes_at,
+          finalCodes,
+          count:finalCodes.length,
+          publicUrl,
+          pdfUrl,
+          finalizedAt:new Date().toISOString()
+        })
+      ]
+    );
+
+    await client.query('COMMIT');
+
+    await createNotification(
+      'guest_voting_finalized',
+      'Selezione invitati completata',
+      `La pratica ${event.practice_id} ha ${finalCodes.length} flash definitivi. Il PDF è pronto.`,
+      event.practice_id,
+      null
+    );
+
+    try{
+      await pool.query(
+        `INSERT INTO wte_activity_log
+         (actor,actor_role,action,practice_id,details)
+         VALUES ('Sistema','system','Votazione invitati finalizzata',$1,$2::jsonb)`,
+        [event.practice_id,JSON.stringify({token,reason,count:finalCodes.length})]
+      );
+    }catch{}
+
+    return updated.rows[0];
+  }catch(error){
+    await client.query('ROLLBACK');
+    throw error;
+  }finally{
+    client.release();
+  }
+}
+
+async function finalizeGuestEventIfDue(token) {
+  const result=await pool.query(
+    `SELECT token,status,closes_at
+     FROM wte_guest_events WHERE token=$1`,
+    [token]
+  );
+  const event=result.rows[0];
+  if(!event)return null;
+  if(event.status==='open' && new Date(event.closes_at)<=new Date()){
+    return finalizeGuestEvent(token,'deadline');
+  }
+  return event;
+}
+
+async function finalizeAllDueGuestEvents() {
+  const result=await pool.query(
+    `SELECT token FROM wte_guest_events
+     WHERE status='open' AND closes_at<=NOW()
+     ORDER BY closes_at ASC`
+  );
+  for(const row of result.rows){
+    try{ await finalizeGuestEvent(row.token,'scheduled'); }
+    catch(error){ console.error('Guest event finalize error',row.token,error); }
+  }
+}
+
+function writeGuestVotingPdf(res,bundle) {
+  const {event,practice,items,ranking}=bundle;
+  const doc=new PDFDocument({size:'A4',margin:32,bufferPages:true});
+
+  res.setHeader('Content-Type','application/pdf');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="WTE_${event.practice_id}_flash_invitati.pdf"`
+  );
+  doc.pipe(res);
+
+  writePdfHeader(doc,'Flash scelti dagli invitati',event.practice_id);
+  writePracticeDetails(doc,practice,{
+    practice_id:event.practice_id,
+    customer_name:practice.name || ''
+  });
+
+  doc.font('Helvetica-Bold').fontSize(11).fillColor('#8A5D1B')
+    .text(`${items.length} FLASH DEFINITIVI`);
+  doc.font('Helvetica').fontSize(8.5).fillColor('#6F6254')
+    .text(
+      `Votazione chiusa il ${new Date(event.finalized_at || event.closes_at).toLocaleString('it-IT')}. `+
+      `Ordinamento per numero di preferenze.`
+    );
+  doc.moveDown(.7);
+
+  const votesByCode=new Map(ranking.map(row=>[row.code,Number(row.votes||0)]));
+  const cols=3,gap=9,usable=doc.page.width-64;
+  const cellW=(usable-gap*(cols-1))/cols;
+  const cellH=174;
+  let col=0,x=32,y=doc.y;
+
+  items.forEach(item=>{
+    if(y+cellH>doc.page.height-42){
+      doc.addPage();
+      writePdfHeader(doc,'Flash scelti dagli invitati',event.practice_id);
+      y=112;col=0;x=32;
+    }
+
+    doc.roundedRect(x,y,cellW,cellH-7,3).strokeColor('#CBB793').stroke();
+
+    try{
+      doc.image(item.image_data,x+7,y+7,{
+        fit:[cellW-14,102],align:'center',valign:'center'
+      });
+    }catch{
+      doc.font('Helvetica').fontSize(8).fillColor('#7A6C5B')
+        .text('Anteprima non disponibile',x+8,y+48,{
+          width:cellW-16,align:'center'
+        });
+    }
+
+    doc.font('Helvetica-Bold').fontSize(10).fillColor('#211B16')
+      .text(safePdfText(item.code),x+8,y+114,{
+        width:cellW-16,align:'center'
+      });
+    doc.font('Helvetica').fontSize(7.5).fillColor('#6F6254')
+      .text(safePdfText(item.title || item.category || ''),x+8,y+128,{
+        width:cellW-16,align:'center',height:18
+      });
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#8A5D1B')
+      .text(`${votesByCode.get(item.code)||0} preferenze`,x+8,y+149,{
+        width:cellW-16,align:'center'
+      });
+
+    col++;
+    if(col>=cols){col=0;x=32;y+=cellH}
+    else{x+=cellW+gap}
+  });
+
+  doc.end();
+}
+
+app.post('/api/guest-events', auth, async (req,res) => {
+  const parsed=z.object({
+    practiceId:z.string().min(1),
+    eventDate:z.string().optional(),
+    maxFlash:z.number().int().min(1).max(50).optional().default(50)
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Dati evento invitati non validi.'});
+  }
+
+  const practiceResult=await pool.query(
+    'SELECT id,data FROM wte_practices WHERE id=$1',
+    [parsed.data.practiceId]
+  );
+  if(!practiceResult.rowCount){
+    return res.status(404).json({error:'Pratica non trovata.'});
+  }
+
+  const practice=practiceResult.rows[0].data || {};
+  const eventDate=validIsoDate(parsed.data.eventDate || practice.date);
+  if(!eventDate){
+    return res.status(400).json({
+      error:'Inserisci una data evento valida nella pratica (AAAA-MM-GG).'
+    });
+  }
+
+  const existing=await pool.query(
+    `SELECT token,practice_id,event_date,closes_at,max_flash,status,final_codes,
+            finalized_at,created_at,updated_at
+     FROM wte_guest_events WHERE practice_id=$1`,
+    [parsed.data.practiceId]
+  );
+
+  if(existing.rowCount){
+    const event=await finalizeGuestEventIfDue(existing.rows[0].token);
+    const stats=await guestEventStats(existing.rows[0].token);
+    return res.json({
+      event:{...existing.rows[0],...(event||{})},
+      stats,
+      url:guestPublicUrl(existing.rows[0].token),
+      qr:`${req.protocol}://${req.get('host')}/api/public/guest-event/${existing.rows[0].token}/qr.svg`,
+      existing:true
+    });
+  }
+
+  const token=crypto.randomBytes(24).toString('hex');
+  const result=await pool.query(
+    `INSERT INTO wte_guest_events
+     (token,practice_id,event_date,closes_at,max_flash)
+     VALUES (
+       $1,$2,$3::date,
+       (($3::date - 15) AT TIME ZONE 'Europe/Rome'),
+       $4
+     )
+     RETURNING token,practice_id,event_date,closes_at,max_flash,status,
+               final_codes,finalized_at,created_at,updated_at`,
+    [token,parsed.data.practiceId,eventDate,parsed.data.maxFlash]
+  );
+
+  const event=result.rows[0];
+  const url=guestPublicUrl(token);
+
+  await pool.query(
+    `UPDATE wte_practices
+     SET data=jsonb_set(
+       COALESCE(data,'{}'::jsonb),
+       '{guestVoting}',
+       $2::jsonb,
+       TRUE
+     ),
+     updated_at=NOW()
+     WHERE id=$1`,
+    [
+      parsed.data.practiceId,
+      JSON.stringify({
+        token,
+        status:'open',
+        eventDate,
+        closesAt:event.closes_at,
+        publicUrl:url,
+        qrUrl:`https://wte-cloud-api.onrender.com/api/public/guest-event/${token}/qr.svg`
+      })
+    ]
+  );
+
+  await logActivity(req,'QR invitati creato',parsed.data.practiceId,{
+    token,eventDate,closesAt:event.closes_at
+  });
+  await createNotification(
+    'guest_voting_created',
+    'QR invitati pronto',
+    `Il catalogo invitati della pratica ${parsed.data.practiceId} è aperto fino al ${new Date(event.closes_at).toLocaleDateString('it-IT')}.`,
+    parsed.data.practiceId,
+    null
+  );
+
+  res.status(201).json({
+    event,
+    stats:{votes:0,unique_flash:0},
+    url,
+    qr:`${req.protocol}://${req.get('host')}/api/public/guest-event/${token}/qr.svg`,
+    existing:false
+  });
+});
+
+app.get('/api/guest-events/practice/:id', auth, async (req,res) => {
+  const result=await pool.query(
+    `SELECT token,practice_id,event_date,closes_at,max_flash,status,final_codes,
+            finalized_at,created_at,updated_at
+     FROM wte_guest_events WHERE practice_id=$1`,
+    [req.params.id]
+  );
+
+  if(!result.rowCount){
+    return res.json({event:null,ranking:[],stats:{votes:0,unique_flash:0}});
+  }
+
+  const token=result.rows[0].token;
+  const checked=await finalizeGuestEventIfDue(token);
+  const fresh=await pool.query(
+    `SELECT token,practice_id,event_date,closes_at,max_flash,status,final_codes,
+            finalized_at,created_at,updated_at
+     FROM wte_guest_events WHERE token=$1`,
+    [token]
+  );
+  const ranking=await guestRanking(token,50);
+  const stats=await guestEventStats(token);
+
+  res.json({
+    event:fresh.rows[0] || checked,
+    ranking,
+    stats,
+    url:guestPublicUrl(token),
+    qr:`${req.protocol}://${req.get('host')}/api/public/guest-event/${token}/qr.svg`,
+    pdf:`${req.protocol}://${req.get('host')}${guestPdfUrl(token)}`
+  });
+});
+
+app.post('/api/guest-events/:token/finalize', auth, adminOnly, async (req,res) => {
+  const event=await finalizeGuestEvent(req.params.token,'manual');
+  if(!event)return res.status(404).json({error:'Evento invitati non trovato.'});
+  const ranking=await guestRanking(req.params.token,50);
+  res.json({ok:true,event,ranking});
+});
+
+app.get('/api/guest-events/:token/pdf', auth, async (req,res) => {
+  await finalizeGuestEventIfDue(req.params.token);
+
+  const eventResult=await pool.query(
+    `SELECT token,practice_id,event_date,closes_at,max_flash,status,final_codes,
+            finalized_at
+     FROM wte_guest_events WHERE token=$1`,
+    [req.params.token]
+  );
+  if(!eventResult.rowCount){
+    return res.status(404).json({error:'Evento invitati non trovato.'});
+  }
+
+  const event=eventResult.rows[0];
+  if(event.status!=='finalized'){
+    return res.status(409).json({
+      error:'La votazione non è ancora chiusa. Il PDF definitivo sarà disponibile 15 giorni prima dell’evento.'
+    });
+  }
+
+  const practiceResult=await pool.query(
+    'SELECT id,data FROM wte_practices WHERE id=$1',
+    [event.practice_id]
+  );
+  const practice=practiceResult.rows[0]?.data || {};
+  const codes=Array.isArray(event.final_codes)?event.final_codes:[];
+
+  let items=[];
+  if(codes.length){
+    const result=await pool.query(
+      `SELECT id,code,title,category,image_data,image_mime
+       FROM wte_flash_catalog
+       WHERE code=ANY($1::text[])
+       ORDER BY array_position($1::text[],code)`,
+      [codes]
+    );
+    items=result.rows;
+  }
+
+  const ranking=await guestRanking(req.params.token,50);
+  return writeGuestVotingPdf(res,{event,practice,items,ranking});
+});
+
+app.get('/api/public/guest-event/:token', async (req,res) => {
+  await finalizeGuestEventIfDue(req.params.token);
+
+  const result=await pool.query(
+    `SELECT token,practice_id,event_date,closes_at,max_flash,status,final_codes,
+            finalized_at
+     FROM wte_guest_events WHERE token=$1`,
+    [req.params.token]
+  );
+  if(!result.rowCount){
+    return res.status(404).json({error:'QR non valido.'});
+  }
+
+  const event=result.rows[0];
+  const stats=await guestEventStats(req.params.token);
+
+  res.json({
+    event:{
+      eventDate:event.event_date,
+      closesAt:event.closes_at,
+      maxFlash:event.max_flash,
+      status:event.status,
+      finalizedAt:event.finalized_at,
+      finalCount:Array.isArray(event.final_codes)?event.final_codes.length:0
+    },
+    stats
+  });
+});
+
+app.get('/api/public/guest-event/:token/qr.svg', async (req,res) => {
+  const result=await pool.query(
+    'SELECT token FROM wte_guest_events WHERE token=$1',
+    [req.params.token]
+  );
+  if(!result.rowCount)return res.status(404).end();
+
+  const svg=await QRCode.toString(guestPublicUrl(req.params.token),{
+    type:'svg',
+    width:640,
+    margin:2,
+    color:{dark:'#090604',light:'#FFFFFF'}
+  });
+
+  res.setHeader('Content-Type','image/svg+xml; charset=utf-8');
+  res.setHeader('Cache-Control','public,max-age=3600');
+  res.send(svg);
+});
+
+app.get('/api/public/guest-event/:token/vote', async (req,res) => {
+  const voterKey=String(req.query.voterKey || '').trim();
+  if(!voterKey)return res.json({vote:null});
+
+  const result=await pool.query(
+    `SELECT flash_code,updated_at
+     FROM wte_guest_votes
+     WHERE event_token=$1 AND voter_key=$2`,
+    [req.params.token,voterKey]
+  );
+  res.json({vote:result.rows[0] || null});
+});
+
+app.post('/api/public/guest-event/:token/vote', publicRateLimit, async (req,res) => {
+  const parsed=z.object({
+    voterKey:z.string().min(12).max(160),
+    flashCode:z.string().min(1).max(40)
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Preferenza non valida.'});
+  }
+
+  const eventResult=await pool.query(
+    `SELECT token,status,closes_at FROM wte_guest_events WHERE token=$1`,
+    [req.params.token]
+  );
+  if(!eventResult.rowCount){
+    return res.status(404).json({error:'QR non valido.'});
+  }
+
+  let event=eventResult.rows[0];
+  if(event.status==='open' && new Date(event.closes_at)<=new Date()){
+    await finalizeGuestEvent(req.params.token,'vote-deadline');
+    event.status='finalized';
+  }
+
+  if(event.status!=='open'){
+    return res.status(409).json({
+      error:'La selezione degli invitati è chiusa.'
+    });
+  }
+
+  const flashResult=await pool.query(
+    `SELECT code FROM wte_flash_catalog
+     WHERE code=$1 AND active=TRUE`,
+    [parsed.data.flashCode]
+  );
+  if(!flashResult.rowCount){
+    return res.status(404).json({error:'Flash non disponibile.'});
+  }
+
+  await pool.query(
+    `INSERT INTO wte_guest_votes
+     (event_token,voter_key,flash_code)
+     VALUES ($1,$2,$3)
+     ON CONFLICT (event_token,voter_key)
+     DO UPDATE SET flash_code=EXCLUDED.flash_code,updated_at=NOW()`,
+    [req.params.token,parsed.data.voterKey,parsed.data.flashCode]
+  );
+
+  const stats=await guestEventStats(req.params.token);
+  res.json({
+    ok:true,
+    vote:{flash_code:parsed.data.flashCode},
+    stats
+  });
+});
+
+setTimeout(()=>{
+  finalizeAllDueGuestEvents().catch(error=>
+    console.error('Initial guest finalize error',error)
+  );
+},5000);
+
+setInterval(()=>{
+  finalizeAllDueGuestEvents().catch(error=>
+    console.error('Scheduled guest finalize error',error)
+  );
+},60*60*1000);
+
+
+
+// ============================================================
+// WTE V3 FASE 2 — pagamenti, ricevute e scadenze automatiche
+// ============================================================
+
+function cents(value) {
+  const number=Number(value);
+  return Number.isFinite(number) ? Math.max(0,Math.round(number)) : 0;
+}
+
+function euroFromCents(value) {
+  return new Intl.NumberFormat('it-IT',{
+    style:'currency',currency:'EUR'
+  }).format(cents(value)/100);
+}
+
+function paymentPublicUrl(token) {
+  return `https://www.weddingtattooexperience.it/payment.html?token=${token}`;
+}
+
+function safeEventDate(value) {
+  const text=String(value || '').trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : '';
+}
+
+function calculateBalanceDueAt(eventDate) {
+  const date=safeEventDate(eventDate);
+  if(!date)return null;
+  return `${date}T00:00:00+02:00`;
+}
+
+async function paymentPlanByPractice(practiceId) {
+  const result=await pool.query(
+    `SELECT practice_id,token,currency,total_cents,deposit_cents,balance_cents,
+            deposit_due_at,balance_due_at,deposit_payment_url,balance_payment_url,
+            deposit_status,balance_status,deposit_paid_at,balance_paid_at,
+            deposit_provider,balance_provider,deposit_reference,balance_reference,
+            deposit_receipt_url,balance_receipt_url,
+            reminder_30_sent_at,reminder_7_sent_at,created_at,updated_at
+     FROM wte_payment_plans WHERE practice_id=$1`,
+    [practiceId]
+  );
+  return result.rows[0] || null;
+}
+
+async function paymentPlanByToken(token) {
+  const result=await pool.query(
+    `SELECT practice_id,token,currency,total_cents,deposit_cents,balance_cents,
+            deposit_due_at,balance_due_at,deposit_payment_url,balance_payment_url,
+            deposit_status,balance_status,deposit_paid_at,balance_paid_at,
+            deposit_provider,balance_provider,deposit_reference,balance_reference,
+            deposit_receipt_url,balance_receipt_url,
+            reminder_30_sent_at,reminder_7_sent_at,created_at,updated_at
+     FROM wte_payment_plans WHERE token=$1`,
+    [token]
+  );
+  return result.rows[0] || null;
+}
+
+async function practiceContact(practiceId) {
+  const result=await pool.query(
+    'SELECT data FROM wte_practices WHERE id=$1',
+    [practiceId]
+  );
+  const practice=result.rows[0]?.data || {};
+  return {
+    practice,
+    email:String(practice.email || practice.mail || '').trim(),
+    phone:String(practice.phone || practice.telefono || '').trim(),
+    name:String(practice.name || '').trim()
+  };
+}
+
+async function queueMessage({
+  practiceId=null,
+  messageType,
+  recipient='',
+  subject='',
+  body,
+  sendAfter=new Date(),
+  metadata={}
+}) {
+  const result=await pool.query(
+    `INSERT INTO wte_message_outbox
+     (practice_id,message_type,recipient,subject,body,send_after,metadata)
+     VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)
+     RETURNING id,practice_id,message_type,recipient,subject,body,status,
+               send_after,created_at`,
+    [
+      practiceId,messageType,recipient,subject,body,sendAfter,
+      JSON.stringify(metadata)
+    ]
+  );
+  return result.rows[0];
+}
+
+async function ensureGuestVotingAfterDeposit(practiceId) {
+  const practiceResult=await pool.query(
+    'SELECT data FROM wte_practices WHERE id=$1',
+    [practiceId]
+  );
+  if(!practiceResult.rowCount)return null;
+
+  const practice=practiceResult.rows[0].data || {};
+  const eventDate=safeEventDate(practice.date);
+  if(!eventDate)return null;
+
+  const existing=await pool.query(
+    'SELECT token FROM wte_guest_events WHERE practice_id=$1',
+    [practiceId]
+  );
+  if(existing.rowCount)return existing.rows[0];
+
+  const token=crypto.randomBytes(24).toString('hex');
+  const result=await pool.query(
+    `INSERT INTO wte_guest_events
+     (token,practice_id,event_date,closes_at,max_flash)
+     VALUES (
+       $1,$2,$3::date,
+       (($3::date - 15) AT TIME ZONE 'Europe/Rome'),
+       50
+     )
+     RETURNING token,practice_id,event_date,closes_at,status`,
+    [token,practiceId,eventDate]
+  );
+
+  const event=result.rows[0];
+  const url=guestPublicUrl(token);
+
+  await pool.query(
+    `UPDATE wte_practices
+     SET data=jsonb_set(
+       COALESCE(data,'{}'::jsonb),
+       '{guestVoting}',
+       $2::jsonb,
+       TRUE
+     ),
+     updated_at=NOW()
+     WHERE id=$1`,
+    [
+      practiceId,
+      JSON.stringify({
+        token,
+        status:'open',
+        eventDate,
+        closesAt:event.closes_at,
+        publicUrl:url,
+        qrUrl:`https://wte-cloud-api.onrender.com/api/public/guest-event/${token}/qr.svg`
+      })
+    ]
+  );
+
+  await createNotification(
+    'guest_voting_created',
+    'QR invitati creato automaticamente',
+    `L’acconto della pratica ${practiceId} è stato registrato. Il QR invitati è pronto.`,
+    practiceId,
+    null
+  );
+
+  return event;
+}
+
+async function updatePracticePaymentSummary(practiceId,plan) {
+  const ready=plan.deposit_status==='paid'
+    && plan.balance_status==='paid';
+
+  await pool.query(
+    `UPDATE wte_practices
+     SET data=jsonb_set(
+       COALESCE(data,'{}'::jsonb),
+       '{payments}',
+       $2::jsonb,
+       TRUE
+     ),
+     updated_at=NOW()
+     WHERE id=$1`,
+    [
+      practiceId,
+      JSON.stringify({
+        token:plan.token,
+        publicUrl:paymentPublicUrl(plan.token),
+        currency:plan.currency,
+        totalCents:plan.total_cents,
+        depositCents:plan.deposit_cents,
+        balanceCents:plan.balance_cents,
+        depositStatus:plan.deposit_status,
+        balanceStatus:plan.balance_status,
+        depositPaidAt:plan.deposit_paid_at,
+        balancePaidAt:plan.balance_paid_at,
+        depositReceiptUrl:plan.deposit_receipt_url,
+        balanceReceiptUrl:plan.balance_receipt_url,
+        ready
+      })
+    ]
+  );
+}
+
+async function applyPaidPayment({
+  practiceId,
+  paymentType,
+  amountCents=0,
+  provider='manual',
+  reference='',
+  receiptUrl='',
+  eventKey='',
+  occurredAt=new Date(),
+  payload={}
+}) {
+  const plan=await paymentPlanByPractice(practiceId);
+  if(!plan)throw new Error('Piano pagamenti non trovato.');
+
+  const type=paymentType==='balance'?'balance':'deposit';
+  const key=eventKey || `${provider}:${practiceId}:${type}:${reference || occurredAt.toISOString()}`;
+
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+
+    const existing=await client.query(
+      'SELECT id FROM wte_payment_events WHERE event_key=$1',
+      [key]
+    );
+    if(existing.rowCount){
+      await client.query('COMMIT');
+      return paymentPlanByPractice(practiceId);
+    }
+
+    await client.query(
+      `INSERT INTO wte_payment_events
+       (event_key,practice_id,payment_type,status,amount_cents,currency,
+        provider,provider_reference,receipt_url,payload,occurred_at)
+       VALUES ($1,$2,$3,'paid',$4,$5,$6,$7,$8,$9::jsonb,$10)`,
+      [
+        key,practiceId,type,cents(amountCents),plan.currency,
+        provider,reference,receiptUrl,JSON.stringify(payload),occurredAt
+      ]
+    );
+
+    const statusColumn=type==='deposit'?'deposit_status':'balance_status';
+    const paidColumn=type==='deposit'?'deposit_paid_at':'balance_paid_at';
+    const providerColumn=type==='deposit'?'deposit_provider':'balance_provider';
+    const referenceColumn=type==='deposit'?'deposit_reference':'balance_reference';
+    const receiptColumn=type==='deposit'?'deposit_receipt_url':'balance_receipt_url';
+
+    await client.query(
+      `UPDATE wte_payment_plans
+       SET ${statusColumn}='paid',
+           ${paidColumn}=$2,
+           ${providerColumn}=$3,
+           ${referenceColumn}=$4,
+           ${receiptColumn}=$5,
+           updated_at=NOW()
+       WHERE practice_id=$1`,
+      [practiceId,occurredAt,provider,reference,receiptUrl]
+    );
+
+    await client.query('COMMIT');
+  }catch(error){
+    await client.query('ROLLBACK');
+    throw error;
+  }finally{
+    client.release();
+  }
+
+  const updated=await paymentPlanByPractice(practiceId);
+  await updatePracticePaymentSummary(practiceId,updated);
+
+  if(type==='deposit'){
+    await ensureGuestVotingAfterDeposit(practiceId);
+    const contact=await practiceContact(practiceId);
+    const guestEvent=await pool.query(
+      'SELECT token FROM wte_guest_events WHERE practice_id=$1',
+      [practiceId]
+    );
+    const guestUrl=guestEvent.rowCount
+      ? guestPublicUrl(guestEvent.rows[0].token)
+      : '';
+
+    await queueMessage({
+      practiceId,
+      messageType:'deposit_paid',
+      recipient:contact.email || contact.phone,
+      subject:'Acconto ricevuto — Wedding Tattoo Experience',
+      body:
+        `Ciao ${contact.name || ''}, abbiamo registrato il tuo acconto. `+
+        (guestUrl
+          ? `Il catalogo invitati è disponibile qui: ${guestUrl}`
+          : 'La pratica è stata aggiornata.'),
+      metadata:{paymentType:type,guestUrl}
+    });
+  }else{
+    const contact=await practiceContact(practiceId);
+    await queueMessage({
+      practiceId,
+      messageType:'balance_paid',
+      recipient:contact.email || contact.phone,
+      subject:'Saldo ricevuto — Wedding Tattoo Experience',
+      body:
+        `Ciao ${contact.name || ''}, abbiamo registrato il saldo. `+
+        'La pratica del matrimonio risulta pronta.',
+      metadata:{paymentType:type}
+    });
+  }
+
+  await createNotification(
+    type==='deposit'?'deposit_paid':'balance_paid',
+    type==='deposit'?'Acconto ricevuto':'Saldo ricevuto',
+    `${euroFromCents(amountCents)} registrati per la pratica ${practiceId}.`,
+    practiceId,
+    null
+  );
+
+  return updated;
+}
+
+function writePaymentReceiptPdf(res,{plan,practice,paymentType}) {
+  const type=paymentType==='balance'?'balance':'deposit';
+  const isDeposit=type==='deposit';
+  const amount=isDeposit?plan.deposit_cents:plan.balance_cents;
+  const paidAt=isDeposit?plan.deposit_paid_at:plan.balance_paid_at;
+  const provider=isDeposit?plan.deposit_provider:plan.balance_provider;
+  const reference=isDeposit?plan.deposit_reference:plan.balance_reference;
+
+  const doc=new PDFDocument({size:'A4',margin:48});
+  res.setHeader('Content-Type','application/pdf');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="WTE_${plan.practice_id}_${type}_pagamento.pdf"`
+  );
+  doc.pipe(res);
+
+  writePdfHeader(
+    doc,
+    isDeposit?'Registrazione acconto':'Registrazione saldo',
+    plan.practice_id
+  );
+
+  doc.font('Helvetica-Bold').fontSize(13).fillColor('#8A5D1B')
+    .text(isDeposit?'ACCONTO REGISTRATO':'SALDO REGISTRATO');
+  doc.moveDown(.7);
+
+  const rows=[
+    ['Cliente',practice.name || '-'],
+    ['Data evento',practice.date || '-'],
+    ['Luogo',practice.location || practice.city || '-'],
+    ['Importo',euroFromCents(amount)],
+    ['Data pagamento',paidAt?new Date(paidAt).toLocaleString('it-IT'):'-'],
+    ['Metodo / provider',provider || '-'],
+    ['Riferimento',reference || '-'],
+    ['Pratica',plan.practice_id]
+  ];
+
+  rows.forEach(([label,value])=>{
+    doc.font('Helvetica-Bold').fontSize(8).fillColor('#8A7964')
+      .text(label.toUpperCase(),{continued:true,width:150});
+    doc.font('Helvetica').fontSize(10).fillColor('#211B16')
+      .text(`  ${safePdfText(value)}`);
+    doc.moveDown(.25);
+  });
+
+  doc.moveDown(1.2);
+  doc.font('Helvetica').fontSize(8.5).fillColor('#6F6254')
+    .text(
+      'Documento generato automaticamente dal gestionale Wedding Tattoo Experience. '+
+      'Attesta la registrazione del pagamento nella pratica e non sostituisce eventuali '+
+      'documenti fiscali previsti dalla normativa applicabile.',
+      {lineGap:3}
+    );
+
+  doc.end();
+}
+
+async function processPaymentReminders() {
+  const result=await pool.query(
+    `SELECT p.practice_id,p.token,p.balance_cents,p.balance_due_at,
+            p.balance_payment_url,p.reminder_30_sent_at,p.reminder_7_sent_at,
+            r.data
+     FROM wte_payment_plans p
+     LEFT JOIN wte_practices r ON r.id=p.practice_id
+     WHERE p.balance_status='pending'
+       AND p.balance_due_at IS NOT NULL`
+  );
+
+  const now=new Date();
+
+  for(const row of result.rows){
+    const eventDate=safeEventDate(row.data?.date);
+    if(!eventDate)continue;
+
+    const event=new Date(`${eventDate}T12:00:00+02:00`);
+    const days=Math.ceil((event-now)/86400000);
+    const contact={
+      name:String(row.data?.name||'').trim(),
+      recipient:String(row.data?.email||row.data?.mail||row.data?.phone||'').trim()
+    };
+
+    if(days<=30 && days>7 && !row.reminder_30_sent_at){
+      await queueMessage({
+        practiceId:row.practice_id,
+        messageType:'balance_reminder_30',
+        recipient:contact.recipient,
+        subject:'Promemoria saldo — Wedding Tattoo Experience',
+        body:
+          `Ciao ${contact.name}, manca circa un mese al matrimonio. `+
+          `Il saldo di ${euroFromCents(row.balance_cents)} dovrà essere versato `+
+          `entro la settimana precedente l’evento. `+
+          (row.balance_payment_url?`Pagamento: ${row.balance_payment_url}`:''),
+        metadata:{daysBeforeEvent:days}
+      });
+      await pool.query(
+        'UPDATE wte_payment_plans SET reminder_30_sent_at=NOW(),updated_at=NOW() WHERE practice_id=$1',
+        [row.practice_id]
+      );
+      await createNotification(
+        'balance_reminder_30',
+        'Promemoria saldo preparato',
+        `Preparato il promemoria saldo per la pratica ${row.practice_id}.`,
+        row.practice_id,
+        null
+      );
+    }
+
+    if(days<=7 && !row.reminder_7_sent_at){
+      await queueMessage({
+        practiceId:row.practice_id,
+        messageType:'balance_due_7',
+        recipient:contact.recipient,
+        subject:'Saldo in scadenza — Wedding Tattoo Experience',
+        body:
+          `Ciao ${contact.name}, il saldo di ${euroFromCents(row.balance_cents)} `+
+          `è ora dovuto prima dell’evento. `+
+          (row.balance_payment_url?`Pagamento: ${row.balance_payment_url}`:''),
+        metadata:{daysBeforeEvent:days}
+      });
+      await pool.query(
+        'UPDATE wte_payment_plans SET reminder_7_sent_at=NOW(),updated_at=NOW() WHERE practice_id=$1',
+        [row.practice_id]
+      );
+      await createNotification(
+        'balance_due_7',
+        'Saldo in scadenza',
+        `Il saldo della pratica ${row.practice_id} è da completare.`,
+        row.practice_id,
+        null
+      );
+    }
+  }
+}
+
+app.post('/api/payment-plans', auth, async (req,res) => {
+  const parsed=z.object({
+    practiceId:z.string().min(1),
+    totalCents:z.number().int().min(0),
+    depositCents:z.number().int().min(0),
+    depositDueAt:z.string().optional().nullable(),
+    depositPaymentUrl:z.string().url().optional().or(z.literal('')),
+    balancePaymentUrl:z.string().url().optional().or(z.literal(''))
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Dati piano pagamenti non validi.'});
+  }
+
+  const practiceResult=await pool.query(
+    'SELECT data FROM wte_practices WHERE id=$1',
+    [parsed.data.practiceId]
+  );
+  if(!practiceResult.rowCount){
+    return res.status(404).json({error:'Pratica non trovata.'});
+  }
+
+  const practice=practiceResult.rows[0].data || {};
+  const total=cents(parsed.data.totalCents);
+  const deposit=Math.min(total,cents(parsed.data.depositCents));
+  const balance=Math.max(0,total-deposit);
+  const eventDate=safeEventDate(practice.date);
+  const balanceDue=eventDate
+    ? new Date(new Date(`${eventDate}T12:00:00+02:00`).getTime()-7*86400000)
+    : null;
+
+  const existing=await paymentPlanByPractice(parsed.data.practiceId);
+  const token=existing?.token || crypto.randomBytes(24).toString('hex');
+
+  const result=await pool.query(
+    `INSERT INTO wte_payment_plans
+     (practice_id,token,total_cents,deposit_cents,balance_cents,
+      deposit_due_at,balance_due_at,deposit_payment_url,balance_payment_url)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+     ON CONFLICT (practice_id)
+     DO UPDATE SET
+       total_cents=EXCLUDED.total_cents,
+       deposit_cents=EXCLUDED.deposit_cents,
+       balance_cents=EXCLUDED.balance_cents,
+       deposit_due_at=EXCLUDED.deposit_due_at,
+       balance_due_at=EXCLUDED.balance_due_at,
+       deposit_payment_url=EXCLUDED.deposit_payment_url,
+       balance_payment_url=EXCLUDED.balance_payment_url,
+       updated_at=NOW()
+     RETURNING practice_id,token,currency,total_cents,deposit_cents,balance_cents,
+               deposit_due_at,balance_due_at,deposit_payment_url,balance_payment_url,
+               deposit_status,balance_status,deposit_paid_at,balance_paid_at,
+               deposit_provider,balance_provider,deposit_reference,balance_reference,
+               deposit_receipt_url,balance_receipt_url,
+               reminder_30_sent_at,reminder_7_sent_at,created_at,updated_at`,
+    [
+      parsed.data.practiceId,token,total,deposit,balance,
+      parsed.data.depositDueAt || null,balanceDue,
+      parsed.data.depositPaymentUrl || '',
+      parsed.data.balancePaymentUrl || ''
+    ]
+  );
+
+  const plan=result.rows[0];
+  await updatePracticePaymentSummary(parsed.data.practiceId,plan);
+  await logActivity(req,'Piano pagamenti salvato',parsed.data.practiceId,{
+    totalCents:total,depositCents:deposit,balanceCents:balance
+  });
+
+  res.status(existing?200:201).json({
+    plan,
+    publicUrl:paymentPublicUrl(token)
+  });
+});
+
+app.get('/api/payment-plans/practice/:id', auth, async (req,res) => {
+  const plan=await paymentPlanByPractice(req.params.id);
+  if(!plan)return res.json({plan:null,events:[],outbox:[]});
+
+  const events=await pool.query(
+    `SELECT id,event_key,payment_type,status,amount_cents,currency,provider,
+            provider_reference,receipt_url,occurred_at,created_at
+     FROM wte_payment_events
+     WHERE practice_id=$1
+     ORDER BY occurred_at DESC`,
+    [req.params.id]
+  );
+
+  const outbox=await pool.query(
+    `SELECT id,message_type,recipient,subject,body,status,send_after,sent_at,created_at
+     FROM wte_message_outbox
+     WHERE practice_id=$1
+     ORDER BY created_at DESC LIMIT 20`,
+    [req.params.id]
+  );
+
+  res.json({
+    plan,
+    events:events.rows,
+    outbox:outbox.rows,
+    publicUrl:paymentPublicUrl(plan.token),
+    depositReceipt:`${req.protocol}://${req.get('host')}/api/payment-plans/${plan.practice_id}/receipt?type=deposit`,
+    balanceReceipt:`${req.protocol}://${req.get('host')}/api/payment-plans/${plan.practice_id}/receipt?type=balance`
+  });
+});
+
+app.post('/api/payment-plans/:id/mark-paid', auth, async (req,res) => {
+  const parsed=z.object({
+    type:z.enum(['deposit','balance']),
+    amountCents:z.number().int().min(0).optional(),
+    provider:z.string().max(80).optional().default('manual'),
+    reference:z.string().max(180).optional().default(''),
+    receiptUrl:z.string().url().optional().or(z.literal(''))
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Pagamento non valido.'});
+  }
+
+  const plan=await paymentPlanByPractice(req.params.id);
+  if(!plan)return res.status(404).json({error:'Piano pagamenti non trovato.'});
+
+  const defaultAmount=parsed.data.type==='deposit'
+    ? plan.deposit_cents
+    : plan.balance_cents;
+
+  const updated=await applyPaidPayment({
+    practiceId:req.params.id,
+    paymentType:parsed.data.type,
+    amountCents:parsed.data.amountCents ?? defaultAmount,
+    provider:parsed.data.provider,
+    reference:parsed.data.reference,
+    receiptUrl:parsed.data.receiptUrl || '',
+    eventKey:`manual:${req.params.id}:${parsed.data.type}:${Date.now()}`,
+    payload:{actor:req.user?.email||req.user?.name||'Staff'}
+  });
+
+  await logActivity(req,'Pagamento registrato',req.params.id,{
+    type:parsed.data.type,
+    amountCents:parsed.data.amountCents ?? defaultAmount
+  });
+
+  res.json({ok:true,plan:updated});
+});
+
+app.get('/api/payment-plans/:id/receipt', auth, async (req,res) => {
+  const type=String(req.query.type||'deposit')==='balance'?'balance':'deposit';
+  const plan=await paymentPlanByPractice(req.params.id);
+  if(!plan)return res.status(404).json({error:'Piano pagamenti non trovato.'});
+
+  const status=type==='deposit'?plan.deposit_status:plan.balance_status;
+  if(status!=='paid'){
+    return res.status(409).json({error:'Il pagamento non risulta ancora registrato.'});
+  }
+
+  const contact=await practiceContact(req.params.id);
+  return writePaymentReceiptPdf(res,{
+    plan,
+    practice:contact.practice,
+    paymentType:type
+  });
+});
+
+app.get('/api/public/payment-plan/:token', async (req,res) => {
+  const plan=await paymentPlanByToken(req.params.token);
+  if(!plan)return res.status(404).json({error:'Link pagamento non valido.'});
+
+  const contact=await practiceContact(plan.practice_id);
+  res.json({
+    plan:{
+      currency:plan.currency,
+      totalCents:plan.total_cents,
+      depositCents:plan.deposit_cents,
+      balanceCents:plan.balance_cents,
+      depositDueAt:plan.deposit_due_at,
+      balanceDueAt:plan.balance_due_at,
+      depositPaymentUrl:plan.deposit_payment_url,
+      balancePaymentUrl:plan.balance_payment_url,
+      depositStatus:plan.deposit_status,
+      balanceStatus:plan.balance_status,
+      depositPaidAt:plan.deposit_paid_at,
+      balancePaidAt:plan.balance_paid_at
+    },
+    practice:{
+      name:contact.practice.name||'',
+      date:contact.practice.date||'',
+      location:contact.practice.location||contact.practice.city||''
+    }
+  });
+});
+
+app.post('/api/payment-webhook/:provider', async (req,res) => {
+  if(!PAYMENT_WEBHOOK_SECRET){
+    return res.status(503).json({
+      error:'Webhook pagamenti non configurato.'
+    });
+  }
+
+  const signature=String(req.headers['x-wte-signature']||'');
+  const body=JSON.stringify(req.body||{});
+  const expected=crypto
+    .createHmac('sha256',PAYMENT_WEBHOOK_SECRET)
+    .update(body)
+    .digest('hex');
+
+  const valid=
+    signature.length===expected.length
+    && crypto.timingSafeEqual(Buffer.from(signature),Buffer.from(expected));
+
+  if(!valid){
+    return res.status(401).json({error:'Firma webhook non valida.'});
+  }
+
+  const parsed=z.object({
+    eventId:z.string().min(1).max(240),
+    practiceId:z.string().min(1).max(160),
+    type:z.enum(['deposit','balance']),
+    status:z.enum(['paid','pending','failed','cancelled']),
+    amountCents:z.number().int().min(0),
+    currency:z.string().max(8).optional().default('EUR'),
+    reference:z.string().max(240).optional().default(''),
+    receiptUrl:z.string().url().optional().or(z.literal('')),
+    paidAt:z.string().optional()
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Payload webhook non valido.'});
+  }
+
+  if(parsed.data.status!=='paid'){
+    await pool.query(
+      `INSERT INTO wte_payment_events
+       (event_key,practice_id,payment_type,status,amount_cents,currency,
+        provider,provider_reference,receipt_url,payload,occurred_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,NOW())
+       ON CONFLICT (event_key) DO NOTHING`,
+      [
+        parsed.data.eventId,parsed.data.practiceId,parsed.data.type,
+        parsed.data.status,parsed.data.amountCents,parsed.data.currency,
+        req.params.provider,parsed.data.reference,parsed.data.receiptUrl||'',
+        JSON.stringify(req.body)
+      ]
+    );
+    return res.json({ok:true,processed:false});
+  }
+
+  const updated=await applyPaidPayment({
+    practiceId:parsed.data.practiceId,
+    paymentType:parsed.data.type,
+    amountCents:parsed.data.amountCents,
+    provider:req.params.provider,
+    reference:parsed.data.reference,
+    receiptUrl:parsed.data.receiptUrl||'',
+    eventKey:parsed.data.eventId,
+    occurredAt:parsed.data.paidAt?new Date(parsed.data.paidAt):new Date(),
+    payload:req.body
+  });
+
+  res.json({ok:true,processed:true,plan:updated});
+});
+
+app.get('/api/message-outbox', auth, async (req,res) => {
+  const result=await pool.query(
+    `SELECT id,practice_id,message_type,recipient,subject,body,status,
+            send_after,sent_at,metadata,created_at
+     FROM wte_message_outbox
+     ORDER BY created_at DESC LIMIT 200`
+  );
+  res.json({messages:result.rows});
+});
+
+app.post('/api/message-outbox/:id/sent', auth, async (req,res) => {
+  const result=await pool.query(
+    `UPDATE wte_message_outbox
+     SET status='sent',sent_at=NOW()
+     WHERE id=$1
+     RETURNING id,status,sent_at`,
+    [req.params.id]
+  );
+  if(!result.rowCount)return res.status(404).json({error:'Messaggio non trovato.'});
+  res.json({message:result.rows[0]});
+});
+
+setTimeout(()=>{
+  processPaymentReminders().catch(error=>
+    console.error('Initial payment reminder error',error)
+  );
+},7000);
+
+setInterval(()=>{
+  processPaymentReminders().catch(error=>
+    console.error('Scheduled payment reminder error',error)
+  );
+},60*60*1000);
+
+
+
+// ============================================================
+// WTE V3 FASE 3 — assistente pacchetto, contratto e firma
+// ============================================================
+
+function salesPublicUrl(token) {
+  return `https://www.weddingtattooexperience.it/contract.html?token=${token}`;
+}
+
+function contractPdfUrl(token) {
+  return `/api/public/contracts/${token}/pdf`;
+}
+
+function safeCustomerText(value,max=240) {
+  return String(value || '').trim().slice(0,max);
+}
+
+async function activePackages() {
+  const result=await pool.query(
+    `SELECT code,name,description,reason,price_cents,deposit_percent,
+            included_hours,min_guests,max_guests,max_distance_km,
+            features,sort_order
+     FROM wte_service_packages
+     WHERE active=TRUE
+     ORDER BY sort_order ASC`
+  );
+  return result.rows;
+}
+
+function rulePackageCode(data) {
+  const guests=Number(data.guests||0);
+  const hours=Number(data.hours||0);
+  const distance=Number(data.distance||0);
+  const style=String(data.style||'').toLowerCase();
+
+  if(guests>150 || hours>=8 || distance>180 || style==='premium'){
+    return 'LUXURY';
+  }
+  if(guests>110 || hours>=6 || distance>100){
+    return 'GOLD';
+  }
+  if(guests>65 || hours>=4 || style==='equilibrato'){
+    return 'SILVER';
+  }
+  return 'BRONZE';
+}
+
+function deterministicRecommendation(data,packages) {
+  const code=rulePackageCode(data);
+  const selected=packages.find(item=>item.code===code) || packages[0];
+  const facts=[
+    `${Number(data.guests||0)} invitati`,
+    `${Number(data.hours||0)} ore richieste`,
+    `${Number(data.distance||0)} km di distanza`
+  ];
+  return {
+    packageCode:selected.code,
+    packageName:selected.name,
+    title:`Pacchetto ${selected.name} consigliato`,
+    explanation:
+      `${selected.reason} La valutazione considera ${facts.join(', ')}.`,
+    considerations:[
+      Number(data.guests||0)>110?'Affluenza elevata':'Affluenza gestibile',
+      Number(data.hours||0)>=6?'Durata estesa':'Durata standard',
+      Number(data.distance||0)>100?'Trasferta significativa':'Trasferta ordinaria'
+    ],
+    source:'rules'
+  };
+}
+
+function outputTextFromResponse(payload) {
+  if(typeof payload?.output_text==='string')return payload.output_text;
+  for(const item of payload?.output||[]){
+    if(item?.type!=='message')continue;
+    for(const content of item.content||[]){
+      if(content?.type==='output_text' && typeof content.text==='string'){
+        return content.text;
+      }
+    }
+  }
+  return '';
+}
+
+async function aiRecommendation(data,packages,fallback) {
+  if(!OPENAI_API_KEY)return {...fallback,aiUsed:false};
+
+  const packageList=packages.map(item=>({
+    code:item.code,
+    name:item.name,
+    priceCents:item.price_cents,
+    includedHours:Number(item.included_hours),
+    minGuests:item.min_guests,
+    maxGuests:item.max_guests,
+    maxDistanceKm:item.max_distance_km,
+    reason:item.reason
+  }));
+
+  const schema={
+    type:'object',
+    additionalProperties:false,
+    properties:{
+      packageCode:{type:'string',enum:packageList.map(item=>item.code)},
+      title:{type:'string'},
+      explanation:{type:'string'},
+      considerations:{
+        type:'array',
+        items:{type:'string'},
+        minItems:2,
+        maxItems:5
+      }
+    },
+    required:['packageCode','title','explanation','considerations']
+  };
+
+  const response=await fetch('https://api.openai.com/v1/responses',{
+    method:'POST',
+    headers:{
+      Authorization:`Bearer ${OPENAI_API_KEY}`,
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      model:OPENAI_MODEL,
+      store:false,
+      input:[
+        {
+          role:'system',
+          content:
+            'Sei il consulente Wedding Tattoo Experience. '+
+            'Scegli esclusivamente uno dei pacchetti forniti. '+
+            'Non inventare prezzi, condizioni o servizi. '+
+            'Scrivi in italiano, con tono chiaro e professionale. '+
+            'La raccomandazione deve ridurre dubbi e passaggi del cliente.'
+        },
+        {
+          role:'user',
+          content:JSON.stringify({
+            customer:data,
+            availablePackages:packageList,
+            deterministicFallback:fallback.packageCode
+          })
+        }
+      ],
+      text:{
+        format:{
+          type:'json_schema',
+          name:'wte_package_recommendation',
+          strict:true,
+          schema
+        }
+      },
+      max_output_tokens:500
+    })
+  });
+
+  const payload=await response.json().catch(()=>({}));
+  if(!response.ok){
+    throw new Error(payload?.error?.message || `OpenAI ${response.status}`);
+  }
+
+  const text=outputTextFromResponse(payload);
+  const parsed=JSON.parse(text);
+  const selected=packages.find(item=>item.code===parsed.packageCode);
+  if(!selected)throw new Error('Pacchetto AI non valido.');
+
+  return {
+    packageCode:selected.code,
+    packageName:selected.name,
+    title:parsed.title,
+    explanation:parsed.explanation,
+    considerations:parsed.considerations,
+    source:'openai',
+    aiUsed:true
+  };
+}
+
+function defaultContractClauses() {
+  return [
+    {
+      title:'Oggetto del servizio',
+      text:
+        'Wedding Tattoo Experience fornirà il servizio indicato nel pacchetto scelto, '+
+        'secondo i dati dell’evento riportati nel presente documento.'
+    },
+    {
+      title:'Acconto e conferma della data',
+      text:
+        'La data è considerata confermata soltanto dopo la registrazione dell’acconto. '+
+        'Le istruzioni e la scadenza del pagamento sono riportate nella pagina pagamenti.'
+    },
+    {
+      title:'Saldo',
+      text:
+        'Il saldo deve risultare registrato entro sette giorni prima dell’evento, '+
+        'salvo diverso accordo scritto.'
+    },
+    {
+      title:'Catalogo flash e invitati',
+      text:
+        'Dopo la registrazione dell’acconto viene attivato il QR invitati. '+
+        'La raccolta delle preferenze termina automaticamente quindici giorni prima '+
+        'dell’evento e genera la selezione definitiva fino a cinquanta flash.'
+    },
+    {
+      title:'Esecuzione del tatuaggio',
+      text:
+        'Ogni tatuaggio è subordinato alla maggiore età, al consenso informato, '+
+        'alla valutazione professionale del tatuatore e alle condizioni operative '+
+        'disponibili durante l’evento.'
+    },
+    {
+      title:'Variazioni e comunicazioni',
+      text:
+        'Eventuali variazioni rilevanti di data, luogo, orario o organizzazione devono '+
+        'essere comunicate tempestivamente e possono richiedere una revisione economica.'
+    }
+  ];
+}
+
+function contractNumber() {
+  const date=new Date();
+  const stamp=[
+    date.getFullYear(),
+    String(date.getMonth()+1).padStart(2,'0'),
+    String(date.getDate()).padStart(2,'0')
+  ].join('');
+  return `WTE-${stamp}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+}
+
+function contractSignatureBuffer(dataUrl) {
+  const match=String(dataUrl||'').match(/^data:image\/(?:png|jpeg);base64,(.+)$/);
+  return match?Buffer.from(match[1],'base64'):null;
+}
+
+async function salesBundleByContractToken(token) {
+  const result=await pool.query(
+    `SELECT c.token,c.sales_token,c.practice_id,c.package_code,c.contract_number,
+            c.customer_data,c.package_snapshot,c.clauses,c.status,c.signer_name,
+            c.signature_data,c.accepted_at,c.created_at,c.updated_at,
+            s.recommendation,s.ai_used,s.ai_summary
+     FROM wte_contracts c
+     JOIN wte_sales_sessions s ON s.token=c.sales_token
+     WHERE c.token=$1`,
+    [token]
+  );
+  return result.rows[0] || null;
+}
+
+function writeContractPdf(res,bundle) {
+  const customer=bundle.customer_data||{};
+  const pack=bundle.package_snapshot||{};
+  const clauses=Array.isArray(bundle.clauses)?bundle.clauses:[];
+  const accepted=bundle.status==='accepted';
+
+  const doc=new PDFDocument({size:'A4',margin:48,bufferPages:true});
+  res.setHeader('Content-Type','application/pdf');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="${bundle.contract_number}_${accepted?'firmato':'bozza'}.pdf"`
+  );
+  doc.pipe(res);
+
+  writePdfHeader(
+    doc,
+    accepted?'Contratto accettato':'Bozza di contratto',
+    bundle.contract_number
+  );
+
+  doc.font('Helvetica-Bold').fontSize(12).fillColor('#8A5D1B')
+    .text('DATI DEL CLIENTE E DELL’EVENTO');
+  doc.moveDown(.5);
+
+  const rows=[
+    ['Cliente',customer.name||'-'],
+    ['E-mail',customer.email||'-'],
+    ['Telefono',customer.phone||'-'],
+    ['Data evento',customer.date||'-'],
+    ['Ora',customer.time||'-'],
+    ['Luogo',customer.location||'-'],
+    ['Invitati',customer.guests||'-'],
+    ['Pacchetto',pack.name||bundle.package_code],
+    ['Importo',pack.price_cents?euroFromCents(pack.price_cents):'Su misura']
+  ];
+
+  rows.forEach(([label,value])=>{
+    doc.font('Helvetica-Bold').fontSize(8).fillColor('#8A7964')
+      .text(label.toUpperCase(),{continued:true,width:125});
+    doc.font('Helvetica').fontSize(10).fillColor('#211B16')
+      .text(`  ${safePdfText(value)}`);
+  });
+
+  doc.moveDown(1);
+  clauses.forEach((clause,index)=>{
+    if(doc.y>doc.page.height-130)doc.addPage();
+    doc.font('Helvetica-Bold').fontSize(10).fillColor('#8A5D1B')
+      .text(`${index+1}. ${safePdfText(clause.title)}`);
+    doc.moveDown(.25);
+    doc.font('Helvetica').fontSize(9).fillColor('#211B16')
+      .text(safePdfText(clause.text),{align:'justify',lineGap:3});
+    doc.moveDown(.65);
+  });
+
+  doc.moveDown(.5);
+  doc.font('Helvetica-Bold').fontSize(10).fillColor('#8A5D1B')
+    .text(accepted?'ACCETTAZIONE REGISTRATA':'DOCUMENTO IN BOZZA');
+  doc.moveDown(.35);
+
+  if(accepted){
+    doc.font('Helvetica').fontSize(9).fillColor('#211B16')
+      .text(
+        `Firmatario: ${safePdfText(bundle.signer_name)}\n`+
+        `Data e ora: ${new Date(bundle.accepted_at).toLocaleString('it-IT')}`
+      );
+
+    const signature=contractSignatureBuffer(bundle.signature_data);
+    if(signature){
+      try{
+        doc.image(signature,48,doc.y+12,{fit:[250,85]});
+        doc.y+=108;
+      }catch{}
+    }
+  }else{
+    doc.font('Helvetica').fontSize(9).fillColor('#6F6254')
+      .text(
+        'Questa è una bozza generata automaticamente. Il contratto sarà considerato '+
+        'accettato soltanto dopo la conferma delle condizioni e l’acquisizione della firma.'
+      );
+  }
+
+  doc.end();
+}
+
+async function createPaymentPlanFromContract(practiceId,customer,pack) {
+  const total=cents(pack.price_cents||0);
+  const depositPercent=Number(pack.deposit_percent||30);
+  const deposit=Math.round(total*depositPercent/100);
+  const balance=Math.max(0,total-deposit);
+  const eventDate=safeEventDate(customer.date);
+  const balanceDue=eventDate
+    ? new Date(new Date(`${eventDate}T12:00:00+02:00`).getTime()-7*86400000)
+    : null;
+  const depositDue=new Date(Date.now()+3*86400000);
+  const existing=await paymentPlanByPractice(practiceId);
+  const token=existing?.token || crypto.randomBytes(24).toString('hex');
+
+  const result=await pool.query(
+    `INSERT INTO wte_payment_plans
+     (practice_id,token,total_cents,deposit_cents,balance_cents,
+      deposit_due_at,balance_due_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7)
+     ON CONFLICT (practice_id)
+     DO UPDATE SET
+       total_cents=EXCLUDED.total_cents,
+       deposit_cents=EXCLUDED.deposit_cents,
+       balance_cents=EXCLUDED.balance_cents,
+       deposit_due_at=EXCLUDED.deposit_due_at,
+       balance_due_at=EXCLUDED.balance_due_at,
+       updated_at=NOW()
+     RETURNING practice_id,token,currency,total_cents,deposit_cents,balance_cents,
+               deposit_due_at,balance_due_at,deposit_payment_url,balance_payment_url,
+               deposit_status,balance_status,deposit_paid_at,balance_paid_at,
+               deposit_provider,balance_provider,deposit_reference,balance_reference,
+               deposit_receipt_url,balance_receipt_url,
+               reminder_30_sent_at,reminder_7_sent_at,created_at,updated_at`,
+    [practiceId,token,total,deposit,balance,depositDue,balanceDue]
+  );
+
+  await updatePracticePaymentSummary(practiceId,result.rows[0]);
+  return result.rows[0];
+}
+
+app.get('/api/public/packages', async (_req,res) => {
+  res.setHeader('Cache-Control','no-store');
+  const packages=await activePackages();
+  res.json({
+    packages:packages.map(item=>({
+      ...item,
+      priceLabel:item.price_cents?euroFromCents(item.price_cents):'Su misura'
+    }))
+  });
+});
+
+app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
+  const parsed=z.object({
+    name:z.string().min(2).max(180),
+    email:z.string().email(),
+    phone:z.string().min(5).max(60),
+    date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    time:z.string().max(20).optional().default(''),
+    location:z.string().min(2).max(240),
+    guests:z.number().int().min(1).max(5000),
+    hours:z.number().min(1).max(24),
+    distance:z.number().min(0).max(5000),
+    style:z.enum(['intimo','equilibrato','premium']),
+    notes:z.string().max(2000).optional().default('')
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({
+      error:'Completa correttamente tutti i dati dell’evento.'
+    });
+  }
+
+  const packages=await activePackages();
+  if(!packages.length){
+    return res.status(503).json({error:'Pacchetti non configurati.'});
+  }
+
+  const fallback=deterministicRecommendation(parsed.data,packages);
+  let recommendation={...fallback,aiUsed:false};
+  let aiError='';
+
+  try{
+    recommendation=await aiRecommendation(parsed.data,packages,fallback);
+  }catch(error){
+    aiError=error.message;
+    recommendation={...fallback,aiUsed:false};
+  }
+
+  const selected=packages.find(item=>item.code===recommendation.packageCode)
+    || packages[0];
+  const salesToken=crypto.randomBytes(24).toString('hex');
+  const contractToken=crypto.randomBytes(24).toString('hex');
+  const number=contractNumber();
+  const clauses=defaultContractClauses();
+
+  await pool.query(
+    `INSERT INTO wte_sales_sessions
+     (token,status,customer_data,recommendation,package_code,ai_used,
+      ai_summary,contract_token,expires_at)
+     VALUES ($1,'contract_ready',$2::jsonb,$3::jsonb,$4,$5,$6,$7,NOW()+INTERVAL '30 days')`,
+    [
+      salesToken,
+      JSON.stringify(parsed.data),
+      JSON.stringify(recommendation),
+      selected.code,
+      Boolean(recommendation.aiUsed),
+      recommendation.explanation,
+      contractToken
+    ]
+  );
+
+  await pool.query(
+    `INSERT INTO wte_contracts
+     (token,sales_token,package_code,contract_number,customer_data,
+      package_snapshot,clauses)
+     VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb)`,
+    [
+      contractToken,salesToken,selected.code,number,
+      JSON.stringify(parsed.data),
+      JSON.stringify(selected),
+      JSON.stringify(clauses)
+    ]
+  );
+
+  const contractUrl=salesPublicUrl(contractToken);
+  const recipient=parsed.data.email || parsed.data.phone;
+
+  await queueMessage({
+    messageType:'contract_draft',
+    recipient,
+    subject:'La tua proposta Wedding Tattoo Experience',
+    body:
+      `Ciao ${parsed.data.name}, il pacchetto consigliato è ${selected.name}. `+
+      `Puoi leggere e accettare la bozza del contratto qui: ${contractUrl}`,
+    metadata:{
+      salesToken,
+      contractToken,
+      packageCode:selected.code,
+      aiUsed:Boolean(recommendation.aiUsed)
+    }
+  });
+
+  res.status(201).json({
+    salesToken,
+    contractToken,
+    contractUrl,
+    draftPdf:`${req.protocol}://${req.get('host')}${contractPdfUrl(contractToken)}`,
+    recommendation:{
+      ...recommendation,
+      package:{
+        code:selected.code,
+        name:selected.name,
+        description:selected.description,
+        priceCents:selected.price_cents,
+        priceLabel:selected.price_cents?euroFromCents(selected.price_cents):'Su misura',
+        depositPercent:selected.deposit_percent,
+        includedHours:Number(selected.included_hours),
+        features:selected.features||[]
+      }
+    },
+    ai:{
+      enabled:Boolean(OPENAI_API_KEY),
+      used:Boolean(recommendation.aiUsed),
+      fallbackUsed:!recommendation.aiUsed,
+      error:aiError
+    }
+  });
+});
+
+app.get('/api/public/contracts/:token', async (req,res) => {
+  const bundle=await salesBundleByContractToken(req.params.token);
+  if(!bundle)return res.status(404).json({error:'Contratto non trovato.'});
+
+  res.json({
+    contract:{
+      token:bundle.token,
+      contractNumber:bundle.contract_number,
+      status:bundle.status,
+      customer:bundle.customer_data,
+      package:bundle.package_snapshot,
+      clauses:bundle.clauses,
+      signerName:bundle.signer_name,
+      acceptedAt:bundle.accepted_at,
+      recommendation:bundle.recommendation,
+      aiUsed:bundle.ai_used
+    },
+    pdf:`${req.protocol}://${req.get('host')}${contractPdfUrl(req.params.token)}`
+  });
+});
+
+app.get('/api/public/contracts/:token/pdf', async (req,res) => {
+  const bundle=await salesBundleByContractToken(req.params.token);
+  if(!bundle)return res.status(404).json({error:'Contratto non trovato.'});
+  return writeContractPdf(res,bundle);
+});
+
+app.post('/api/public/contracts/:token/accept', publicRateLimit, async (req,res) => {
+  const parsed=z.object({
+    signerName:z.string().min(2).max(180),
+    signatureData:z.string().min(100),
+    accepted:z.literal(true)
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({
+      error:'Firma e accettazione non valide.'
+    });
+  }
+
+  const bundle=await salesBundleByContractToken(req.params.token);
+  if(!bundle)return res.status(404).json({error:'Contratto non trovato.'});
+
+  if(bundle.status==='accepted'){
+    const plan=await paymentPlanByPractice(bundle.practice_id);
+    return res.json({
+      ok:true,
+      existing:true,
+      practiceId:bundle.practice_id,
+      paymentUrl:plan?paymentPublicUrl(plan.token):'',
+      contractPdf:`${req.protocol}://${req.get('host')}${contractPdfUrl(req.params.token)}`
+    });
+  }
+
+  const customer=bundle.customer_data||{};
+  const pack=bundle.package_snapshot||{};
+  const practiceId=`WTE-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+
+  const practice={
+    id:practiceId,
+    createdAt:new Date().toISOString(),
+    updatedAt:new Date().toISOString(),
+    name:safeCustomerText(customer.name,180),
+    email:safeCustomerText(customer.email,180),
+    phone:safeCustomerText(customer.phone,60),
+    date:safeCustomerText(customer.date,40),
+    time:safeCustomerText(customer.time,20),
+    location:safeCustomerText(customer.location,240),
+    guests:Number(customer.guests||0),
+    hours:Number(customer.hours||0),
+    distance:Number(customer.distance||0),
+    style:safeCustomerText(customer.style,80),
+    notes:safeCustomerText(customer.notes,2000),
+    package:pack.name||bundle.package_code,
+    packageCode:bundle.package_code,
+    priceCents:cents(pack.price_cents||0),
+    status:'Contratto firmato — acconto in attesa',
+    type:'Assistente pacchetto V3',
+    source:'advisor-v3',
+    contract:{
+      token:req.params.token,
+      number:bundle.contract_number,
+      status:'accepted',
+      acceptedAt:new Date().toISOString(),
+      signerName:parsed.data.signerName,
+      pdfUrl:`https://wte-cloud-api.onrender.com${contractPdfUrl(req.params.token)}`
+    }
+  };
+
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+
+    await client.query(
+      `INSERT INTO wte_practices (id,data,updated_at)
+       VALUES ($1,$2::jsonb,NOW())`,
+      [practiceId,JSON.stringify(practice)]
+    );
+
+    await client.query(
+      `UPDATE wte_contracts
+       SET practice_id=$2,status='accepted',signer_name=$3,
+           signature_data=$4,accepted_at=NOW(),updated_at=NOW()
+       WHERE token=$1`,
+      [
+        req.params.token,practiceId,parsed.data.signerName,
+        parsed.data.signatureData
+      ]
+    );
+
+    await client.query(
+      `UPDATE wte_sales_sessions
+       SET status='accepted',practice_id=$2,updated_at=NOW()
+       WHERE token=$1`,
+      [bundle.sales_token,practiceId]
+    );
+
+    await client.query('COMMIT');
+  }catch(error){
+    await client.query('ROLLBACK');
+    throw error;
+  }finally{
+    client.release();
+  }
+
+  const plan=await createPaymentPlanFromContract(practiceId,customer,pack);
+  const paymentUrl=paymentPublicUrl(plan.token);
+
+  await createNotification(
+    'contract_accepted',
+    'Nuovo contratto accettato',
+    `${customer.name||'Cliente'} ha firmato il contratto ${bundle.contract_number}.`,
+    practiceId,
+    null
+  );
+
+  await queueMessage({
+    practiceId,
+    messageType:'contract_accepted_payment',
+    recipient:customer.email||customer.phone||'',
+    subject:'Contratto accettato e istruzioni acconto',
+    body:
+      `Ciao ${customer.name||''}, il contratto è stato accettato. `+
+      `L’acconto è ${euroFromCents(plan.deposit_cents)} e scade il `+
+      `${new Date(plan.deposit_due_at).toLocaleDateString('it-IT')}. `+
+      `Stato e istruzioni di pagamento: ${paymentUrl}`,
+    metadata:{
+      contractToken:req.params.token,
+      practiceId,
+      paymentToken:plan.token
+    }
+  });
+
+  res.status(201).json({
+    ok:true,
+    practiceId,
+    paymentUrl,
+    depositCents:plan.deposit_cents,
+    depositDueAt:plan.deposit_due_at,
+    contractPdf:`${req.protocol}://${req.get('host')}${contractPdfUrl(req.params.token)}`
+  });
+});
+
+app.get('/api/packages', auth, async (_req,res) => {
+  res.json({packages:await activePackages()});
+});
+
+app.patch('/api/packages/:code', auth, adminOnly, async (req,res) => {
+  const parsed=z.object({
+    name:z.string().min(1).max(120).optional(),
+    description:z.string().max(500).optional(),
+    reason:z.string().max(1000).optional(),
+    priceCents:z.number().int().min(0).optional(),
+    depositPercent:z.number().int().min(0).max(100).optional(),
+    includedHours:z.number().min(0).max(48).optional(),
+    minGuests:z.number().int().min(0).max(5000).optional(),
+    maxGuests:z.number().int().min(1).max(5000).optional(),
+    maxDistanceKm:z.number().int().min(0).max(5000).optional(),
+    features:z.array(z.string().max(180)).max(30).optional(),
+    active:z.boolean().optional(),
+    sortOrder:z.number().int().min(0).max(10000).optional()
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Modifica pacchetto non valida.'});
+  }
+
+  const map={
+    name:'name',
+    description:'description',
+    reason:'reason',
+    priceCents:'price_cents',
+    depositPercent:'deposit_percent',
+    includedHours:'included_hours',
+    minGuests:'min_guests',
+    maxGuests:'max_guests',
+    maxDistanceKm:'max_distance_km',
+    features:'features',
+    active:'active',
+    sortOrder:'sort_order'
+  };
+
+  const fields=[],values=[];
+  for(const [key,value] of Object.entries(parsed.data)){
+    values.push(key==='features'?JSON.stringify(value):value);
+    fields.push(`${map[key]}=$${values.length}${key==='features'?'::jsonb':''}`);
+  }
+  if(!fields.length)return res.status(400).json({error:'Nessuna modifica.'});
+
+  values.push(req.params.code.toUpperCase());
+  const result=await pool.query(
+    `UPDATE wte_service_packages
+     SET ${fields.join(',')},updated_at=NOW()
+     WHERE code=$${values.length}
+     RETURNING code,name,description,reason,price_cents,deposit_percent,
+               included_hours,min_guests,max_guests,max_distance_km,
+               active,sort_order,features,updated_at`,
+    values
+  );
+
+  if(!result.rowCount)return res.status(404).json({error:'Pacchetto non trovato.'});
+  res.json({package:result.rows[0]});
+});
+
+
+
+// ============================================================
+// WTE V3 FASE 4 — invii automatici, dashboard ed eccezioni
+// ============================================================
+function recipientChannel(recipient='') {
+  return String(recipient||'').includes('@') ? 'email' : 'whatsapp';
+}
+function normalizedPhone(value='') { return String(value||'').replace(/[^\d+]/g,''); }
+async function signedWebhook(url,payload) {
+  const body=JSON.stringify(payload);
+  const headers={'Content-Type':'application/json'};
+  if(OUTBOUND_WEBHOOK_SECRET){
+    headers['X-WTE-Signature']=crypto.createHmac('sha256',OUTBOUND_WEBHOOK_SECRET).update(body).digest('hex');
+  }
+  const response=await fetch(url,{method:'POST',headers,body});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||data.message||`Webhook ${response.status}`);
+  return data;
+}
+async function deliverOutboxMessage(message) {
+  const channel=message.channel==='auto'?recipientChannel(message.recipient):message.channel;
+  if(channel==='email'){
+    if(!OUTBOUND_EMAIL_WEBHOOK_URL)throw new Error('Canale e-mail non configurato.');
+    return signedWebhook(OUTBOUND_EMAIL_WEBHOOK_URL,{channel:'email',to:message.recipient,subject:message.subject,text:message.body,practiceId:message.practice_id,messageType:message.message_type,metadata:message.metadata||{}});
+  }
+  if(!OUTBOUND_WHATSAPP_WEBHOOK_URL)throw new Error('Canale WhatsApp non configurato.');
+  return signedWebhook(OUTBOUND_WHATSAPP_WEBHOOK_URL,{channel:'whatsapp',to:normalizedPhone(message.recipient),text:message.body,practiceId:message.practice_id,messageType:message.message_type,metadata:message.metadata||{}});
+}
+async function registerWorkflowException({practiceId=null,code,severity='warning',title,description='',metadata={}}) {
+  await pool.query(`INSERT INTO wte_workflow_exceptions (practice_id,code,severity,title,description,metadata) VALUES ($1,$2,$3,$4,$5,$6::jsonb) ON CONFLICT (practice_id,code,status) DO UPDATE SET severity=EXCLUDED.severity,title=EXCLUDED.title,description=EXCLUDED.description,metadata=EXCLUDED.metadata,detected_at=NOW()`,[practiceId,code,severity,title,description,JSON.stringify(metadata)]);
+}
+async function resolveWorkflowException(practiceId,code) {
+  await pool.query(`UPDATE wte_workflow_exceptions SET status='resolved',resolved_at=NOW() WHERE practice_id IS NOT DISTINCT FROM $1 AND code=$2 AND status='open'`,[practiceId,code]);
+}
+async function runWorkflowJob(jobName,handler) {
+  const run=await pool.query(`INSERT INTO wte_workflow_runs (job_name,status) VALUES ($1,'running') RETURNING id`,[jobName]);
+  const id=run.rows[0].id;
+  try{
+    const details=await handler();
+    await pool.query(`UPDATE wte_workflow_runs SET status='success',finished_at=NOW(),details=$2::jsonb WHERE id=$1`,[id,JSON.stringify(details||{})]);
+    return details;
+  }catch(error){
+    await pool.query(`UPDATE wte_workflow_runs SET status='failed',finished_at=NOW(),details=$2::jsonb WHERE id=$1`,[id,JSON.stringify({error:error.message})]);
+    throw error;
+  }
+}
+async function dispatchPendingMessages(limit=25) {
+  const result=await pool.query(`UPDATE wte_message_outbox SET locked_at=NOW() WHERE id IN (SELECT id FROM wte_message_outbox WHERE status='pending' AND send_after<=NOW() AND (locked_at IS NULL OR locked_at<NOW()-INTERVAL '15 minutes') ORDER BY send_after ASC,id ASC LIMIT $1 FOR UPDATE SKIP LOCKED) RETURNING id,practice_id,message_type,recipient,subject,body,status,send_after,metadata,channel,attempts`,[limit]);
+  let sent=0,failed=0,waiting=0;
+  for(const message of result.rows){
+    try{
+      if(!message.recipient)throw new Error('Destinatario mancante.');
+      const provider=await deliverOutboxMessage(message);
+      await pool.query(`UPDATE wte_message_outbox SET status='sent',sent_at=NOW(),locked_at=NULL,attempts=attempts+1,last_error='',provider_message_id=$2 WHERE id=$1`,[message.id,String(provider.id||provider.messageId||provider.reference||'')]);
+      await resolveWorkflowException(message.practice_id,`message_${message.id}`); sent++;
+    }catch(error){
+      const configurationMissing=/non configurato/i.test(error.message);
+      await pool.query(`UPDATE wte_message_outbox SET status=CASE WHEN attempts+1>=5 THEN 'failed' ELSE 'pending' END,locked_at=NULL,attempts=attempts+1,last_error=$2,send_after=CASE WHEN $3::boolean THEN NOW()+INTERVAL '6 hours' ELSE NOW()+INTERVAL '15 minutes' END WHERE id=$1`,[message.id,error.message,configurationMissing]);
+      await registerWorkflowException({practiceId:message.practice_id,code:`message_${message.id}`,severity:configurationMissing?'warning':'critical',title:configurationMissing?'Canale automatico da configurare':'Messaggio automatico non inviato',description:`${message.subject||message.message_type}: ${error.message}`,metadata:{outboxId:message.id,messageType:message.message_type,recipient:message.recipient}});
+      configurationMissing?waiting++:failed++;
+    }
+  }
+  return {processed:result.rowCount,sent,failed,waiting};
+}
+async function detectWorkflowExceptions() {
+  const practices=await pool.query(`SELECT p.id,p.data,pp.deposit_status,pp.balance_status,pp.deposit_due_at,pp.balance_due_at,ge.status AS guest_status,ge.closes_at,ge.final_codes FROM wte_practices p LEFT JOIN wte_payment_plans pp ON pp.practice_id=p.id LEFT JOIN wte_guest_events ge ON ge.practice_id=p.id`);
+  let detected=0,resolved=0; const now=new Date();
+  for(const row of practices.rows){
+    const data=row.data||{}; const eventDate=safeEventDate(data.date); const event=eventDate?new Date(`${eventDate}T12:00:00+02:00`):null; const days=event?Math.ceil((event-now)/86400000):null;
+    const checks=[
+      {code:'missing_event_data',active:!eventDate||!data.location||!data.time,severity:'critical',title:'Dati evento incompleti',description:'Mancano data, ora o luogo necessari alle automazioni.'},
+      {code:'missing_payment_plan',active:!row.deposit_status,severity:'warning',title:'Piano pagamenti assente',description:'La pratica non ha ancora un piano acconto/saldo.'},
+      {code:'deposit_overdue',active:row.deposit_status==='pending'&&row.deposit_due_at&&new Date(row.deposit_due_at)<now,severity:'critical',title:'Acconto scaduto',description:'La scadenza dell’acconto è superata e il pagamento non risulta registrato.'},
+      {code:'balance_overdue',active:row.balance_status==='pending'&&row.balance_due_at&&new Date(row.balance_due_at)<now,severity:'critical',title:'Saldo scaduto',description:'Il saldo non risulta registrato entro la scadenza.'},
+      {code:'guest_qr_missing',active:row.deposit_status==='paid'&&days!==null&&days>15&&!row.guest_status,severity:'critical',title:'QR invitati non creato',description:'L’acconto è pagato, ma il QR invitati non risulta disponibile.'},
+      {code:'guest_pdf_missing',active:days!==null&&days<=15&&(row.guest_status!=='finalized'||!Array.isArray(row.final_codes)),severity:'critical',title:'PDF flash definitivo non pronto',description:'Mancano meno di 15 giorni e la selezione invitati non risulta finalizzata.'}
+    ];
+    for(const check of checks){
+      if(check.active){await registerWorkflowException({practiceId:row.id,code:check.code,severity:check.severity,title:check.title,description:check.description,metadata:{daysBeforeEvent:days}});detected++;}
+      else{const r=await pool.query(`UPDATE wte_workflow_exceptions SET status='resolved',resolved_at=NOW() WHERE practice_id=$1 AND code=$2 AND status='open' RETURNING id`,[row.id,check.code]);resolved+=r.rowCount;}
+    }
+  }
+  return {practices:practices.rowCount,detected,resolved};
+}
+async function workflowDashboardData() {
+  const exceptions=await pool.query(`SELECT e.id,e.practice_id,e.code,e.severity,e.title,e.description,e.metadata,e.detected_at,p.data FROM wte_workflow_exceptions e LEFT JOIN wte_practices p ON p.id=e.practice_id WHERE e.status='open' ORDER BY CASE e.severity WHEN 'critical' THEN 1 WHEN 'warning' THEN 2 ELSE 3 END,e.detected_at ASC`);
+  const summary=await pool.query(`SELECT COUNT(*)::int AS total_practices,COUNT(*) FILTER (WHERE COALESCE((data->'payments'->>'ready')::boolean,FALSE)=TRUE)::int AS ready_practices,COUNT(*) FILTER (WHERE data->'contract'->>'status'='accepted')::int AS signed_contracts FROM wte_practices`);
+  const payments=await pool.query(`SELECT COUNT(*) FILTER (WHERE deposit_status='pending')::int AS deposits_pending,COUNT(*) FILTER (WHERE deposit_status='paid')::int AS deposits_paid,COUNT(*) FILTER (WHERE balance_status='pending')::int AS balances_pending,COUNT(*) FILTER (WHERE balance_status='paid')::int AS balances_paid FROM wte_payment_plans`);
+  const messages=await pool.query(`SELECT COUNT(*) FILTER (WHERE status='pending')::int AS pending,COUNT(*) FILTER (WHERE status='failed')::int AS failed,COUNT(*) FILTER (WHERE status='sent')::int AS sent FROM wte_message_outbox`);
+  const upcoming=await pool.query(`SELECT id,data FROM wte_practices WHERE data->>'date' ~ '^\\d{4}-\\d{2}-\\d{2}$' AND (data->>'date')::date>=CURRENT_DATE ORDER BY (data->>'date')::date ASC LIMIT 8`);
+  return {summary:summary.rows[0]||{},payments:payments.rows[0]||{},messages:messages.rows[0]||{},exceptions:exceptions.rows.map(row=>({id:row.id,practiceId:row.practice_id,code:row.code,severity:row.severity,title:row.title,description:row.description,detectedAt:row.detected_at,customer:row.data?.name||'',eventDate:row.data?.date||''})),upcoming:upcoming.rows.map(row=>({id:row.id,name:row.data?.name||'',date:row.data?.date||'',time:row.data?.time||'',location:row.data?.location||row.data?.city||'',status:row.data?.status||''})),automation:{emailConfigured:Boolean(OUTBOUND_EMAIL_WEBHOOK_URL),whatsappConfigured:Boolean(OUTBOUND_WHATSAPP_WEBHOOK_URL),webhookSigned:Boolean(OUTBOUND_WEBHOOK_SECRET)}};
+}
+app.get('/api/workflow-dashboard',auth,async(_req,res)=>res.json(await workflowDashboardData()));
+app.post('/api/workflow/run',auth,adminOnly,async(_req,res)=>{
+  const reminder=await runWorkflowJob('payment-reminders',processPaymentReminders);
+  const finalization=await runWorkflowJob('guest-finalization',finalizeAllDueGuestEvents);
+  const detection=await runWorkflowJob('exception-detection',detectWorkflowExceptions);
+  const dispatch=await runWorkflowJob('message-dispatch',dispatchPendingMessages);
+  res.json({ok:true,reminder:reminder||{},finalization:finalization||{},detection,dispatch});
+});
+app.post('/api/workflow-exceptions/:id/resolve',auth,async(req,res)=>{
+  const result=await pool.query(`UPDATE wte_workflow_exceptions SET status='resolved',resolved_at=NOW() WHERE id=$1 RETURNING id,status,resolved_at`,[req.params.id]);
+  if(!result.rowCount)return res.status(404).json({error:'Eccezione non trovata.'});
+  res.json({exception:result.rows[0]});
+});
+app.post('/api/message-outbox/:id/retry',auth,async(req,res)=>{
+  const result=await pool.query(`UPDATE wte_message_outbox SET status='pending',send_after=NOW(),locked_at=NULL,attempts=0,last_error='' WHERE id=$1 RETURNING id,status,send_after`,[req.params.id]);
+  if(!result.rowCount)return res.status(404).json({error:'Messaggio non trovato.'});
+  res.json({message:result.rows[0]});
+});
+setTimeout(()=>{runWorkflowJob('phase4-startup',async()=>{await processPaymentReminders();await finalizeAllDueGuestEvents();const detection=await detectWorkflowExceptions();const dispatch=await dispatchPendingMessages();return{detection,dispatch};}).catch(error=>console.error('Phase 4 startup error',error));},10000);
+setInterval(()=>{runWorkflowJob('phase4-scheduled',async()=>{await processPaymentReminders();await finalizeAllDueGuestEvents();const detection=await detectWorkflowExceptions();const dispatch=await dispatchPendingMessages();return{detection,dispatch};}).catch(error=>console.error('Phase 4 scheduled error',error));},5*60*1000);
 
 app.delete('/api/practices/:id', auth, async (req,res) => {
   await pool.query('DELETE FROM wte_practices WHERE id = $1', [req.params.id]);
