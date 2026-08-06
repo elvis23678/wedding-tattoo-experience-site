@@ -26,10 +26,18 @@ a{display:grid;place-items:center;min-height:54px;background:linear-gradient(135
 </main>
 <script>
 const API='https://wte-cloud-api.onrender.com';
-const token=new URLSearchParams(location.search).get('token');
+const params=new URLSearchParams(location.search);
+const token=params.get('token');
+const sessionId=params.get('session_id');
 const title=document.getElementById('title'),message=document.getElementById('message'),link=document.getElementById('coupleLink');
 let timer;
 async function load(){
+ if(sessionId){
+  await fetch(
+   `${API}/api/public/stripe-session/${encodeURIComponent(sessionId)}`,
+   {cache:'no-store'}
+  ).catch(()=>null);
+ }
  const response=await fetch(`${API}/api/public/booking-success/${encodeURIComponent(token||'')}`,{cache:'no-store'});
  const data=await response.json().catch(()=>({}));
  if(!response.ok)throw new Error(data.error||'Prenotazione non trovata.');
