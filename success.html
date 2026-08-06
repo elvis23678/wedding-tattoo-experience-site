@@ -11,10 +11,27 @@ small{display:block;margin-top:18px;color:var(--gold);letter-spacing:.16em;text-
 .progress-note{margin:12px 0;padding:9px;border:1px solid rgba(211,166,79,.18);color:var(--muted);font-size:11px}.items{display:grid;gap:7px;margin:18px 0;text-align:left}.items div{padding:9px;border-bottom:1px solid rgba(211,166,79,.12)}
 a{display:grid;place-items:center;min-height:54px;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;text-decoration:none;font-weight:800}
 .wait{color:var(--gold)}
-</style></head>
+</style><meta name="wte-release" content="1.0.0">
+
+<script>
+(async()=>{
+ try{
+  const response=await fetch(
+   'https://wte-cloud-api.onrender.com/api/public/release-info',
+   {cache:'no-store'}
+  );
+  const release=await response.json();
+  if(release.maintenance && !location.pathname.endsWith('/maintenance.html')){
+   location.replace('/maintenance.html');
+  }
+ }catch{}
+})();
+</script>
+
+</head>
 <body><main>
 <div class="icon">✓</div><small>Wedding Tattoo Experience</small>
-<h1 id="title">Verifica della prenotazione</h1>
+<h1 id="title">Stiamo confermando la vostra data</h1>
 <p id="message" class="wait">Attendiamo la conferma automatica del pagamento…</p>
 <div class="progress-note" id="progressNote">La conferma può richiedere alcuni secondi.</div>
 <div class="items">
@@ -23,7 +40,7 @@ a{display:grid;place-items:center;min-height:54px;background:linear-gradient(135
 <div>✓ QR invitati generato dopo l’acconto</div>
 <div>✓ Area Sposi sempre aggiornata</div>
 </div>
-<a id="coupleLink" hidden>Vai alla tua Area Sposi</a>
+<a id="coupleLink" hidden>Entra nella vostra Area Sposi</a>
 </main>
 <script>
 const API='https://wte-cloud-api.onrender.com';
@@ -43,7 +60,7 @@ async function load(){
  const data=await response.json().catch(()=>({}));
  if(!response.ok)throw new Error(data.error||'Prenotazione non trovata.');
  if(data.confirmed){
-  title.textContent='Prenotazione confermata!';
+  title.textContent='La vostra data è confermata';
   message.textContent=`Grazie ${data.booking.customerName||''}. L’acconto è stato ricevuto e la pratica è attiva.`;
   message.classList.remove('wait');
   link.href=data.booking.coupleUrl;link.hidden=false;
@@ -56,4 +73,14 @@ async function load(){
 }
 load().catch(error=>message.textContent=error.message);
 timer=setInterval(()=>load().catch(()=>{}),5000);
-</script></body></html>
+</script>
+<script>
+window.addEventListener('unhandledrejection',event=>{
+  console.error('WTE unhandled rejection',event.reason);
+});
+window.addEventListener('error',event=>{
+  console.error('WTE frontend error',event.error||event.message);
+});
+</script>
+
+</body></html>

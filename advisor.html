@@ -64,6 +64,10 @@ textarea{min-height:110px;padding:13px;resize:vertical}
   border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);
   color:#171006
 }
+.availability-status{margin-top:10px;padding:10px;border:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.45}
+.availability-status.checking{color:var(--gold)}
+.availability-status.available{border-color:rgba(156,196,161,.45);color:var(--ok)}
+.availability-status.unavailable{border-color:rgba(210,104,104,.5);color:#e0a1a1}
 .result{display:none;text-align:center}
 .result.show{display:block}
 .result-badge{
@@ -80,7 +84,7 @@ textarea{min-height:110px;padding:13px;resize:vertical}
 .summary-grid strong{display:block;margin-top:4px;font-size:12px}
 .features{padding:0;list-style:none;text-align:left}
 .features li{padding:9px 0;border-bottom:1px solid rgba(211,166,79,.12)}
-.result-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:9px;margin-top:16px}
+.result-actions{display:grid;grid-template-columns:1fr;gap:9px;margin-top:16px}.secondary-link{display:block;margin-top:13px;color:var(--muted);font-size:11px;text-align:center;text-decoration:underline}
 .result-actions a{display:grid;place-items:center;text-decoration:none;text-align:center;padding:0 10px}
 .note{margin-top:12px;color:var(--muted);font-size:10px;line-height:1.45}
 @media(max-width:600px){
@@ -88,12 +92,28 @@ textarea{min-height:110px;padding:13px;resize:vertical}
   .card{min-height:390px;padding:17px}
 }
 </style>
+
+<script>
+(async()=>{
+ try{
+  const response=await fetch(
+   'https://wte-cloud-api.onrender.com/api/public/release-info',
+   {cache:'no-store'}
+  );
+  const release=await response.json();
+  if(release.maintenance && !location.pathname.endsWith('/maintenance.html')){
+   location.replace('/maintenance.html');
+  }
+ }catch{}
+})();
+</script>
+
 </head>
 <body>
 <main>
 <div class="brand">Wedding Tattoo Experience</div>
 <h1>Troviamo il pacchetto giusto</h1>
-<p class="intro">Meno di 2 minuti, nessun impegno e una proposta personalizzata.</p>
+<p class="intro">Poche domande. Una proposta chiara. La vostra data pronta da confermare.</p>
 
 <div class="progress-wrap">
   <div class="dots" id="dots"></div>
@@ -127,6 +147,7 @@ textarea{min-height:110px;padding:13px;resize:vertical}
 <h2>Quando vi sposate?</h2>
 <p>Da questa data il sistema calcola tutte le scadenze.</p>
 <label>Data evento<input name="date" type="date" required></label>
+<div class="availability-status" id="availabilityStatus">Seleziona una data per verificarne la disponibilità.</div>
 <label>Ora evento<input name="time" type="time" required></label>
 </section>
 
@@ -189,7 +210,7 @@ textarea{min-height:110px;padding:13px;resize:vertical}
 <div class="result-badge">✓</div>
 <small>Proposta pronta</small>
 <h2>Perfetto!</h2>
-<p>Abbiamo preparato la soluzione più adatta al vostro matrimonio.</p>
+<p>Abbiamo preparato la proposta più adatta al vostro matrimonio.</p>
 <h3 id="resultTitle"></h3>
 <div class="price" id="resultPrice"></div>
 <p id="resultExplanation"></p>
@@ -199,10 +220,10 @@ textarea{min-height:110px;padding:13px;resize:vertical}
 <div><span>Acconto</span><strong>Calcolato</strong></div>
 </div>
 <ul class="features" id="resultFeatures"></ul>
-<div class="result-actions">
-<a id="draftPdf" target="_blank">Apri bozza PDF</a>
-<a class="gold" id="contractLink">Continua alla prenotazione</a>
+<div class="result-actions single-action">
+<a class="gold" id="contractLink">Continua</a>
 </div>
+<a class="secondary-link" id="draftPdf" target="_blank">Leggi la proposta in PDF</a>
 </section>
 
 <p class="note">Prezzi e contenuti derivano esclusivamente dai pacchetti configurati da Wedding Tattoo Experience.</p>
@@ -217,6 +238,9 @@ const counter=document.getElementById('stepCounter');
 const back=document.getElementById('backBtn');
 const next=document.getElementById('nextBtn');
 let current=0;
+let dateAvailable=false;
+let availabilityChecking=false;
+let holdToken=localStorage.getItem('wte_date_hold_token')||'';
 const STORAGE_KEY='wte_advisor_v41';
 
 dots.innerHTML=steps.map((_,i)=>`<span class="dot" data-dot="${i}"></span>`).join('');
@@ -260,6 +284,53 @@ function showStep(){
   focusCurrent();
   saveProgress();
 }
+
+async function checkAvailability(){
+  const field=form.elements.date;
+  const status=document.getElementById('availabilityStatus');
+  const value=field.value;
+
+  dateAvailable=false;
+  if(!value){
+    status.className='availability-status';
+    status.textContent='Seleziona una data per verificarne la disponibilità.';
+    return false;
+  }
+
+  availabilityChecking=true;
+  status.className='availability-status checking';
+  status.textContent='Verifica disponibilità…';
+
+  try{
+    const query=holdToken?`?holdToken=${encodeURIComponent(holdToken)}`:'';
+    const response=await fetch(
+      `${API}/api/public/availability/${encodeURIComponent(value)}${query}`,
+      {cache:'no-store'}
+    );
+    const data=await response.json().catch(()=>({}));
+
+    if(!response.ok)throw new Error(data.error||'Verifica non disponibile.');
+
+    dateAvailable=Boolean(data.available);
+    if(dateAvailable){
+      status.className='availability-status available';
+      status.textContent=data.heldByCurrentCustomer
+        ?'✓ La data è riservata per voi durante questo percorso.'
+        :'✓ Ottima notizia: la data è disponibile.';
+    }else{
+      status.className='availability-status unavailable';
+      status.textContent='Questa data non è disponibile. Scegli un altro giorno.';
+    }
+    return dateAvailable;
+  }catch(error){
+    status.className='availability-status unavailable';
+    status.textContent=error.message;
+    return false;
+  }finally{
+    availabilityChecking=false;
+  }
+}
+
 function validStep(){
   const fields=[...steps[current].querySelectorAll('input,select,textarea')];
   for(const field of fields){
@@ -288,6 +359,14 @@ back.onclick=()=>{
 next.onclick=async()=>{
   if(!validStep())return;
 
+  if(current===3){
+    if(availabilityChecking)return;
+    if(!dateAvailable){
+      const available=await checkAvailability();
+      if(!available)return;
+    }
+  }
+
   if(current<steps.length-1){
     current++;
     showStep();
@@ -312,7 +391,8 @@ next.onclick=async()=>{
         guests:Number(raw.guests),
         experience:raw.experience,
         budget:raw.budget,
-        notes:raw.notes
+        notes:raw.notes,
+        holdToken
       })
     });
 
@@ -320,6 +400,10 @@ next.onclick=async()=>{
     if(!response.ok)throw new Error(data.error||'Impossibile preparare la proposta.');
 
     const rec=data.recommendation;
+    if(data.availability?.holdToken){
+      holdToken=data.availability.holdToken;
+      localStorage.setItem('wte_date_hold_token',holdToken);
+    }
     form.style.display='none';
     document.getElementById('resultTitle').textContent=rec.title;
     document.getElementById('resultPrice').textContent=rec.package.priceLabel;
@@ -345,7 +429,23 @@ document.querySelectorAll('input,select,textarea').forEach(field=>{
   field.addEventListener('input',saveProgress);
   field.addEventListener('change',saveProgress);
 });
+
+form.elements.date.addEventListener('change',()=>{
+  holdToken='';
+  localStorage.removeItem('wte_date_hold_token');
+  checkAvailability();
+});
 showStep();
 </script>
+
+<script>
+window.addEventListener('unhandledrejection',event=>{
+  console.error('WTE unhandled rejection',event.reason);
+});
+window.addEventListener('error',event=>{
+  console.error('WTE frontend error',event.error||event.message);
+});
+</script>
+
 </body>
 </html>

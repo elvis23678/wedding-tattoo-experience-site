@@ -16,6 +16,23 @@ header{padding:14px 2px}header small{color:var(--gold);font-size:9px;letter-spac
 .summary,.terms,.sign{margin-top:11px;padding:14px;border:1px solid var(--line);background:var(--card)}.summary h2,.sign h2{font-family:Georgia,serif;font-size:25px;font-weight:400}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.summary-grid div{padding:8px;border-bottom:1px solid rgba(211,166,79,.12)}.summary-grid span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase}.summary-grid strong{display:block;margin-top:3px;font-size:12px}.clause{padding:11px 0;border-bottom:1px solid rgba(211,166,79,.12)}.clause h3{margin:0;color:var(--gold);font-size:13px}.clause p{margin:6px 0 0;color:#d5c9b7;font-size:12px;line-height:1.55}.accept{display:flex;gap:9px;align-items:flex-start;color:#d5c9b7;font-size:12px;line-height:1.5}.accept input{width:22px;height:22px;flex:0 0 auto}input[type=text]{width:100%;min-height:47px;padding:0 10px;border:1px solid var(--line);background:#090604;color:#fff}canvas{display:block;width:100%;height:180px;margin-top:10px;background:#fff;touch-action:none}.actions{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:10px}.actions button,.actions a{display:grid;place-items:center;min-height:48px;border:1px solid var(--line);background:#0b0805;color:#fff;text-decoration:none}.actions .gold{border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;font-weight:800}.success{display:none;margin-top:11px;padding:14px;border:1px solid rgba(156,196,161,.4);color:var(--ok);line-height:1.5}.success.show{display:block}
 @media(max-width:600px){.summary-grid,.actions{grid-template-columns:1fr}}
 </style>
+<meta name="wte-release" content="1.0.0">
+
+<script>
+(async()=>{
+ try{
+  const response=await fetch(
+   'https://wte-cloud-api.onrender.com/api/public/release-info',
+   {cache:'no-store'}
+  );
+  const release=await response.json();
+  if(release.maintenance && !location.pathname.endsWith('/maintenance.html')){
+   location.replace('/maintenance.html');
+  }
+ }catch{}
+})();
+</script>
+
 </head>
 <body>
 <main>
@@ -43,13 +60,13 @@ header{padding:14px 2px}header small{color:var(--gold);font-size:9px;letter-spac
 <canvas id="signature"></canvas>
 <div class="actions">
 <button id="clear" type="button">Cancella firma</button>
-<button class="gold" id="confirm" type="button">Accetta e firma</button>
+<button class="gold" id="confirm" type="button">Accetta e continua</button>
 </div>
 </section>
 <div class="success" id="success"></div>
 <div class="actions">
-<a id="pdfLink" target="_blank">Scarica il contratto PDF</a>
-<a class="gold" id="paymentLink" hidden>Vai al pagamento dell’acconto</a>
+<a class="gold" id="paymentLink" hidden>Conferma la tua data</a>
+<a class="secondary-link" id="pdfLink" target="_blank">Scarica il contratto PDF</a>
 </div>
 </main>
 <script>
@@ -106,7 +123,7 @@ $('confirm').onclick=async()=>{
  if(!$('accepted').checked)return alert('Devi accettare le condizioni.');
  if(!hasInk)return alert('Inserisci la firma.');
  const button=$('confirm');
- button.disabled=true;button.textContent='Registrazione sicura…';
+ button.disabled=true;button.textContent='Registrazione…';
  try{
   const response=await fetch(`${API}/api/public/contracts/${encodeURIComponent(token)}/accept`,{
    method:'POST',
@@ -133,7 +150,7 @@ $('confirm').onclick=async()=>{
  }catch(error){
   alert(error.message);
  }finally{
-  button.disabled=false;button.textContent='Accetta e firma';
+  button.disabled=false;button.textContent='Accetta e continua';
  }
 };
 init().catch(error=>{
@@ -141,5 +158,15 @@ init().catch(error=>{
  $('signSection').style.display='none';
 });
 </script>
+
+<script>
+window.addEventListener('unhandledrejection',event=>{
+  console.error('WTE unhandled rejection',event.reason);
+});
+window.addEventListener('error',event=>{
+  console.error('WTE frontend error',event.error||event.message);
+});
+</script>
+
 </body>
 </html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070503">
+<meta name="wte-release" content="1.0.0">
+<title>Controllo Release - Wedding Tattoo Experience</title>
+<style>
+:root{--bg:#070503;--card:#100c08;--gold:#d3a64f;--text:#f3eadb;--muted:#a99a84;--line:rgba(211,166,79,.25);--ok:#9cc4a1;--bad:#e0a1a1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+main{max-width:850px;margin:auto;padding:20px 14px 50px}
+.brand{color:var(--gold);font-size:9px;letter-spacing:.17em;text-transform:uppercase}
+h1{margin:8px 0;font-family:Georgia,serif;font-size:34px;font-weight:400}
+p{color:var(--muted);line-height:1.55}
+.panel{margin-top:14px;padding:16px;border:1px solid var(--line);background:var(--card)}
+.panel h2{margin:0;font-family:Georgia,serif;font-size:24px;font-weight:400}
+.row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(211,166,79,.12)}
+.actions{display:grid;gap:8px;margin-top:12px}
+button,a{display:grid;place-items:center;min-height:48px;border:1px solid var(--line);background:#0b0805;color:#fff;text-decoration:none;font-weight:700}
+.gold{border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006}
+.bad{border-color:rgba(224,161,161,.4);color:var(--bad)}
+input{width:100%;min-height:48px;padding:0 10px;background:#080604;border:1px solid var(--line);color:#fff}
+.status{margin-top:10px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<main>
+<div class="brand">Wedding Tattoo Experience</div>
+<h1>Controllo Release</h1>
+<p>Usa questa pagina solo durante manutenzione, backup o rollback.</p>
+
+<section class="panel">
+<h2>Accesso</h2>
+<input id="token" type="password" placeholder="Token amministratore">
+<div class="actions"><button class="gold" id="load">Carica stato</button></div>
+</section>
+
+<section class="panel" id="control" hidden>
+<h2>Stato piattaforma</h2>
+<div id="controlRows"></div>
+<div class="actions">
+<button id="maintenanceOn">Attiva manutenzione</button>
+<button id="maintenanceOff">Disattiva manutenzione</button>
+<button id="bookingOn">Apri prenotazioni</button>
+<button class="bad" id="bookingOff">Sospendi prenotazioni</button>
+<a id="backup">Scarica backup JSON</a>
+</div>
+<div class="status" id="status"></div>
+</section>
+</main>
+
+<script>
+const API='https://wte-cloud-api.onrender.com';
+const $=id=>document.getElementById(id);
+const headers=()=>({
+ 'Authorization':`Bearer ${$('token').value.trim()}`,
+ 'Content-Type':'application/json'
+});
+
+async function call(path,options={}){
+ const response=await fetch(`${API}${path}`,{
+  cache:'no-store',
+  ...options,
+  headers:{...headers(),...(options.headers||{})}
+ });
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||`Errore ${response.status}`);
+ return data;
+}
+
+async function load(){
+ const data=await call('/api/release/control');
+ const c=data.control;
+ $('control').hidden=false;
+ $('controlRows').innerHTML=`
+  <div class="row"><span>Release</span><strong>${c.release_name}</strong></div>
+  <div class="row"><span>Manutenzione</span><strong>${c.maintenance_enabled?'Attiva':'Disattiva'}</strong></div>
+  <div class="row"><span>Prenotazioni</span><strong>${c.booking_enabled?'Aperte':'Sospese'}</strong></div>
+  <div class="row"><span>Ultimo aggiornamento</span><strong>${new Date(c.updated_at).toLocaleString('it-IT')}</strong></div>
+ `;
+ $('backup').href=`${API}/api/release/backup`;
+ $('backup').onclick=async event=>{
+  event.preventDefault();
+  const response=await fetch(`${API}/api/release/backup`,{
+   headers:{Authorization:`Bearer ${$('token').value.trim()}`}
+  });
+  if(!response.ok)throw new Error('Backup non disponibile.');
+  const blob=await response.blob();
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='WTE_backup.json';a.click();
+  URL.revokeObjectURL(url);
+ };
+}
+
+async function update(path,body){
+ $('status').textContent='Aggiornamento…';
+ await call(path,{
+  method:'POST',
+  body:JSON.stringify(body)
+ });
+ $('status').textContent='Operazione completata.';
+ await load();
+}
+
+$('load').onclick=()=>load().catch(error=>$('status').textContent=error.message);
+$('maintenanceOn').onclick=()=>update('/api/release/maintenance',{enabled:true,message:'Aggiornamento programmato in corso.'}).catch(error=>$('status').textContent=error.message);
+$('maintenanceOff').onclick=()=>update('/api/release/maintenance',{enabled:false,message:''}).catch(error=>$('status').textContent=error.message);
+$('bookingOn').onclick=()=>update('/api/release/bookings',{enabled:true}).catch(error=>$('status').textContent=error.message);
+$('bookingOff').onclick=()=>update('/api/release/bookings',{enabled:false}).catch(error=>$('status').textContent=error.message);
+</script>
+</body>
+</html>
