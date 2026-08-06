@@ -10,6 +10,10 @@ import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import pg from 'pg';
 import { z } from 'zod';
+import { createWorkflowEngine, WORKFLOW_STATES, WORKFLOW_TRANSITIONS } from './workflow-engine.js';
+import { createSchedulerEngine } from './scheduler-engine.js';
+import { createNotificationEngine } from './notification-engine.js';
+import { createPdfEngine } from './pdf-engine.js';
 
 const { Pool } = pg;
 
@@ -36,6 +40,61 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production'
     ? { rejectUnauthorized:false }
     : false
+});
+
+const workflow = createWorkflowEngine({
+  pool,
+  logger: console,
+  onTransition({state,transition,actions}) {
+    console.log(
+      `[WORKFLOW] ${transition.practice_id}: ` +
+      `${transition.from_state || '∅'} -> ${state.current_state}` +
+      (actions.length ? ` | azioni: ${actions.join(', ')}` : '')
+    );
+  }
+});
+
+const notifications = createNotificationEngine({
+  pool,
+  env:process.env,
+  logger:console
+});
+
+const pdfEngine = createPdfEngine({
+  pool,
+  logger:console
+});
+
+const scheduler = createSchedulerEngine({
+  pool,
+  workflow,
+  env:process.env,
+  logger:console,
+  onGuestFinalized({practiceId,finalCodes,pdfUrl}) {
+    return notifications.queueForPractice(
+      practiceId,
+      'flash_pdf_ready',
+      {
+        context:{
+          practiceId,
+          pdfUrl,
+          finalCount:finalCodes.length
+        },
+        idempotencyKey:`flash_pdf_ready:${practiceId}`
+      }
+    ).catch(error=>console.error('Scheduler notification error',error));
+  },
+  onCycleCompleted(){
+    return notifications.dispatch();
+  },
+  onDocumentReady({practiceId,type,url,metadata}){
+    return pdfEngine.registerDocument({
+      practiceId,
+      type,
+      storageUrl:url,
+      metadata
+    });
+  }
 });
 
 app.use(helmet());
@@ -105,7 +164,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'4.0.0-phase-b', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'4.5.0-pdf-engine', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -1497,6 +1556,11 @@ async function finalizeGuestEvent(token, reason='automatic') {
 
     await client.query('COMMIT');
 
+    await workflow.sync(event.practice_id,{
+      actor:{type:'system',name:'Selezione invitati'},
+      reason:'guest_selection_finalized'
+    });
+
     await createNotification(
       'guest_voting_finalized',
       'Selezione invitati completata',
@@ -1771,44 +1835,28 @@ app.post('/api/guest-events/:token/finalize', auth, adminOnly, async (req,res) =
 app.get('/api/guest-events/:token/pdf', auth, async (req,res) => {
   await finalizeGuestEventIfDue(req.params.token);
 
-  const eventResult=await pool.query(
-    `SELECT token,practice_id,event_date,closes_at,max_flash,status,final_codes,
-            finalized_at
-     FROM wte_guest_events WHERE token=$1`,
+  const result=await pool.query(
+    `SELECT practice_id,status
+     FROM wte_guest_events
+     WHERE token=$1`,
     [req.params.token]
   );
-  if(!eventResult.rowCount){
+
+  if(!result.rowCount){
     return res.status(404).json({error:'Evento invitati non trovato.'});
   }
 
-  const event=eventResult.rows[0];
-  if(event.status!=='finalized'){
+  if(result.rows[0].status!=='finalized'){
     return res.status(409).json({
-      error:'La votazione non è ancora chiusa. Il PDF definitivo sarà disponibile 15 giorni prima dell’evento.'
+      error:'La votazione non è ancora chiusa.'
     });
   }
 
-  const practiceResult=await pool.query(
-    'SELECT id,data FROM wte_practices WHERE id=$1',
-    [event.practice_id]
+  return pdfEngine.render(
+    'flash_selection',
+    result.rows[0].practice_id,
+    {res}
   );
-  const practice=practiceResult.rows[0]?.data || {};
-  const codes=Array.isArray(event.final_codes)?event.final_codes:[];
-
-  let items=[];
-  if(codes.length){
-    const result=await pool.query(
-      `SELECT id,code,title,category,image_data,image_mime
-       FROM wte_flash_catalog
-       WHERE code=ANY($1::text[])
-       ORDER BY array_position($1::text[],code)`,
-      [codes]
-    );
-    items=result.rows;
-  }
-
-  const ranking=await guestRanking(req.params.token,50);
-  return writeGuestVotingPdf(res,{event,practice,items,ranking});
 });
 
 app.get('/api/public/guest-event/:token', async (req,res) => {
@@ -2209,9 +2257,29 @@ async function applyPaidPayment({
   const updated=await paymentPlanByPractice(practiceId);
   await syncBookingStatus(practiceId);
   await updatePracticePaymentSummary(practiceId,updated);
+  await workflow.sync(practiceId,{
+    actor:{type:'system',name:'Pagamento automatico'},
+    reason:type==='deposit'?'deposit_paid':'balance_paid'
+  });
 
   if(type==='deposit'){
     await ensureGuestVotingAfterDeposit(practiceId);
+
+    const couplePlan=await paymentPlanByPractice(practiceId);
+    await notifications.queueForPractice(
+      practiceId,
+      'deposit_paid',
+      {
+        context:{
+          practiceId,
+          depositCents:couplePlan?.deposit_cents||0,
+          coupleUrl:couplePlan
+            ?couplePublicUrl(couplePlan.couple_token||couplePlan.token)
+            :''
+        },
+        idempotencyKey:`deposit_paid:${practiceId}`
+      }
+    );
     const contact=await practiceContact(practiceId);
     const guestEvent=await pool.query(
       'SELECT token FROM wte_guest_events WHERE practice_id=$1',
@@ -2220,6 +2288,17 @@ async function applyPaidPayment({
     const guestUrl=guestEvent.rowCount
       ? guestPublicUrl(guestEvent.rows[0].token)
       : '';
+
+    if(guestUrl){
+      await notifications.queueForPractice(
+        practiceId,
+        'guest_qr_ready',
+        {
+          context:{practiceId,guestUrl},
+          idempotencyKey:`guest_qr_ready:${practiceId}`
+        }
+      );
+    }
 
     await queueMessage({
       practiceId,
@@ -2234,6 +2313,22 @@ async function applyPaidPayment({
       metadata:{paymentType:type,guestUrl}
     });
   }else{
+    const paidPlan=await paymentPlanByPractice(practiceId);
+    await notifications.queueForPractice(
+      practiceId,
+      'balance_paid',
+      {
+        context:{
+          practiceId,
+          balanceCents:paidPlan?.balance_cents||0,
+          coupleUrl:paidPlan
+            ?couplePublicUrl(paidPlan.couple_token||paidPlan.token)
+            :''
+        },
+        idempotencyKey:`balance_paid:${practiceId}`
+      }
+    );
+
     const contact=await practiceContact(practiceId);
     await queueMessage({
       practiceId,
@@ -2539,21 +2634,24 @@ app.post('/api/payment-plans/:id/mark-paid', auth, async (req,res) => {
 });
 
 app.get('/api/payment-plans/:id/receipt', auth, async (req,res) => {
-  const type=String(req.query.type||'deposit')==='balance'?'balance':'deposit';
+  const type=String(req.query.type||'deposit')==='balance'
+    ?'balance_receipt'
+    :'deposit_receipt';
+
   const plan=await paymentPlanByPractice(req.params.id);
   if(!plan)return res.status(404).json({error:'Piano pagamenti non trovato.'});
 
-  const status=type==='deposit'?plan.deposit_status:plan.balance_status;
+  const status=type==='deposit_receipt'
+    ?plan.deposit_status
+    :plan.balance_status;
+
   if(status!=='paid'){
-    return res.status(409).json({error:'Il pagamento non risulta ancora registrato.'});
+    return res.status(409).json({
+      error:'Il pagamento non risulta ancora registrato.'
+    });
   }
 
-  const contact=await practiceContact(req.params.id);
-  return writePaymentReceiptPdf(res,{
-    plan,
-    practice:contact.practice,
-    paymentType:type
-  });
+  return pdfEngine.render(type,req.params.id,{res});
 });
 
 app.get('/api/public/payment-plan/:token', async (req,res) => {
@@ -3162,6 +3260,16 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
   const contractUrl=salesPublicUrl(contractToken);
   const recipient=normalizedData.email || normalizedData.phone;
 
+  await notifications.queue({
+    type:'contract_ready',
+    recipient,
+    context:{
+      customerName:parsed.data.name,
+      contractUrl
+    },
+    idempotencyKey:`contract_ready:${contractToken}`
+  });
+
   await queueMessage({
     messageType:'contract_draft',
     recipient,
@@ -3228,6 +3336,11 @@ app.get('/api/public/contracts/:token', async (req,res) => {
 app.get('/api/public/contracts/:token/pdf', async (req,res) => {
   const bundle=await salesBundleByContractToken(req.params.token);
   if(!bundle)return res.status(404).json({error:'Contratto non trovato.'});
+
+  if(bundle.practice_id){
+    return pdfEngine.render('contract',bundle.practice_id,{res});
+  }
+
   return writeContractPdf(res,bundle);
 });
 
@@ -3330,6 +3443,14 @@ app.post('/api/public/contracts/:token/accept', publicRateLimit, async (req,res)
   }
 
   const plan=await createPaymentPlanFromContract(practiceId,customer,pack);
+  await workflow.ensureState(practiceId,{
+    actor:{type:'system',name:'Contratto automatico'},
+    reason:'contract_practice_created'
+  });
+  await workflow.sync(practiceId,{
+    actor:{type:'system',name:'Contratto automatico'},
+    reason:'contract_accepted'
+  });
   const paymentUrl=paymentPublicUrl(plan.token);
 
   await createNotification(
@@ -3338,6 +3459,20 @@ app.post('/api/public/contracts/:token/accept', publicRateLimit, async (req,res)
     `${customer.name||'Cliente'} ha firmato il contratto ${bundle.contract_number}.`,
     practiceId,
     null
+  );
+
+  await notifications.queueForPractice(
+    practiceId,
+    'contract_accepted',
+    {
+      context:{
+        customerName:customer.name||'',
+        paymentUrl,
+        depositCents:plan.deposit_cents,
+        practiceId
+      },
+      idempotencyKey:`contract_accepted:${practiceId}`
+    }
   );
 
   await queueMessage({
@@ -3734,6 +3869,364 @@ app.get('/api/public/booking-success/:token', async (req,res) => {
 });
 
 
+
+// ============================================================
+// WTE V4 PUNTO 1 — API Workflow Engine
+// ============================================================
+
+function workflowActor(req) {
+  return {
+    type:req.user?.role || 'staff',
+    id:req.user?.id || req.user?.email || null,
+    name:req.user?.name || req.user?.email || 'Staff'
+  };
+}
+
+function workflowHttpError(res,error) {
+  const status=Number(error.statusCode || 500);
+  if(status>=500)console.error('Workflow API error',error);
+  return res.status(status).json({
+    error:error.message || 'Errore Workflow Engine.',
+    code:error.code || 'WORKFLOW_ERROR'
+  });
+}
+
+app.get('/api/workflow/config', auth, (_req,res) => {
+  res.json({
+    states:WORKFLOW_STATES,
+    transitions:WORKFLOW_TRANSITIONS
+  });
+});
+
+app.get('/api/workflow/practices', auth, async (req,res) => {
+  try{
+    const items=await workflow.list({
+      state:String(req.query.state||''),
+      limit:Number(req.query.limit||100),
+      offset:Number(req.query.offset||0)
+    });
+    res.json({items});
+  }catch(error){
+    workflowHttpError(res,error);
+  }
+});
+
+app.get('/api/workflow/practices/:id', auth, async (req,res) => {
+  try{
+    const [state,history,actions]=await Promise.all([
+      workflow.getState(req.params.id),
+      workflow.history(req.params.id,Number(req.query.historyLimit||100)),
+      workflow.pendingActions(req.params.id,100)
+    ]);
+    res.json({state,history,actions});
+  }catch(error){
+    workflowHttpError(res,error);
+  }
+});
+
+app.post('/api/workflow/practices/:id/sync', auth, async (req,res) => {
+  try{
+    const result=await workflow.sync(req.params.id,{
+      actor:workflowActor(req),
+      reason:String(req.body?.reason||'staff_sync').slice(0,240)
+    });
+    res.json(result);
+  }catch(error){
+    workflowHttpError(res,error);
+  }
+});
+
+app.post('/api/workflow/practices/:id/transition', auth, async (req,res) => {
+  const parsed=z.object({
+    toState:z.enum(WORKFLOW_STATES),
+    reason:z.string().min(1).max(240).optional().default('staff_transition'),
+    payload:z.record(z.any()).optional().default({}),
+    eventKey:z.string().max(240).optional().default(''),
+    expectedVersion:z.number().int().min(1).optional(),
+    force:z.boolean().optional().default(false)
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Transizione workflow non valida.'});
+  }
+
+  if(parsed.data.force && req.user?.role!=='admin'){
+    return res.status(403).json({
+      error:'Solo l’amministratore può forzare una transizione.'
+    });
+  }
+
+  try{
+    const result=await workflow.transition(
+      req.params.id,
+      parsed.data.toState,
+      {
+        reason:parsed.data.reason,
+        payload:parsed.data.payload,
+        eventKey:parsed.data.eventKey,
+        expectedVersion:parsed.data.expectedVersion,
+        force:parsed.data.force,
+        actor:workflowActor(req)
+      }
+    );
+    res.json(result);
+  }catch(error){
+    workflowHttpError(res,error);
+  }
+});
+
+app.get('/api/workflow/actions', auth, async (req,res) => {
+  try{
+    const actions=await workflow.pendingActions(
+      req.query.practiceId?String(req.query.practiceId):null,
+      Number(req.query.limit||100)
+    );
+    res.json({actions});
+  }catch(error){
+    workflowHttpError(res,error);
+  }
+});
+
+app.post('/api/workflow/actions/:id/status', auth, async (req,res) => {
+  const parsed=z.object({
+    status:z.enum(['processing','completed','failed','cancelled']),
+    error:z.string().max(2000).optional().default(''),
+    result:z.record(z.any()).optional().default({})
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Stato azione non valido.'});
+  }
+
+  try{
+    const action=await workflow.markAction(
+      Number(req.params.id),
+      parsed.data.status,
+      {
+        error:parsed.data.error,
+        result:parsed.data.result
+      }
+    );
+    res.json({action});
+  }catch(error){
+    workflowHttpError(res,error);
+  }
+});
+
+
+
+// ============================================================
+// WTE V4 PUNTO 2 — API Scheduler Engine
+// ============================================================
+
+app.get('/api/scheduler/status', auth, (_req,res) => {
+  res.json(scheduler.status());
+});
+
+app.get('/api/scheduler/runs', auth, async (req,res) => {
+  try{
+    const runs=await scheduler.recentRuns(Number(req.query.limit||100));
+    res.json({runs});
+  }catch(error){
+    console.error('Scheduler runs error',error);
+    res.status(500).json({error:'Impossibile leggere le esecuzioni Scheduler.'});
+  }
+});
+
+app.get('/api/scheduler/runs/:id/items', auth, async (req,res) => {
+  try{
+    const items=await scheduler.runItems(
+      Number(req.params.id),
+      Number(req.query.limit||500)
+    );
+    res.json({items});
+  }catch(error){
+    console.error('Scheduler run items error',error);
+    res.status(500).json({error:'Impossibile leggere i dettagli Scheduler.'});
+  }
+});
+
+app.post('/api/scheduler/run', auth, adminOnly, async (req,res) => {
+  try{
+    const result=await scheduler.runAll({trigger:'api'});
+    res.json(result);
+  }catch(error){
+    console.error('Scheduler run all error',error);
+    res.status(500).json({error:error.message||'Esecuzione Scheduler fallita.'});
+  }
+});
+
+app.post('/api/scheduler/jobs/:name/run', auth, adminOnly, async (req,res) => {
+  try{
+    const result=await scheduler.runJob(req.params.name,{trigger:'api'});
+    res.json(result);
+  }catch(error){
+    const status=error.code==='UNKNOWN_JOB'?404:500;
+    res.status(status).json({error:error.message||'Job Scheduler fallito.'});
+  }
+});
+
+
+
+// ============================================================
+// WTE V4 PUNTO 3 — API Notification Engine
+// ============================================================
+
+app.get('/api/notifications/config', auth, (_req,res) => {
+  res.json(notifications.status());
+});
+
+app.get('/api/notifications', auth, async (req,res) => {
+  try{
+    const messages=await notifications.list({
+      status:String(req.query.status||''),
+      practiceId:String(req.query.practiceId||''),
+      limit:Number(req.query.limit||100),
+      offset:Number(req.query.offset||0)
+    });
+    res.json({messages});
+  }catch(error){
+    console.error('Notification list error',error);
+    res.status(500).json({error:'Impossibile leggere le notifiche.'});
+  }
+});
+
+app.post('/api/notifications/queue', auth, async (req,res) => {
+  const parsed=z.object({
+    practiceId:z.string().min(1).optional(),
+    type:z.enum(notifications.types),
+    recipient:z.string().max(240).optional().default(''),
+    channel:z.enum(['auto','email','whatsapp']).optional().default('auto'),
+    context:z.record(z.any()).optional().default({}),
+    sendAfter:z.string().optional(),
+    idempotencyKey:z.string().max(240).optional().default('')
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Notifica non valida.'});
+  }
+
+  try{
+    const message=await notifications.queue({
+      practiceId:parsed.data.practiceId||null,
+      type:parsed.data.type,
+      recipient:parsed.data.recipient,
+      channel:parsed.data.channel,
+      context:parsed.data.context,
+      sendAfter:parsed.data.sendAfter
+        ?new Date(parsed.data.sendAfter)
+        :new Date(),
+      idempotencyKey:parsed.data.idempotencyKey
+    });
+    res.status(201).json({message});
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'NOTIFICATION_ERROR'
+    });
+  }
+});
+
+app.post('/api/notifications/dispatch', auth, adminOnly, async (req,res) => {
+  try{
+    const result=await notifications.dispatch(
+      Number(req.body?.limit||notifications.config.batchSize)
+    );
+    res.json(result);
+  }catch(error){
+    console.error('Notification dispatch error',error);
+    res.status(500).json({error:error.message||'Invio notifiche fallito.'});
+  }
+});
+
+app.post('/api/notifications/:id/retry', auth, async (req,res) => {
+  try{
+    const message=await notifications.retry(Number(req.params.id));
+    res.json({message});
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'NOTIFICATION_ERROR'
+    });
+  }
+});
+
+app.post('/api/notifications/:id/cancel', auth, async (req,res) => {
+  try{
+    const message=await notifications.cancel(Number(req.params.id));
+    res.json({message});
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'NOTIFICATION_ERROR'
+    });
+  }
+});
+
+
+
+// ============================================================
+// WTE V4 PUNTO 4 — API PDF Engine
+// ============================================================
+
+app.get('/api/pdf/config', auth, (_req,res) => {
+  res.json({types:pdfEngine.types});
+});
+
+app.get('/api/pdf/practices/:id/documents', auth, async (req,res) => {
+  try{
+    const documents=await pdfEngine.listDocuments(req.params.id);
+    res.json({documents});
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'PDF_ENGINE_ERROR'
+    });
+  }
+});
+
+app.get('/api/pdf/practices/:id/:type', auth, async (req,res) => {
+  try{
+    await pdfEngine.render(req.params.type,req.params.id,{res});
+  }catch(error){
+    if(!res.headersSent){
+      res.status(error.statusCode||500).json({
+        error:error.message,
+        code:error.code||'PDF_ENGINE_ERROR'
+      });
+    }
+  }
+});
+
+app.post('/api/pdf/practices/:id/:type/register', auth, async (req,res) => {
+  const parsed=z.object({
+    storageUrl:z.string().url().optional().or(z.literal('')),
+    checksum:z.string().max(240).optional().default(''),
+    metadata:z.record(z.any()).optional().default({})
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Registrazione documento non valida.'});
+  }
+
+  try{
+    const document=await pdfEngine.registerDocument({
+      practiceId:req.params.id,
+      type:req.params.type,
+      storageUrl:parsed.data.storageUrl||'',
+      checksum:parsed.data.checksum,
+      metadata:parsed.data.metadata
+    });
+    res.status(201).json({document});
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'PDF_ENGINE_ERROR'
+    });
+  }
+});
+
+
 app.delete('/api/practices/:id', auth, async (req,res) => {
   await pool.query('DELETE FROM wte_practices WHERE id = $1', [req.params.id]);
   res.json({ok:true});
@@ -3787,6 +4280,8 @@ app.use((error,_req,res,_next) => {
   console.error(error);
   res.status(500).json({error:'Errore interno del server.'});
 });
+
+scheduler.start();
 
 app.listen(PORT, () => {
   console.log(`WTE Cloud API attiva sulla porta ${PORT}`);
