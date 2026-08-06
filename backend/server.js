@@ -105,7 +105,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'3.0.0-phase4', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'4.0.0-phase-a', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -3077,9 +3077,11 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
     time:z.string().max(20).optional().default(''),
     location:z.string().min(2).max(240),
     guests:z.number().int().min(1).max(5000),
-    hours:z.number().min(1).max(24),
-    distance:z.number().min(0).max(5000),
-    style:z.enum(['intimo','equilibrato','premium']),
+    experience:z.enum(['intimo','equilibrato','premium']).optional(),
+    budget:z.enum(['under1000','1000-1500','1500-2200','over2200']).optional(),
+    hours:z.number().min(1).max(24).optional(),
+    distance:z.number().min(0).max(5000).optional(),
+    style:z.enum(['intimo','equilibrato','premium']).optional(),
     notes:z.string().max(2000).optional().default('')
   }).safeParse(req.body);
 
@@ -3094,12 +3096,26 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
     return res.status(503).json({error:'Pacchetti non configurati.'});
   }
 
-  const fallback=deterministicRecommendation(parsed.data,packages);
+  const inferredStyle=parsed.data.experience || parsed.data.style || 'equilibrato';
+  const inferredHours=parsed.data.hours || (
+    inferredStyle==='premium' ? 7 :
+    parsed.data.guests>110 ? 6 :
+    parsed.data.guests>65 ? 5 : 3
+  );
+  const inferredDistance=parsed.data.distance ?? 50;
+  const normalizedData={
+    ...parsed.data,
+    style:inferredStyle,
+    hours:inferredHours,
+    distance:inferredDistance
+  };
+
+  const fallback=deterministicRecommendation(normalizedData,packages);
   let recommendation={...fallback,aiUsed:false};
   let aiError='';
 
   try{
-    recommendation=await aiRecommendation(parsed.data,packages,fallback);
+    recommendation=await aiRecommendation(normalizedData,packages,fallback);
   }catch(error){
     aiError=error.message;
     recommendation={...fallback,aiUsed:false};
@@ -3119,7 +3135,7 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
      VALUES ($1,'contract_ready',$2::jsonb,$3::jsonb,$4,$5,$6,$7,NOW()+INTERVAL '30 days')`,
     [
       salesToken,
-      JSON.stringify(parsed.data),
+      JSON.stringify(normalizedData),
       JSON.stringify(recommendation),
       selected.code,
       Boolean(recommendation.aiUsed),
@@ -3135,21 +3151,21 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
      VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb)`,
     [
       contractToken,salesToken,selected.code,number,
-      JSON.stringify(parsed.data),
+      JSON.stringify(normalizedData),
       JSON.stringify(selected),
       JSON.stringify(clauses)
     ]
   );
 
   const contractUrl=salesPublicUrl(contractToken);
-  const recipient=parsed.data.email || parsed.data.phone;
+  const recipient=normalizedData.email || normalizedData.phone;
 
   await queueMessage({
     messageType:'contract_draft',
     recipient,
     subject:'La tua proposta Wedding Tattoo Experience',
     body:
-      `Ciao ${parsed.data.name}, il pacchetto consigliato è ${selected.name}. `+
+      `Ciao ${normalizedData.name}, il pacchetto consigliato è ${selected.name}. `+
       `Puoi leggere e accettare la bozza del contratto qui: ${contractUrl}`,
     metadata:{
       salesToken,
