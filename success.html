@@ -28,6 +28,7 @@ a{display:grid;place-items:center;min-height:54px;background:linear-gradient(135
 })();
 </script>
 
+<script src="/wte-analytics.js" defer></script>
 </head>
 <body><main>
 <div class="icon">✓</div><small>Wedding Tattoo Experience</small>
@@ -40,7 +41,12 @@ a{display:grid;place-items:center;min-height:54px;background:linear-gradient(135
 <div>✓ QR invitati generato dopo l’acconto</div>
 <div>✓ Area Sposi sempre aggiornata</div>
 </div>
-<a id="coupleLink" hidden>Entra nella vostra Area Sposi</a>
+<div class="auto-area" id="autoArea" hidden>
+  <span>Apertura automatica dell’Area Sposi</span>
+  <strong id="areaCountdown">5</strong>
+  <button id="cancelArea" type="button">Resta qui</button>
+</div>
+<a id="coupleLink" hidden>Accedi ora alla vostra Area Sposi</a>
 </main>
 <script>
 const API='https://wte-cloud-api.onrender.com';

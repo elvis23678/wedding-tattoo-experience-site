@@ -4,253 +4,1148 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050302">
-<meta name="description" content="Wedding Tattoo Experience: scopri in meno di due minuti la proposta ideale per il tuo matrimonio e conferma la data online.">
-<meta name="wte-release" content="1.0-home">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wedding Tattoo Experience">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="preconnect" href="https://wte-cloud-api.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="//wte-cloud-api.onrender.com">
+<meta name="description" content="Wedding Tattoo Experience: una proposta personalizzata, contratto digitale e conferma della data online.">
+<meta name="wte-release" content="2.0.0-premium-flow">
 <title>Wedding Tattoo Experience</title>
+
 <style>
 :root{
-  --bg:#050302;
-  --panel:#0d0906;
-  --gold:#d3a64f;
-  --gold-light:#f2dfad;
-  --text:#f5eee3;
-  --muted:#b9aa94;
-  --line:rgba(211,166,79,.22);
+  --black:#050302;
+  --black-soft:#0d0906;
+  --panel:rgba(14,10,7,.82);
+  --panel-strong:rgba(10,7,5,.94);
+  --gold:#d4aa56;
+  --gold-bright:#fff0bd;
+  --gold-deep:#9c681f;
+  --text:#f7f0e5;
+  --muted:#bcae99;
+  --line:rgba(221,181,96,.24);
+  --ok:#a9d0ad;
+  --danger:#e5a7a7;
   --serif:Georgia,"Times New Roman",serif;
-  --sans:Arial,sans-serif
+  --sans:Arial,sans-serif;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html,body{margin:0;min-height:100%;background:var(--black)}
 body{
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:var(--sans);overflow-x:hidden
+  color:var(--text);
+  font-family:var(--sans);
+  overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
 }
-a{color:inherit}
-.header{
-  position:absolute;inset:0 0 auto;z-index:5;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px
+button,a,input{min-width:0}
+@media(pointer:coarse){
+  button,a{touch-action:manipulation}
 }
-.logo{width:60px;height:auto;display:block}
-.header-note{
-  color:var(--gold-light);font-size:9px;letter-spacing:.11em;
-  text-transform:uppercase;text-align:right
+button,input{font:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+
+
+.skip-link{
+  position:fixed;
+  top:8px;
+  left:8px;
+  z-index:300;
+  padding:10px 12px;
+  background:#fff0bd;
+  color:#171006;
+  font-weight:900;
+  transform:translateY(-160%);
+  transition:transform .2s ease;
 }
-.hero{
-  position:relative;min-height:100svh;display:flex;
-  align-items:flex-end;isolation:isolate;overflow:hidden
+.skip-link:focus{transform:none}
+.sr-live{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0;
 }
-.hero video{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  object-position:center;z-index:-3;filter:saturate(.78) contrast(1.08) brightness(.72)
+:focus-visible{
+  outline:2px solid var(--gold-bright);
+  outline-offset:3px;
 }
-.hero:before{
-  content:"";position:absolute;inset:0;z-index:-2;
+button,
+a,
+input{
+  -webkit-tap-highlight-color:transparent;
+}
+
+.shell{
+  position:relative;
+  min-height:100svh;
+  overflow:hidden;
+  isolation:isolate;
+}
+.video{
+  position:fixed;
+  inset:0;
+  z-index:-5;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  filter:saturate(.78) contrast(1.08) brightness(.58);
+}
+.backdrop{
+  position:fixed;
+  inset:0;
+  z-index:-4;
   background:
-    linear-gradient(180deg,rgba(5,3,2,.20),rgba(5,3,2,.08) 34%,rgba(5,3,2,.72) 74%,var(--bg)),
-    linear-gradient(90deg,rgba(5,3,2,.34),transparent 60%)
+    radial-gradient(circle at 50% 14%,rgba(222,177,82,.12),transparent 34%),
+    linear-gradient(180deg,rgba(5,3,2,.20),rgba(5,3,2,.57) 48%,rgba(5,3,2,.94));
 }
-.hero-content{width:100%;max-width:820px;padding:110px 18px 72px}
-.eyebrow{
-  margin:0 0 13px;color:var(--gold-light);font-size:9px;
-  letter-spacing:.22em;text-transform:uppercase
+.backdrop:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:.22;
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:44px 44px;
 }
-h1{
-  max-width:760px;margin:0;font-family:var(--serif);
-  font-size:clamp(46px,13vw,88px);line-height:.96;font-weight:400;
-  letter-spacing:-.045em
+
+.topbar{
+  position:absolute;
+  inset:0 0 auto;
+  z-index:20;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  padding:18px;
+}
+.logo{width:96px;height:auto;display:block}
+.topbar-right{
+  display:flex;
+  align-items:flex-end;
+  flex-direction:column;
+  gap:8px;
+}
+.service-pill{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:7px 9px;
+  border:1px solid rgba(169,208,173,.28);
+  background:rgba(5,3,2,.52);
+  color:#d8ccb8;
+  font-size:8px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  backdrop-filter:blur(10px);
+}
+.service-pill.offline{
+  border-color:rgba(229,167,167,.34);
+  color:var(--danger);
+}
+.service-pill.waking{
+  border-color:rgba(212,170,86,.36);
+  color:var(--gold-bright);
+}
+.service-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--ok);
+  box-shadow:0 0 12px rgba(169,208,173,.50);
+}
+.service-pill.offline .service-dot{
+  background:var(--danger);
+  box-shadow:0 0 12px rgba(229,167,167,.40);
+}
+.service-pill.waking .service-dot{
+  background:var(--gold);
+  box-shadow:0 0 12px rgba(212,170,86,.45);
+}
+.top-note{
+  max-width:190px;
+  color:var(--gold-bright);
+  font-size:9px;
+  line-height:1.45;
+  letter-spacing:.15em;
+  text-align:right;
+  text-transform:uppercase;
+  text-shadow:0 0 18px rgba(255,220,138,.28);
+}
+
+.hero{
+  min-height:100svh;
+  display:flex;
+  align-items:flex-end;
+  padding:132px 16px 34px;
+}
+.hero-inner{width:100%;max-width:820px}
+.kicker{
+  margin:0 0 13px;
+  color:var(--gold-bright);
+  font-size:10px;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  text-shadow:0 0 18px rgba(255,220,138,.34);
+}
+.hero h1{
+  max-width:780px;
+  margin:0;
+  font-family:var(--serif);
+  font-size:clamp(52px,14vw,92px);
+  font-weight:400;
+  line-height:.94;
+  letter-spacing:-.048em;
+  text-wrap:balance;
+}
+.gold-word{
+  color:var(--gold-bright);
+  text-shadow:
+    0 0 12px rgba(255,230,164,.16),
+    0 0 34px rgba(218,169,72,.22);
 }
 .hero-copy{
-  max-width:570px;margin:20px 0 0;color:#ddd0bd;
-  font-size:15px;line-height:1.65
+  max-width:620px;
+  margin:22px 0 0;
+  color:#e1d4c1;
+  font-size:16px;
+  line-height:1.62;
 }
-.cta{
-  display:grid;place-items:center;width:min(100%,420px);min-height:58px;
-  margin-top:25px;border:0;text-decoration:none;
-  background:linear-gradient(135deg,var(--gold-light),#d1a349 57%,#aa7124);
-  color:#171006;font-weight:800;font-size:12px;letter-spacing:.04em
+.primary{
+  display:grid;
+  place-items:center;
+  width:min(100%,520px);
+  min-height:66px;
+  margin-top:25px;
+  border:1px solid rgba(255,237,190,.5);
+  background:
+    linear-gradient(135deg,#fff0bd,#d8aa4d 56%,#9c681f);
+  box-shadow:
+    0 16px 46px rgba(0,0,0,.38),
+    0 0 28px rgba(218,169,72,.16);
+  color:#171006;
+  font-weight:900;
+  letter-spacing:.025em;
 }
-.microcopy{
-  margin:10px 0 0;color:#cbbda8;font-size:10px;line-height:1.45
+.primary:active{transform:translateY(1px)}
+.resume-link{
+  display:block;
+  margin-top:13px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#d7c9b4;
+  font-size:11px;
+  text-decoration:underline;
 }
-.trust{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
-  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-  background:var(--line)
+.flow-tools{
+  display:flex;
+  align-items:center;
+  gap:12px;
 }
-.trust article{
-  min-height:155px;padding:25px 15px;background:#080503;
-  display:flex;flex-direction:column;justify-content:center;text-align:center
+.reset-flow{
+  padding:0;
+  border:0;
+  background:transparent;
+  color:rgba(188,174,153,.72);
+  font-size:9px;
+  text-decoration:underline;
 }
-.trust strong{
-  font-family:var(--serif);font-size:22px;font-weight:400
+
+.micro{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:11px 0 0;
+  color:#d7c9b4;
+  font-size:11px;
+  line-height:1.45;
 }
-.trust span{
-  margin-top:8px;color:var(--muted);font-size:11px;line-height:1.45
+.micro:before{content:"✓";color:var(--ok);font-weight:900}
+.hero-trust{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 16px;
+  margin-top:17px;
+  color:#bba991;
+  font-size:10px;
 }
-.section{padding:88px 18px}
-.section-head{max-width:720px;margin:0 auto 38px;text-align:center}
-.section-head small{
-  color:var(--gold);font-size:9px;letter-spacing:.18em;text-transform:uppercase
+.hero-trust span:before{content:"•";margin-right:7px;color:var(--gold)}
+
+.flow{
+  min-height:100svh;
+  display:grid;
+  place-items:center;
+  padding:92px 13px 30px;
 }
-.section-head h2{
-  margin:10px 0 0;font-family:var(--serif);
-  font-size:clamp(38px,10vw,62px);line-height:1.04;font-weight:400
+.flow-layout{
+  width:min(1180px,100%);
+  display:grid;
+  gap:14px;
+  align-items:start;
 }
-.steps{max-width:920px;margin:auto;display:grid;gap:1px;background:var(--line)}
-.steps article{padding:25px 20px;background:var(--panel)}
-.steps span{
-  display:block;color:var(--gold);font-size:10px;
-  letter-spacing:.13em;text-transform:uppercase
+.flow-card{
+  width:min(720px,100%);
+  min-height:560px;
+  padding:20px;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(180deg,rgba(20,14,9,.90),rgba(8,6,4,.94));
+  box-shadow:
+    0 32px 100px rgba(0,0,0,.56),
+    inset 0 1px 0 rgba(255,255,255,.025);
+  backdrop-filter:blur(18px);
 }
-.steps h3{
-  margin:16px 0 8px;font-family:var(--serif);
-  font-size:29px;font-weight:400
+.flow-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
 }
-.steps p{margin:0;color:var(--muted);line-height:1.6;font-size:13px}
-.closing{
-  padding:105px 18px;text-align:center;
-  background:radial-gradient(circle at 50% 25%,rgba(211,166,79,.13),transparent 37%),#070402
+.flow-brand{
+  color:var(--gold-bright);
+  font-size:9px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
 }
-.closing h2{
-  max-width:780px;margin:0 auto;font-family:var(--serif);
-  font-size:clamp(42px,11vw,72px);font-weight:400;line-height:1.03
+.progress-label{color:var(--muted);font-size:10px}
+.milestones{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+  margin-top:15px;
 }
-.closing p{max-width:560px;margin:18px auto 0;color:var(--muted);line-height:1.65}
-.closing .cta{margin:25px auto 0}
-footer{
-  padding:30px 18px 40px;border-top:1px solid var(--line);
-  text-align:center;color:var(--muted);font-size:11px
+.milestone{
+  padding:8px 6px;
+  border:1px solid rgba(221,181,96,.12);
+  color:rgba(188,174,153,.62);
+  text-align:center;
+  transition:.28s ease;
 }
-.footer-links{
-  display:flex;justify-content:center;flex-wrap:wrap;gap:18px;margin-bottom:15px
+.milestone span{
+  display:block;
+  font-size:8px;
+  letter-spacing:.12em;
 }
-.footer-links a{text-decoration:none;color:#d5c8b5}
-.sticky-cta{
-  position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));
-  z-index:8;display:grid;place-items:center;min-height:55px;text-decoration:none;
-  background:linear-gradient(135deg,var(--gold-light),#d1a349 57%,#aa7124);
-  color:#171006;font-weight:800;box-shadow:0 18px 45px rgba(0,0,0,.42)
+.milestone strong{
+  display:block;
+  margin-top:4px;
+  font-size:9px;
+  font-weight:700;
 }
+.milestone.done{
+  border-color:rgba(169,208,173,.34);
+  color:var(--ok);
+}
+.milestone.active{
+  border-color:var(--gold);
+  color:var(--gold-bright);
+  box-shadow:0 0 20px rgba(212,170,86,.08);
+}
+.progress{
+  height:2px;
+  margin-top:10px;
+  overflow:hidden;
+  background:rgba(255,255,255,.08);
+}
+.progress > span{
+  display:block;
+  width:0;
+  height:100%;
+  background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright));
+  box-shadow:0 0 14px rgba(255,226,154,.45);
+  transition:width .35s ease;
+}
+
+.step{
+  position:relative;
+  display:none;
+  min-height:430px;
+  padding-top:38px;
+  animation:stepIn .32s ease both;
+}
+.step.active{display:flex;flex-direction:column}
+@keyframes stepIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
+.step small{
+  color:var(--gold);
+  font-size:9px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.step h2{
+  max-width:620px;
+  margin:10px 0 8px;
+  font-family:var(--serif);
+  font-size:clamp(34px,9vw,54px);
+  font-weight:400;
+  line-height:1.04;
+}
+.step p{
+  max-width:570px;
+  margin:0 0 23px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.55;
+}
+.field{
+  display:grid;
+  gap:7px;
+  margin-top:12px;
+  color:#cabcaa;
+  font-size:9px;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+.field input{
+  width:100%;
+  min-height:58px;
+  padding:0 14px;
+  border:1px solid var(--line);
+  border-radius:0;
+  outline:none;
+  background:rgba(5,3,2,.72);
+  color:#fff;
+  font-size:18px;
+}
+.field input:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 1px rgba(212,170,86,.28),0 0 22px rgba(212,170,86,.08);
+}
+.smart-hint{
+  margin-top:10px;
+  color:rgba(188,174,153,.72);
+  font-size:10px;
+  text-align:right;
+}
+.step.auto-advancing:after{
+  content:"";
+  position:absolute;
+  inset:auto 20px 18px;
+  height:2px;
+  background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright));
+  animation:autoAdvance 420ms linear both;
+}
+@keyframes autoAdvance{
+  from{transform:scaleX(0);transform-origin:left}
+  to{transform:scaleX(1);transform-origin:left}
+}
+.choices{display:grid;gap:10px;margin-top:8px}
+.choice{
+  min-height:68px;
+  padding:13px 14px;
+  border:1px solid var(--line);
+  background:rgba(5,3,2,.58);
+  color:#fff;
+  text-align:left;
+}
+.choice strong{display:block;font-size:15px}
+.choice span{display:block;margin-top:4px;color:var(--muted);font-size:11px}
+.choice.selected{
+  border-color:var(--gold);
+  background:linear-gradient(135deg,rgba(212,170,86,.16),rgba(5,3,2,.62));
+  box-shadow:inset 0 0 0 1px rgba(255,232,176,.15),0 0 22px rgba(212,170,86,.08);
+}
+.choice.luxury{
+  position:relative;
+  border-color:rgba(255,225,153,.44);
+}
+.badge{
+  position:absolute;
+  top:9px;
+  right:10px;
+  padding:5px 7px;
+  border:1px solid rgba(255,232,176,.36);
+  color:var(--gold-bright);
+  font-size:8px;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+.availability{
+  margin-top:10px;
+  padding:11px;
+  border:1px solid var(--line);
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.45;
+}
+.availability.checking{color:var(--gold-bright)}
+.availability.available{border-color:rgba(169,208,173,.40);color:var(--ok)}
+.availability.unavailable{border-color:rgba(229,167,167,.42);color:var(--danger)}
+.nav{
+  display:grid;
+  grid-template-columns:1fr 2fr;
+  gap:9px;
+  margin-top:auto;
+  padding-top:23px;
+}
+.nav button{
+  min-height:54px;
+  border:1px solid var(--line);
+  background:rgba(5,3,2,.58);
+  color:#fff;
+  font-weight:800;
+}
+.nav .next{
+  border:0;
+  background:linear-gradient(135deg,#fff0bd,#d8aa4d 56%,#9c681f);
+  color:#171006;
+}
+.nav .next:disabled{opacity:.48;cursor:not-allowed}
+
+.loading{
+  justify-content:center;
+  text-align:center;
+}
+.loading-mark{
+  width:72px;
+  height:72px;
+  margin:0 auto 18px;
+  border:1px solid rgba(255,232,176,.45);
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:var(--gold-bright);
+  font-family:var(--serif);
+  font-size:28px;
+  animation:pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse{
+  50%{box-shadow:0 0 38px rgba(212,170,86,.24);transform:scale(1.04)}
+}
+.loading-list{
+  max-width:360px;
+  margin:20px auto 0;
+  display:grid;
+  gap:10px;
+  text-align:left;
+  color:var(--muted);
+  font-size:12px;
+}
+.loading-list div.done{color:var(--ok)}
+
+.result{
+  justify-content:center;
+  text-align:center;
+}
+.result-mark{
+  width:72px;
+  height:72px;
+  margin:0 auto 15px;
+  border:1px solid rgba(169,208,173,.42);
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:var(--ok);
+  font-size:31px;
+}
+.result h2{margin-left:auto;margin-right:auto}
+.package-name{
+  margin-top:8px;
+  color:var(--gold-bright);
+  font-family:var(--serif);
+  font-size:30px;
+}
+.price{
+  margin-top:7px;
+  color:#fff;
+  font-size:38px;
+  font-weight:900;
+}
+.deposit{
+  margin:14px auto 0;
+  padding:12px;
+  max-width:420px;
+  border:1px solid var(--line);
+  color:#dccdb7;
+  font-size:12px;
+  line-height:1.55;
+}
+
+.result-card{
+  width:min(560px,100%);
+  margin:18px auto 0;
+  padding:17px;
+  border:1px solid rgba(221,181,96,.24);
+  background:
+    linear-gradient(180deg,rgba(20,14,9,.94),rgba(8,6,4,.98));
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.025);
+}
+.result-package-row{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+  text-align:left;
+}
+.result-package-row span,
+.result-details span,
+.hold-box span{
+  display:block;
+  color:var(--muted);
+  font-size:9px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.result-package-row .package-name{
+  margin-top:5px;
+  font-size:30px;
+}
+.result-package-row .price{
+  margin:0;
+  text-align:right;
+  white-space:nowrap;
+}
+.result-details{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin-top:14px;
+}
+.result-details div{
+  padding:10px 7px;
+  border:1px solid rgba(221,181,96,.13);
+  text-align:left;
+}
+.result-details strong{
+  display:block;
+  margin-top:5px;
+  color:#fff;
+  font-size:11px;
+}
+.hold-box{
+  margin-top:13px;
+  padding:13px;
+  border:1px solid rgba(169,208,173,.32);
+  background:rgba(169,208,173,.045);
+}
+.hold-box strong{
+  display:block;
+  margin-top:5px;
+  color:var(--ok);
+  font-size:28px;
+  letter-spacing:.03em;
+}
+.hold-box small{
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:9px;
+}
+.result-cta{
+  width:min(560px,100%);
+  min-height:70px;
+  font-size:16px;
+  box-shadow:
+    0 22px 60px rgba(0,0,0,.38),
+    0 0 35px rgba(212,170,86,.18);
+}
+.result-reassurance{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:8px 15px;
+  width:min(560px,100%);
+  margin:12px auto 0;
+  color:#d9cbb7;
+  font-size:10px;
+}
+.result-reassurance span{white-space:nowrap}
+.result .primary{margin-left:auto;margin-right:auto}
+.secondary{
+  display:inline-block;
+  margin-top:14px;
+  color:var(--muted);
+  font-size:11px;
+  text-decoration:underline;
+}
+.error{
+  margin-top:13px;
+  color:var(--danger);
+  font-size:12px;
+  line-height:1.45;
+}
+
+
+.live-summary{
+  position:sticky;top:90px;padding:20px;border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(20,14,9,.93),rgba(8,6,4,.96));
+  box-shadow:0 32px 100px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.025);
+  backdrop-filter:blur(18px)
+}
+.summary-kicker{color:var(--gold-bright);font-size:9px;letter-spacing:.18em;text-transform:uppercase}
+.live-summary h3{margin:9px 0 16px;font-family:var(--serif);font-size:27px;font-weight:400}
+.summary-list{display:grid;gap:1px;background:rgba(221,181,96,.12)}
+.summary-list div{display:flex;justify-content:space-between;gap:18px;padding:11px 12px;background:rgba(8,5,3,.72)}
+.summary-list span{color:var(--muted);font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+.summary-list strong{max-width:62%;color:#fff;font-size:12px;text-align:right}
+.summary-price{margin-top:13px;padding:14px;border:1px solid rgba(221,181,96,.18);background:rgba(212,170,86,.05)}
+.summary-price span{display:block;color:var(--muted);font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+.summary-price strong{display:block;margin-top:5px;color:var(--gold-bright);font-family:var(--serif);font-size:31px;font-weight:400;text-shadow:0 0 20px rgba(255,232,176,.15)}
+.summary-price small{display:block;margin-top:5px;color:var(--muted);font-size:9px;line-height:1.45}
+.summary-status{margin-top:13px;padding:11px;border-left:2px solid var(--gold);color:#d8ccb8;font-size:11px;line-height:1.5}
+
+
+
+.global-alert{
+  position:fixed;
+  inset:12px 12px auto;
+  z-index:150;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:12px 14px;
+  border:1px solid rgba(229,167,167,.40);
+  background:rgba(32,10,10,.96);
+  box-shadow:0 20px 60px rgba(0,0,0,.45);
+  color:#f3d2d2;
+  font-size:12px;
+  line-height:1.45;
+}
+.global-alert button{
+  flex:0 0 auto;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#fff;
+  text-decoration:underline;
+}
+.retry-button{
+  min-height:48px;
+  margin:14px auto 0;
+  padding:0 18px;
+  border:1px solid var(--line);
+  background:#0b0805;
+  color:#fff;
+  font-weight:800;
+}
+.retry-button:hover{
+  border-color:var(--gold);
+}
+.loading-list div.active{
+  color:var(--gold-bright);
+}
+.loading-list div.failed{
+  color:var(--danger);
+}
+
+.resume-modal{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:rgba(3,2,1,.78);
+  backdrop-filter:blur(12px);
+}
+.resume-dialog{
+  width:min(520px,100%);
+  padding:24px;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(180deg,rgba(22,15,10,.98),rgba(8,6,4,.99));
+  box-shadow:0 35px 110px rgba(0,0,0,.58);
+  text-align:center;
+}
+.resume-icon{
+  width:66px;
+  height:66px;
+  margin:0 auto 14px;
+  border:1px solid rgba(255,237,190,.42);
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:var(--gold-bright);
+  font-size:27px;
+  box-shadow:0 0 28px rgba(212,170,86,.12);
+}
+.resume-dialog small{
+  color:var(--gold);
+  font-size:9px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.resume-dialog h2{
+  margin:9px 0 8px;
+  font-family:var(--serif);
+  font-size:32px;
+  font-weight:400;
+  line-height:1.08;
+}
+.resume-dialog p{
+  margin:0;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.6;
+}
+.resume-actions{
+  display:grid;
+  gap:9px;
+  margin-top:20px;
+}
+.resume-actions .primary{
+  width:100%;
+  margin-top:0;
+}
+.secondary-button{
+  min-height:52px;
+  border:1px solid var(--line);
+  background:#0b0805;
+  color:#fff;
+  font-weight:800;
+}
+
+.footer{
+  padding:24px 18px 35px;
+  border-top:1px solid var(--line);
+  background:var(--black);
+  text-align:center;
+  color:#9f917c;
+  font-size:10px;
+}
+.footer-links{display:flex;justify-content:center;flex-wrap:wrap;gap:18px;margin-bottom:12px}
+.footer a{color:#d7c9b5;text-decoration:none}
+
 @media(min-width:760px){
-  .header{padding:18px 4vw}.logo{width:76px}
-  .hero{align-items:center}
-  .hero-content{padding:130px 6vw 75px}
-  .trust article{min-height:190px;padding:32px}
-  .trust strong{font-size:29px}
-  .steps{grid-template-columns:repeat(4,1fr)}
-  .section{padding:130px 5vw}
-  .sticky-cta{display:none}
+  .topbar{padding:24px 5vw}
+  .logo{width:126px}
+  .hero{align-items:center;padding:150px 6vw 70px}
+  .flow{padding:100px 20px 50px}
+  .flow-layout{grid-template-columns:minmax(0,1fr) 330px}
+  .flow-card{padding:28px 34px}
+  .choices.two{grid-template-columns:1fr 1fr}
 }
-@media(max-width:600px){
-  body{padding-bottom:78px}
-  .header-note{max-width:150px;font-size:8px}
-  .trust{grid-template-columns:1fr}
-  .trust article{min-height:120px}
+@media(max-width:520px){
+  .top-note{max-width:170px;font-size:8px}
+  .flow-card{min-height:590px}
+  .nav{grid-template-columns:1fr 1.65fr}
+  .live-summary{position:static;order:-1}
+  .milestone strong{font-size:8px}
+  .summary-list{grid-template-columns:1fr 1fr}
+  .summary-list div{display:block}
+  .summary-list strong{display:block;max-width:none;margin-top:4px;text-align:left}
+  .result-package-row{display:block}
+  .result-package-row .price{margin-top:8px;text-align:left}
+  .result-details{grid-template-columns:1fr}
+  .result-reassurance{display:grid}
+}
+@media(prefers-reduced-data:reduce){
+  .video{display:none}
+  .shell{background:#100b07}
 }
 @media(prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  .hero video{display:none}
-  .hero{background:#100b07}
+  .video{display:none}
+  .shell{background:#100b07}
+  *{animation:none!important;transition:none!important}
 }
 </style>
-
-<script>
-(async()=>{
- try{
-  const response=await fetch(
-   'https://wte-cloud-api.onrender.com/api/public/release-info',
-   {cache:'no-store'}
-  );
-  const release=await response.json();
-  if(release.maintenance && !location.pathname.endsWith('/maintenance.html')){
-   location.replace('/maintenance.html');
-  }
- }catch{}
-})();
-</script>
-
+<script src="/wte-analytics.js" defer></script>
 </head>
+
 <body>
+<a class="skip-link" href="#startExperience">Vai al contenuto principale</a>
+<div class="sr-live" id="srLive" aria-live="polite" aria-atomic="true"></div>
+<div class="global-alert" id="globalAlert" hidden>
+  <span id="globalAlertText"></span>
+  <button id="dismissAlert" type="button">Chiudi</button>
+</div>
+<div class="shell">
+  <video class="video" id="heroVideo" autoplay muted loop playsinline preload="none" poster="logo.png" aria-hidden="true">
+    <source src="hero.mp4" type="video/mp4">
+  </video>
+  <div class="backdrop"></div>
 
-<header class="header">
-  <img class="logo" src="logo.png" alt="Wedding Tattoo Experience">
-  <div class="header-note">Proposta personalizzata<br>in meno di 2 minuti</div>
-</header>
+  <header class="topbar">
+    <img class="logo" src="logo.png" alt="Wedding Tattoo Experience">
+    <div class="topbar-right">
+      <div class="service-pill" id="servicePill">
+        <span class="service-dot"></span>
+        <strong id="serviceText">Servizio online</strong>
+      </div>
+      <div class="top-note">Proposta personalizzata<br>in meno di 2 minuti</div>
+    </div>
+  </header>
 
-<main>
-  <section class="hero">
-    <video autoplay muted loop playsinline preload="metadata" poster="logo.png">
-      <source src="hero.mp4" type="video/mp4">
-    </video>
-
-    <div class="hero-content">
-      <p class="eyebrow">Love. Marked. Forever.</p>
-      <h1>Il ricordo più indelebile del vostro matrimonio.</h1>
+  <section class="hero" id="hero">
+    <div class="hero-inner">
+      <p class="kicker">Love. Marked. Forever.</p>
+      <h1>
+        Il ricordo più <span class="gold-word">indelebile</span>
+        del vostro matrimonio.
+      </h1>
       <p class="hero-copy">
-        Rispondete a poche domande, ricevete subito la proposta più adatta
-        e confermate la vostra data online.
+        Verificate la disponibilità, scoprite la proposta pensata per voi
+        e arrivate alla conferma della data in un unico percorso.
       </p>
-      <a class="cta" href="/advisor.html">Inizia</a>
-      <p class="microcopy">Meno di 2 minuti · Nessun impegno · Prezzo chiaro</p>
+      <button class="primary" id="startExperience" type="button" aria-describedby="startDescription">
+        Inizia l’esperienza
+      </button>
+      <button class="resume-link" id="resumeExperience" type="button" hidden>
+        Riprendi il percorso salvato
+      </button>
+      <p class="micro" id="startDescription">Nessun impegno · Prezzo immediato · Pagamento sicuro</p>
+      <div class="hero-trust">
+        <span>Contratto digitale</span>
+        <span>Acconto online</span>
+        <span>Area Sposi automatica</span>
+      </div>
     </div>
   </section>
 
-  <section class="trust" aria-label="Vantaggi">
-    <article>
-      <strong>Proposta immediata</strong>
-      <span>Il sistema individua la soluzione più adatta al vostro evento.</span>
-    </article>
-    <article>
-      <strong>Conferma online</strong>
-      <span>Contratto digitale e acconto sicuro, senza scambi infiniti di messaggi.</span>
-    </article>
-    <article>
-      <strong>Nessuno stress</strong>
-      <span>Dopo la prenotazione, tutto resta ordinato nella vostra Area Sposi.</span>
-    </article>
-  </section>
+  <section class="flow" id="flow" hidden>
+    <div class="flow-layout">
+      <form class="flow-card" id="wizard" novalidate aria-label="Configuratore Wedding Tattoo Experience">
+      <div class="flow-head">
+        <div class="flow-brand">Wedding Assistant</div>
+        <div class="flow-tools">
+          <button class="reset-flow" id="resetFlow" type="button">Ricomincia</button>
+          <div class="progress-label" id="progressLabel">Profilo</div>
+        </div>
+      </div>
 
-  <section class="section">
-    <div class="section-head">
-      <small>Come funziona</small>
-      <h2>Dal primo clic alla data confermata.</h2>
+      <div class="milestones" id="milestones">
+        <div class="milestone active" data-milestone="0">
+          <span>01</span><strong>Profilo</strong>
+        </div>
+        <div class="milestone" data-milestone="1">
+          <span>02</span><strong>Evento</strong>
+        </div>
+        <div class="milestone" data-milestone="2">
+          <span>03</span><strong>Esperienza</strong>
+        </div>
+        <div class="milestone" data-milestone="3">
+          <span>04</span><strong>Conferma</strong>
+        </div>
+      </div>
+
+      <div class="progress"><span id="progressBar"></span></div>
+
+      <section class="step active" data-step="0">
+        <small>Iniziamo</small>
+        <h2>Come vi chiamate?</h2>
+        <p>Il nome del referente principale è sufficiente.</p>
+        <label class="field">
+          Nome e cognome
+          <input name="name" required minlength="2" maxlength="180" autocomplete="name">
+        </label>
+        <div class="smart-hint">Premi Invio per continuare</div>
+      </section>
+
+      <section class="step" data-step="1">
+        <small>La vostra data</small>
+        <h2>Quando vi sposate?</h2>
+        <p>Verifichiamo subito la disponibilità prima di proseguire.</p>
+        <label class="field">
+          Data del matrimonio
+          <input name="date" type="date" required>
+        </label>
+        <div class="availability" id="availabilityStatus">
+          Selezionate una data.
+        </div>
+      </section>
+
+      <section class="step" data-step="2">
+        <small>Il luogo</small>
+        <h2>Dove si svolgerà?</h2>
+        <p>Inserite il nome della location e la città.</p>
+        <label class="field">
+          Location
+          <input name="location" required minlength="2" maxlength="240" placeholder="Nome location, città">
+        </label>
+        <div class="smart-hint">Premi Invio per continuare</div>
+        <label class="field">
+          Ora indicativa
+          <input name="time" type="time">
+        </label>
+      </section>
+
+      <section class="step" data-step="3">
+        <small>Gli invitati</small>
+        <h2>Quante persone prevedete?</h2>
+        <p>Serve per dimensionare correttamente l’esperienza.</p>
+        <div class="choices two" data-choice-group="guests">
+          <button class="choice" type="button" data-value="50"><strong>Fino a 50</strong><span>Evento intimo</span></button>
+          <button class="choice" type="button" data-value="100"><strong>Da 51 a 100</strong><span>Ricevimento medio</span></button>
+          <button class="choice" type="button" data-value="150"><strong>Da 101 a 150</strong><span>Evento importante</span></button>
+          <button class="choice" type="button" data-value="200"><strong>Oltre 150</strong><span>Grande evento</span></button>
+        </div>
+        <input name="guests" type="hidden" required>
+      </section>
+
+      <section class="step" data-step="4">
+        <small>La durata</small>
+        <h2>Quanto deve durare il servizio?</h2>
+        <p>Scegliete il ritmo più adatto al vostro matrimonio.</p>
+        <div class="choices two" data-choice-group="hours">
+          <button class="choice" type="button" data-value="4"><strong>4 ore</strong><span>Esperienza essenziale</span></button>
+          <button class="choice" type="button" data-value="6"><strong>6 ore</strong><span>Esperienza completa</span></button>
+          <button class="choice" type="button" data-value="8"><strong>8 ore</strong><span>Esperienza estesa</span></button>
+          <button class="choice luxury" type="button" data-value="12" data-style="premium">
+            <span class="badge">Luxury</span>
+            <strong>Intera giornata</strong>
+            <span>Presenza esclusiva per tutto l’evento</span>
+          </button>
+        </div>
+        <input name="hours" type="hidden" required>
+        <input name="experience" type="hidden" value="equilibrato">
+      </section>
+
+      <section class="step" data-step="5">
+        <small>Contatti</small>
+        <h2>Dove inviamo la proposta?</h2>
+        <p>Riceverete contratto e conferme a questo indirizzo.</p>
+        <label class="field">
+          E-mail
+          <input name="email" type="email" required autocomplete="email">
+        </label>
+        <div class="smart-hint">Premi Invio per continuare</div>
+      </section>
+
+      <section class="step" data-step="6">
+        <small>Ultimo dato</small>
+        <h2>Qual è il vostro numero?</h2>
+        <p>Lo useremo solo per le comunicazioni importanti sulla pratica.</p>
+        <label class="field">
+          Telefono
+          <input name="phone" type="tel" required minlength="5" maxlength="60" autocomplete="tel">
+        </label>
+        <div class="smart-hint">Premi Invio per preparare la proposta</div>
+      </section>
+
+      <section class="step loading" data-step="7">
+        <div class="loading-mark">✦</div>
+        <small>Preparazione in corso</small>
+        <h2>Stiamo creando la vostra proposta.</h2>
+        <p>Il sistema sta completando gli ultimi controlli.</p>
+        <div class="loading-list">
+          <div id="loadAvailability">○ Verifica disponibilità</div>
+          <div id="loadPackage">○ Calcolo del pacchetto</div>
+          <div id="loadContract">○ Preparazione del contratto</div>
+          <div id="loadDeposit">○ Calcolo dell’acconto</div>
+        </div>
+        <div class="error" id="submitError"></div>
+        <button class="retry-button" id="retryButton" type="button" hidden>
+          Riprova senza perdere i dati
+        </button>
+      </section>
+
+      <section class="step result" data-step="8">
+        <div class="result-mark">✓</div>
+        <small>Proposta pronta</small>
+        <h2>La vostra data è disponibile.</h2>
+
+        <div class="result-card">
+          <div class="result-package-row">
+            <div>
+              <span>Esperienza consigliata</span>
+              <strong class="package-name" id="resultPackage"></strong>
+            </div>
+            <div class="price" id="resultPrice"></div>
+          </div>
+
+          <div class="result-details">
+            <div>
+              <span>Data</span>
+              <strong id="resultDate">—</strong>
+            </div>
+            <div>
+              <span>Durata</span>
+              <strong id="resultHours">—</strong>
+            </div>
+            <div>
+              <span>Invitati</span>
+              <strong id="resultGuests">—</strong>
+            </div>
+          </div>
+
+          <div class="deposit" id="resultDeposit"></div>
+
+          <div class="hold-box" id="holdBox" hidden>
+            <span>La data è riservata durante la conferma</span>
+            <strong id="holdCountdown">30:00</strong>
+            <small>Nessun importo viene addebitato prima del pagamento.</small>
+          </div>
+        </div>
+
+        <a class="primary result-cta" id="contractLink">
+          Firma e blocca la data
+        </a>
+
+        <div class="result-reassurance">
+          <span>✓ Contratto digitale</span>
+          <span>✓ Pagamento protetto</span>
+          <span>✓ Accesso immediato all’Area Sposi</span>
+        </div>
+
+        <a class="secondary" id="draftPdf" target="_blank" rel="noopener">
+          Leggi la proposta in PDF
+        </a>
+      </section>
+
+      <div class="nav" id="navigation">
+        <button id="backButton" type="button">Indietro</button>
+        <button class="next" id="nextButton" type="button">Avanti →</button>
+      </div>
+      </form>
+
+      <aside class="live-summary" id="liveSummary" aria-live="polite">
+        <div class="summary-kicker">La vostra esperienza</div>
+        <h3>Riepilogo in tempo reale</h3>
+        <div class="summary-list">
+          <div><span>Data</span><strong id="summaryDate">Da scegliere</strong></div>
+          <div><span>Location</span><strong id="summaryLocation">Da inserire</strong></div>
+          <div><span>Invitati</span><strong id="summaryGuests">Da scegliere</strong></div>
+          <div><span>Durata</span><strong id="summaryHours">Da scegliere</strong></div>
+          <div><span>Pacchetto</span><strong id="summaryPackage">In definizione</strong></div>
+        </div>
+        <div class="summary-price">
+          <span>Stima indicativa</span>
+          <strong id="summaryEstimate">—</strong>
+          <small>Il prezzo definitivo viene calcolato dal sistema al termine.</small>
+        </div>
+        <div class="summary-status" id="summaryStatus">
+          Iniziate il percorso: il riepilogo si aggiornerà automaticamente.
+        </div>
+      </aside>
     </div>
-
-    <div class="steps">
-      <article>
-        <span>01</span>
-        <h3>Raccontateci l’evento</h3>
-        <p>Poche domande essenziali, una alla volta.</p>
-      </article>
-      <article>
-        <span>02</span>
-        <h3>Ricevete la proposta</h3>
-        <p>Pacchetto, prezzo e acconto vengono calcolati subito.</p>
-      </article>
-      <article>
-        <span>03</span>
-        <h3>Firmate online</h3>
-        <p>Leggete e accettate il contratto direttamente dal telefono.</p>
-      </article>
-      <article>
-        <span>04</span>
-        <h3>Confermate la data</h3>
-        <p>Completate l’acconto e accedete alla vostra Area Sposi.</p>
-      </article>
-    </div>
   </section>
+</div>
 
-  <section class="closing">
-    <h2>La vostra data è ancora disponibile?</h2>
-    <p>
-      Scopritelo ora e ricevete la proposta pensata per il vostro matrimonio.
+<div class="resume-modal" id="resumeModal" hidden>
+  <div class="resume-dialog" role="dialog" aria-modal="true" aria-labelledby="resumeTitle">
+    <div class="resume-icon">✦</div>
+    <small>Wedding Assistant</small>
+    <h2 id="resumeTitle">Riprendiamo da dove eravate rimasti?</h2>
+    <p id="resumeDescription">
+      Abbiamo conservato in modo locale le risposte già inserite su questo dispositivo.
     </p>
-    <a class="cta" href="/advisor.html">Inizia ora</a>
-  </section>
-</main>
+    <div class="resume-actions">
+      <button class="primary" id="confirmResume" type="button">Riprendi</button>
+      <button class="secondary-button" id="restartFromModal" type="button">Ricomincia</button>
+    </div>
+  </div>
+</div>
 
-<footer>
+<footer class="footer">
   <div class="footer-links">
     <a href="/contatti.html">Contatti</a>
     <a href="/privacy.html">Privacy</a>
@@ -259,10 +1154,992 @@ footer{
   <div>© Wedding Tattoo Experience</div>
 </footer>
 
-<a class="sticky-cta" href="/advisor.html">Inizia</a>
-
-
 <script>
+const API='https://wte-cloud-api.onrender.com';
+const TOTAL_VISIBLE_STEPS=7;
+const hero=document.getElementById('hero');
+const flow=document.getElementById('flow');
+const form=document.getElementById('wizard');
+const steps=[...document.querySelectorAll('.step')];
+const progressLabel=document.getElementById('progressLabel');
+const progressBar=document.getElementById('progressBar');
+const milestones=[...document.querySelectorAll('.milestone')];
+const navigation=document.getElementById('navigation');
+const backButton=document.getElementById('backButton');
+const nextButton=document.getElementById('nextButton');
+const availabilityStatus=document.getElementById('availabilityStatus');
+let current=0;
+let dateAvailable=false;
+let checkingDate=false;
+let holdToken=localStorage.getItem('wte_date_hold_token')||'';
+
+let recommendationData=null;
+let holdCountdownTimer=null;
+const FLOW_STORAGE_KEY='wte_release2_flow';
+const FLOW_STORAGE_VERSION=1;
+let restoringFlow=false;
+let submissionInProgress=false;
+let lastSubmissionPayload=null;
+let apiOnline=true;
+let healthCheckTimer=null;
+let flowHistoryActive=false;
+const srLive=document.getElementById('srLive');
+
+const money=value=>new Intl.NumberFormat('it-IT',{
+  style:'currency',currency:'EUR',maximumFractionDigits:0
+}).format(value);
+
+function formatDate(value){
+  if(!value)return 'Da scegliere';
+  const date=new Date(`${value}T12:00:00`);
+  if(Number.isNaN(date.getTime()))return value;
+  return new Intl.DateTimeFormat('it-IT',{
+    day:'numeric',month:'long',year:'numeric'
+  }).format(date);
+}
+
+function guestLabel(value){
+  return ({
+    '50':'Fino a 50',
+    '100':'51–100',
+    '150':'101–150',
+    '200':'Oltre 150'
+  })[String(value)]||'Da scegliere';
+}
+
+function hourLabel(value){
+  return ({
+    '4':'4 ore',
+    '6':'6 ore',
+    '8':'8 ore',
+    '12':'Intera giornata Luxury'
+  })[String(value)]||'Da scegliere';
+}
+
+function estimateSelection(){
+  const guests=Number(form.elements.guests.value||0);
+  const hours=Number(form.elements.hours.value||0);
+  const premium=form.elements.experience.value==='premium';
+
+  if(!hours)return {packageName:'In definizione',estimate:null};
+
+  let packageName='Silver';
+  let estimate=1090;
+
+  if(hours>=6||guests>50){packageName='Gold';estimate=1390}
+  if(hours>=8||guests>100){packageName='Platinum';estimate=1690}
+  if(premium||hours>=12){packageName='Luxury';estimate=2290}
+  if(guests>150&&!premium)estimate+=200;
+
+  return {packageName,estimate};
+}
+
+
+function startHoldCountdown(expiresAt){
+  const holdBox=document.getElementById('holdBox');
+  const countdown=document.getElementById('holdCountdown');
+
+  if(holdCountdownTimer){
+    clearInterval(holdCountdownTimer);
+    holdCountdownTimer=null;
+  }
+
+  const expiry=new Date(expiresAt||'');
+  if(Number.isNaN(expiry.getTime())){
+    holdBox.hidden=true;
+    return;
+  }
+
+  holdBox.hidden=false;
+
+  const render=()=>{
+    const remaining=Math.max(0,expiry.getTime()-Date.now());
+    const totalSeconds=Math.floor(remaining/1000);
+    const minutes=String(Math.floor(totalSeconds/60)).padStart(2,'0');
+    const seconds=String(totalSeconds%60).padStart(2,'0');
+
+    countdown.textContent=`${minutes}:${seconds}`;
+
+    if(remaining<=0){
+      clearInterval(holdCountdownTimer);
+      holdCountdownTimer=null;
+      countdown.textContent='Scaduta';
+      holdBox.querySelector('span').textContent=
+        'La riserva temporanea è scaduta';
+      holdBox.querySelector('small').textContent=
+        'Torna alla data per verificare nuovamente la disponibilità.';
+      document.getElementById('contractLink').textContent=
+        'Verifica nuovamente la data';
+      document.getElementById('contractLink').onclick=event=>{
+        event.preventDefault();
+        setStep(1);
+        checkAvailability();
+      };
+    }
+  };
+
+  render();
+  holdCountdownTimer=setInterval(render,1000);
+}
+
+function updateLiveSummary(){
+  const selection=estimateSelection();
+
+  document.getElementById('summaryDate').textContent=
+    formatDate(form.elements.date.value);
+  document.getElementById('summaryLocation').textContent=
+    form.elements.location.value.trim()||'Da inserire';
+  document.getElementById('summaryGuests').textContent=
+    guestLabel(form.elements.guests.value);
+  document.getElementById('summaryHours').textContent=
+    hourLabel(form.elements.hours.value);
+  document.getElementById('summaryPackage').textContent=
+    selection.packageName;
+  document.getElementById('summaryEstimate').textContent=
+    selection.estimate?money(selection.estimate):'—';
+
+  const status=document.getElementById('summaryStatus');
+  if(!form.elements.date.value){
+    status.textContent='Scegliete la data: controlleremo subito la disponibilità.';
+  }else if(!dateAvailable){
+    status.textContent='La disponibilità della data deve ancora essere confermata.';
+  }else if(!form.elements.hours.value){
+    status.textContent='Data disponibile. Ora scegliete la durata del servizio.';
+  }else if(!form.elements.email.value){
+    status.textContent='La proposta sta prendendo forma. Mancano solo i contatti.';
+  }else{
+    status.textContent='Quasi fatto: il sistema può preparare la proposta definitiva.';
+  }
+}
+
+
+
+
+
+function announce(message){
+  srLive.textContent='';
+  requestAnimationFrame(()=>{
+    srLive.textContent=message;
+  });
+}
+
+function pulseHaptic(pattern=12){
+  try{
+    if('vibrate' in navigator){
+      navigator.vibrate(pattern);
+    }
+  }catch{}
+}
+
+function shouldLoadVideo(){
+  const connection=
+    navigator.connection ||
+    navigator.mozConnection ||
+    navigator.webkitConnection;
+
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    return false;
+  }
+
+  if(window.matchMedia('(prefers-reduced-data: reduce)').matches){
+    return false;
+  }
+
+  if(connection?.saveData){
+    return false;
+  }
+
+  if(['slow-2g','2g'].includes(connection?.effectiveType)){
+    return false;
+  }
+
+  return true;
+}
+
+function loadHeroVideo(){
+  const video=document.getElementById('heroVideo');
+  if(!video||!shouldLoadVideo())return;
+
+  video.preload='metadata';
+  video.load();
+
+  const play=()=>video.play().catch(()=>{});
+
+  if('requestIdleCallback' in window){
+    requestIdleCallback(play,{timeout:1800});
+  }else{
+    setTimeout(play,650);
+  }
+}
+
+function showGlobalAlert(message){
+  const alert=document.getElementById('globalAlert');
+  document.getElementById('globalAlertText').textContent=message;
+  alert.hidden=false;
+}
+
+function hideGlobalAlert(){
+  document.getElementById('globalAlert').hidden=true;
+}
+
+document.getElementById('dismissAlert').onclick=hideGlobalAlert;
+
+function setServiceState(state,label){
+  const pill=document.getElementById('servicePill');
+  const text=document.getElementById('serviceText');
+
+  pill.classList.remove('offline','waking');
+  if(state==='offline')pill.classList.add('offline');
+  if(state==='waking')pill.classList.add('waking');
+
+  text.textContent=label;
+}
+
+async function checkApiHealth(){
+  if(!navigator.onLine){
+    apiOnline=false;
+    setServiceState('offline','Connessione assente');
+    return false;
+  }
+
+  setServiceState('waking','Verifica servizio…');
+
+  try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),8000);
+
+    const response=await fetch(`${API}/api/health`,{
+      cache:'no-store',
+      signal:controller.signal
+    });
+
+    clearTimeout(timeout);
+    apiOnline=response.ok;
+
+    if(response.ok){
+      setServiceState('online','Servizio online');
+      return true;
+    }
+
+    setServiceState('offline','Servizio non disponibile');
+    return false;
+  }catch{
+    apiOnline=false;
+    setServiceState('offline','Servizio in riattivazione');
+    return false;
+  }
+}
+
+function resetLoadingSteps(){
+  [
+    ['loadAvailability','○ Verifica disponibilità'],
+    ['loadPackage','○ Calcolo del pacchetto'],
+    ['loadContract','○ Preparazione del contratto'],
+    ['loadDeposit','○ Calcolo dell’acconto']
+  ].forEach(([id,text])=>{
+    const item=document.getElementById(id);
+    item.classList.remove('done','active','failed');
+    item.textContent=text;
+  });
+}
+
+function setLoadingActive(id,text){
+  const element=document.getElementById(id);
+  element.classList.remove('done','failed');
+  element.classList.add('active');
+  element.textContent=`• ${text}`;
+}
+
+function setLoadingFailed(id,text){
+  const element=document.getElementById(id);
+  element.classList.remove('done','active');
+  element.classList.add('failed');
+  element.textContent=`× ${text}`;
+}
+
+function submissionPayload(){
+  const raw=Object.fromEntries(new FormData(form));
+
+  return {
+    name:raw.name,
+    email:raw.email,
+    phone:raw.phone,
+    date:raw.date,
+    time:raw.time||'',
+    location:raw.location,
+    guests:Number(raw.guests),
+    hours:Number(raw.hours),
+    experience:raw.experience,
+    budget:'1000-1500',
+    notes:'',
+    holdToken
+  };
+}
+
+async function fetchWithRetry(url,options={},attempts=2){
+  let lastError=null;
+
+  for(let attempt=1;attempt<=attempts;attempt++){
+    try{
+      const controller=new AbortController();
+      const timeout=setTimeout(
+        ()=>controller.abort(),
+        attempt===1?15000:25000
+      );
+
+      const response=await fetch(url,{
+        ...options,
+        signal:controller.signal
+      });
+
+      clearTimeout(timeout);
+
+      if(response.status>=500&&attempt<attempts){
+        await new Promise(resolve=>setTimeout(resolve,1200));
+        continue;
+      }
+
+      return response;
+    }catch(error){
+      lastError=error;
+      if(attempt<attempts){
+        await new Promise(resolve=>setTimeout(resolve,1200));
+      }
+    }
+  }
+
+  throw lastError||new Error('Connessione non disponibile.');
+}
+
+function collectFlowState(){
+  const values=Object.fromEntries(new FormData(form));
+
+  return {
+    version:FLOW_STORAGE_VERSION,
+    savedAt:new Date().toISOString(),
+    current:Math.min(current,6),
+    values,
+    dateAvailable,
+    holdToken,
+    result:recommendationData?{
+      contractUrl:recommendationData.contractUrl||'',
+      draftPdf:recommendationData.draftPdf||'',
+      availability:recommendationData.availability||null,
+      recommendation:recommendationData.recommendation||null
+    }:null
+  };
+}
+
+function saveFlowState(){
+  if(restoringFlow)return;
+
+  try{
+    localStorage.setItem(
+      FLOW_STORAGE_KEY,
+      JSON.stringify(collectFlowState())
+    );
+    document.getElementById('resumeExperience').hidden=false;
+  }catch(error){
+    console.warn('Salvataggio percorso non disponibile',error);
+  }
+}
+
+function readFlowState(){
+  try{
+    const state=JSON.parse(
+      localStorage.getItem(FLOW_STORAGE_KEY)||'null'
+    );
+
+    if(!state||state.version!==FLOW_STORAGE_VERSION){
+      return null;
+    }
+
+    const age=Date.now()-new Date(state.savedAt||0).getTime();
+    if(!Number.isFinite(age)||age>48*60*60*1000){
+      localStorage.removeItem(FLOW_STORAGE_KEY);
+      return null;
+    }
+
+    return state;
+  }catch{
+    return null;
+  }
+}
+
+function clearFlowState(){
+  localStorage.removeItem(FLOW_STORAGE_KEY);
+  localStorage.removeItem('wte_date_hold_token');
+  holdToken='';
+  recommendationData=null;
+  document.getElementById('resumeExperience').hidden=true;
+}
+
+function applyChoiceState(name,value){
+  const group=document.querySelector(
+    `[data-choice-group="${name}"]`
+  );
+  if(!group)return;
+
+  group.querySelectorAll('.choice').forEach(button=>{
+    button.classList.toggle(
+      'selected',
+      button.dataset.value===String(value)
+    );
+  });
+}
+
+function restoreFlowState(state){
+  if(!state)return false;
+
+  restoringFlow=true;
+
+  try{
+    Object.entries(state.values||{}).forEach(([name,value])=>{
+      const field=form.elements[name];
+      if(field)field.value=value;
+    });
+
+    applyChoiceState('guests',state.values?.guests);
+    applyChoiceState('hours',state.values?.hours);
+
+    dateAvailable=Boolean(state.dateAvailable);
+    holdToken=String(state.holdToken||'');
+    if(holdToken){
+      localStorage.setItem('wte_date_hold_token',holdToken);
+    }
+
+    recommendationData=state.result?{
+      contractUrl:state.result.contractUrl,
+      draftPdf:state.result.draftPdf,
+      availability:state.result.availability,
+      recommendation:state.result.recommendation
+    }:null;
+
+    hero.hidden=true;
+    flow.hidden=false;
+
+    const target=Math.max(
+      0,
+      Math.min(Number(state.current)||0,6)
+    );
+
+    setStep(target);
+
+    if(form.elements.date.value){
+      checkAvailability();
+    }
+
+    updateLiveSummary();
+    return true;
+  }finally{
+    restoringFlow=false;
+  }
+}
+
+function milestoneForStep(index){
+  if(index<=1)return 0;
+  if(index<=3)return 1;
+  if(index<=5)return 2;
+  return 3;
+}
+
+function updateMilestones(index){
+  const active=milestoneForStep(index);
+
+  milestones.forEach((item,i)=>{
+    item.classList.toggle('done',i<active);
+    item.classList.toggle('active',i===active);
+  });
+
+  const labels=['Profilo','Evento','Esperienza','Conferma'];
+  progressLabel.textContent=labels[active]||'Conferma';
+}
+
+function autoAdvance(delay=380){
+  const activeStep=steps[current];
+  activeStep.classList.add('auto-advancing');
+
+  setTimeout(()=>{
+    activeStep.classList.remove('auto-advancing');
+
+    if(current<6){
+      setStep(current+1);
+    }
+  },delay);
+}
+
+function setStep(index){
+  current=index;
+  steps.forEach((step,i)=>step.classList.toggle('active',i===index));
+
+  const isLoading=index===7;
+  const isResult=index===8;
+  navigation.hidden=isLoading||isResult;
+
+  if(index<TOTAL_VISIBLE_STEPS){
+    updateMilestones(index);
+    progressBar.style.width=`${((index+1)/TOTAL_VISIBLE_STEPS)*100}%`;
+  }else{
+    milestones.forEach(item=>{
+      item.classList.add('done');
+      item.classList.remove('active');
+    });
+    progressLabel.textContent=isResult?'Completato':'Preparazione';
+    progressBar.style.width='100%';
+  }
+
+  backButton.style.visibility=index===0?'hidden':'visible';
+  nextButton.textContent=index===TOTAL_VISIBLE_STEPS-1
+    ?'Prepara la proposta →'
+    :'Avanti →';
+
+  window.scrollTo({top:flow.offsetTop,behavior:'smooth'});
+  const field=steps[index].querySelector('input:not([type=hidden])');
+  setTimeout(()=>field?.focus({preventScroll:true}),250);
+  updateLiveSummary();
+  saveFlowState();
+
+  const heading=steps[index].querySelector('h2')?.textContent?.trim();
+  if(heading){
+    announce(heading);
+  }
+
+  if(flowHistoryActive&&index<7){
+    history.replaceState(
+      {wteFlow:true,step:index},
+      '',
+      `#step-${index+1}`
+    );
+  }
+}
+
+function openExperience(){
+  const saved=readFlowState();
+
+  if(saved){
+    document.getElementById('resumeModal').hidden=false;
+    return;
+  }
+
+  hero.hidden=true;
+  flow.hidden=false;
+  flowHistoryActive=true;
+  history.pushState({wteFlow:true,step:0},'', '#step-1');
+  setStep(0);
+  pulseHaptic(10);
+}
+
+document.getElementById('startExperience').onclick=()=>{
+  WTEAnalytics?.track('experience_started');
+  openExperience();
+};
+document.getElementById('resumeExperience').onclick=()=>{
+  const saved=readFlowState();
+  if(saved){
+    restoreFlowState(saved);
+  }
+};
+
+document.getElementById('confirmResume').onclick=()=>{
+  const saved=readFlowState();
+  document.getElementById('resumeModal').hidden=true;
+  if(saved){
+    restoreFlowState(saved);
+  }
+};
+
+function restartFlow(){
+  clearFlowState();
+  form.reset();
+  document.querySelectorAll('.choice').forEach(
+    item=>item.classList.remove('selected')
+  );
+  dateAvailable=false;
+  availabilityStatus.className='availability';
+  availabilityStatus.textContent='Selezionate una data.';
+  document.getElementById('resumeModal').hidden=true;
+  hero.hidden=true;
+  flow.hidden=false;
+  flowHistoryActive=true;
+  history.replaceState({wteFlow:true,step:0},'', '#step-1');
+  setStep(0);
+  pulseHaptic(10);
+}
+
+document.getElementById('restartFromModal').onclick=restartFlow;
+document.getElementById('resetFlow').onclick=()=>{
+  if(confirm('Vuoi cancellare le risposte e ricominciare?')){
+    restartFlow();
+  }
+};
+
+function validateCurrent(){
+  const fields=[...steps[current].querySelectorAll('input')];
+
+  for(const field of fields){
+    if(field.type==='hidden'){
+      if(field.required&&!field.value){
+        alert('Seleziona una delle opzioni.');
+        return false;
+      }
+      continue;
+    }
+
+    if(!field.checkValidity()){
+      field.reportValidity();
+      return false;
+    }
+  }
+  return true;
+}
+
+document.querySelectorAll('[data-choice-group]').forEach(group=>{
+  group.querySelectorAll('.choice').forEach(button=>{
+    button.onclick=()=>{
+      group.querySelectorAll('.choice').forEach(item=>item.classList.remove('selected'));
+      button.classList.add('selected');
+
+      const name=group.dataset.choiceGroup;
+      form.elements[name].value=button.dataset.value;
+
+      if(name==='hours'){
+        form.elements.experience.value=
+          button.dataset.style==='premium'?'premium':'equilibrato';
+      }
+
+      updateLiveSummary();
+      saveFlowState();
+      pulseHaptic(8);
+
+      autoAdvance(320);
+    };
+  });
+});
+
+async function checkAvailability(){
+  const value=form.elements.date.value;
+  dateAvailable=false;
+
+  if(!value){
+    availabilityStatus.className='availability';
+    availabilityStatus.textContent='Selezionate una data.';
+    return false;
+  }
+
+  checkingDate=true;
+  availabilityStatus.className='availability checking';
+  availabilityStatus.textContent='Verifica disponibilità…';
+
+  try{
+    const query=holdToken?`?holdToken=${encodeURIComponent(holdToken)}`:'';
+    const response=await fetch(
+      `${API}/api/public/availability/${encodeURIComponent(value)}${query}`,
+      {cache:'no-store'}
+    );
+    const data=await response.json().catch(()=>({}));
+
+    if(!response.ok){
+      throw new Error(data.error||'Verifica non disponibile.');
+    }
+
+    dateAvailable=Boolean(data.available);
+    WTEAnalytics?.track(
+      dateAvailable ? 'date_available' : 'date_unavailable'
+    );
+    if(dateAvailable){
+      availabilityStatus.className='availability available';
+      availabilityStatus.textContent=data.heldByCurrentCustomer
+        ?'✓ La data è già riservata per voi durante questo percorso.'
+        :'✓ Ottima notizia: la data è disponibile.';
+
+      if(current===1){
+        autoAdvance(520);
+      }
+    }else{
+      availabilityStatus.className='availability unavailable';
+      availabilityStatus.textContent='Questa data non è disponibile. Scegliete un altro giorno.';
+    }
+
+    updateLiveSummary();
+    saveFlowState();
+    return dateAvailable;
+  }catch(error){
+    availabilityStatus.className='availability unavailable';
+    availabilityStatus.textContent=error.message;
+    return false;
+  }finally{
+    checkingDate=false;
+  }
+}
+
+form.elements.date.addEventListener('change',()=>{
+  holdToken='';
+  localStorage.removeItem('wte_date_hold_token');
+  checkAvailability();
+});
+
+backButton.onclick=()=>{
+  if(current>0&&current<7){
+    setStep(current-1);
+  }
+};
+
+nextButton.onclick=async()=>{
+  if(!validateCurrent())return;
+
+  if(current===1){
+    if(checkingDate)return;
+    const available=dateAvailable||await checkAvailability();
+    if(!available)return;
+    if(current!==1)return;
+  }
+
+  if(current<6){
+    setStep(current+1);
+    return;
+  }
+
+  await createRecommendation();
+};
+
+function markLoading(id,text){
+  const element=document.getElementById(id);
+  element.classList.add('done');
+  element.textContent=`✓ ${text}`;
+}
+
+async function createRecommendation(){
+  if(submissionInProgress)return;
+
+  submissionInProgress=true;
+  lastSubmissionPayload=submissionPayload();
+
+  setStep(7);
+  resetLoadingSteps();
+
+  const errorBox=document.getElementById('submitError');
+  const retryButton=document.getElementById('retryButton');
+  errorBox.textContent='';
+  retryButton.hidden=true;
+
+  try{
+    const healthy=await checkApiHealth();
+
+    if(!healthy){
+      throw new Error(
+        'Il servizio sta impiegando più tempo del previsto. Riprova tra pochi secondi: le risposte sono già salvate.'
+      );
+    }
+
+    setLoadingActive('loadAvailability','Verifica disponibilità');
+    await new Promise(resolve=>setTimeout(resolve,300));
+    markLoading('loadAvailability','Disponibilità confermata');
+
+    setLoadingActive('loadPackage','Calcolo del pacchetto');
+
+    const response=await fetchWithRetry(
+      `${API}/api/public/advisor/recommend`,
+      {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Accept':'application/json',
+          'X-WTE-Request-Id':crypto.randomUUID?.()||String(Date.now())
+        },
+        body:JSON.stringify(lastSubmissionPayload)
+      },
+      2
+    );
+
+    const data=await response.json().catch(()=>({}));
+
+    if(!response.ok){
+      const error=new Error(
+        data.error||'Impossibile preparare la proposta.'
+      );
+      error.code=data.code||'';
+      error.status=response.status;
+      throw error;
+    }
+
+    markLoading('loadPackage','Pacchetto calcolato');
+    setLoadingActive('loadContract','Preparazione del contratto');
+    await new Promise(resolve=>setTimeout(resolve,350));
+    markLoading('loadContract','Contratto preparato');
+
+    setLoadingActive('loadDeposit','Calcolo dell’acconto');
+    await new Promise(resolve=>setTimeout(resolve,350));
+    markLoading('loadDeposit','Acconto calcolato');
+
+    recommendationData=data;
+    WTEAnalytics?.track('proposal_created',{
+      packageName:data.recommendation?.package?.name||'',
+      priceCents:Number(data.recommendation?.package?.priceCents||0),
+      guestsBand:guestLabel(lastSubmissionPayload?.guests||0),
+      hours:Number(lastSubmissionPayload?.hours||0)
+    });
+
+    if(data.availability?.holdToken){
+      holdToken=data.availability.holdToken;
+      localStorage.setItem('wte_date_hold_token',holdToken);
+    }
+
+    const raw=lastSubmissionPayload;
+    const packageData=data.recommendation.package;
+    const depositCents=Math.round(
+      Number(packageData.priceCents||0) *
+      Number(packageData.depositPercent||30) / 100
+    );
+
+    document.getElementById('resultPackage').textContent=packageData.name;
+    document.getElementById('resultPrice').textContent=packageData.priceLabel;
+    document.getElementById('resultDate').textContent=formatDate(raw.date);
+    document.getElementById('resultHours').textContent=hourLabel(raw.hours);
+    document.getElementById('resultGuests').textContent=guestLabel(raw.guests);
+    document.getElementById('summaryPackage').textContent=packageData.name;
+    document.getElementById('summaryEstimate').textContent=packageData.priceLabel;
+    document.getElementById('summaryStatus').textContent=
+      'Proposta definitiva pronta. Potete proseguire al contratto.';
+
+    document.getElementById('resultDeposit').innerHTML=
+      `<strong>Acconto per riservare la data</strong><br>`+
+      `${new Intl.NumberFormat('it-IT',{
+        style:'currency',
+        currency:'EUR'
+      }).format(depositCents/100)}`+
+      `<br><small>Il saldo restante sarà gestito dalla vostra Area Sposi.</small>`;
+
+    document.getElementById('contractLink').href=data.contractUrl;
+    document.getElementById('contractLink').onclick=()=>{
+      WTEAnalytics?.track('contract_opened',{
+        packageName:packageData.name,
+        priceCents:Number(packageData.priceCents||0)
+      });
+      clearFlowState();
+    };
+    document.getElementById('contractLink').textContent=
+      'Firma e blocca la data';
+    document.getElementById('draftPdf').href=data.draftPdf;
+
+    startHoldCountdown(
+      data.availability?.expiresAt ||
+      new Date(Date.now()+30*60*1000).toISOString()
+    );
+
+    saveFlowState();
+    setStep(8);
+    pulseHaptic([18,60,28]);
+    announce('Proposta pronta. La vostra data è disponibile.');
+    hideGlobalAlert();
+  }catch(error){
+    console.error('Creazione proposta fallita',error);
+
+    if(error.code==='DATE_NOT_AVAILABLE'){
+      errorBox.textContent=
+        'La data è stata appena riservata da un’altra coppia. Nessun pagamento è stato effettuato.';
+      setLoadingFailed('loadAvailability','Data non disponibile');
+
+      setTimeout(()=>{
+        setStep(1);
+        checkAvailability();
+      },1200);
+      return;
+    }
+
+    if(error.code==='MAINTENANCE_MODE'||error.code==='BOOKING_DISABLED'){
+      errorBox.textContent=error.message;
+      setLoadingFailed('loadPackage','Prenotazioni temporaneamente sospese');
+      showGlobalAlert(error.message);
+    }else{
+      errorBox.textContent=
+        error.name==='AbortError'
+          ?'La richiesta sta richiedendo troppo tempo. Le risposte sono al sicuro: premi Riprova.'
+          :error.message;
+      setLoadingFailed('loadPackage','Preparazione interrotta');
+    }
+
+    retryButton.hidden=false;
+    retryButton.onclick=createRecommendation;
+    navigation.hidden=true;
+  }finally{
+    submissionInProgress=false;
+  }
+}
+
+(async()=>{
+  try{
+    const response=await fetch(`${API}/api/public/release-info`,{cache:'no-store'});
+    const release=await response.json().catch(()=>({}));
+    if(release.maintenance){
+      location.replace('/maintenance.html');
+    }
+  }catch{}
+})();
+
+
+window.addEventListener('online',()=>{
+  apiOnline=true;
+  setServiceState('waking','Riconnessione…');
+  checkApiHealth();
+});
+
+window.addEventListener('offline',()=>{
+  apiOnline=false;
+  setServiceState('offline','Connessione assente');
+  showGlobalAlert(
+    'La connessione è assente. Le risposte restano salvate su questo dispositivo.'
+  );
+});
+
+window.addEventListener('beforeunload',event=>{
+  const state=readFlowState();
+  if(!state||current===8)return;
+
+  const hasMeaningfulData=Boolean(
+    state.values?.name||
+    state.values?.date||
+    state.values?.email
+  );
+
+  if(hasMeaningfulData&&submissionInProgress){
+    event.preventDefault();
+    event.returnValue='';
+  }
+});
+
+checkApiHealth();
+healthCheckTimer=setInterval(checkApiHealth,60000);
+
+
+window.addEventListener('popstate',event=>{
+  if(!flowHistoryActive)return;
+
+  const step=Number(event.state?.step);
+
+  if(Number.isInteger(step)&&step>=0&&step<7){
+    hero.hidden=true;
+    flow.hidden=false;
+    setStep(step);
+    return;
+  }
+
+  flowHistoryActive=false;
+  flow.hidden=true;
+  hero.hidden=false;
+  history.replaceState(null,'',location.pathname);
+  announce('Tornati alla presentazione iniziale.');
+});
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(error=>{
+      console.warn('Service worker non registrato',error);
+    });
+  });
+}
+
+loadHeroVideo();
+
 window.addEventListener('unhandledrejection',event=>{
   console.error('WTE unhandled rejection',event.reason);
 });
@@ -270,6 +2147,5 @@ window.addEventListener('error',event=>{
   console.error('WTE frontend error',event.error||event.message);
 });
 </script>
-
 </body>
 </html>

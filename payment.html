@@ -6,21 +6,61 @@
 <meta name="theme-color" content="#070503">
 <title>Acconto e saldo - Wedding Tattoo Experience</title>
 <style>
-:root{--bg:#070503;--card:#100c08;--gold:#d3a64f;--text:#f3eadb;--muted:#a99a84;--line:rgba(211,166,79,.25);--ok:#9cc4a1}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0,rgba(211,166,79,.1),transparent 30%),var(--bg);color:var(--text);font-family:Arial,sans-serif}
-main{max-width:720px;margin:auto;padding:18px 13px 44px}.brand{color:var(--gold);font-size:9px;letter-spacing:.17em;text-transform:uppercase}
-h1{margin:8px 0 6px;font-family:Georgia,serif;font-size:32px;font-weight:400}.intro{margin:0;color:var(--muted);line-height:1.55}
-.journey{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:14px}
-.journey span{padding:7px 4px;border:1px solid rgba(211,166,79,.15);font-size:8px;text-align:center;color:var(--muted)}
-.journey .done{color:var(--ok);border-color:rgba(156,196,161,.35)}
-.journey .current{color:var(--gold);border-color:var(--gold)}
-.summary,.payment{margin-top:14px;padding:16px;border:1px solid var(--line);background:var(--card)}
-.summary h2,.payment h2{margin:0;font-family:Georgia,serif;font-size:25px;font-weight:400}
-.rows{display:grid;gap:7px;margin-top:12px}.row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(211,166,79,.12)}.row span{color:var(--muted)}
-.amount{margin-top:12px;color:var(--gold);font-size:30px;font-weight:800}.status{margin-top:10px;padding:10px;border:1px solid var(--line);color:var(--muted)}.status.paid{border-color:rgba(156,196,161,.4);color:var(--ok)}
-.action{display:grid;place-items:center;width:100%;min-height:54px;margin-top:13px;border:0;background:linear-gradient(135deg,#f2dfad,#cc9f48,#a87526);color:#171006;text-decoration:none;font-weight:800;text-align:center;padding:0 10px}
-.action.disabled{background:#211a13;color:#756b5d;pointer-events:none}.secondary{background:#0b0805;color:#fff;border:1px solid var(--line)}
-.note{margin-top:13px;color:var(--muted);font-size:10px;line-height:1.5}
+
+:root{
+  --bg:#050302;--panel:#0f0a07;--panel2:#171008;
+  --gold:#d4aa56;--gold2:#fff0bd;--deep:#9c681f;
+  --text:#f7f0e5;--muted:#bcae99;--line:rgba(221,181,96,.24);
+  --ok:#a9d0ad;--bad:#e5a7a7;
+  --serif:Georgia,"Times New Roman",serif;--sans:Arial,sans-serif;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;
+  background:
+    radial-gradient(circle at 50% 0,rgba(212,170,86,.13),transparent 34%),
+    var(--bg);
+  color:var(--text);font-family:var(--sans)
+}
+main{max-width:760px;margin:auto;padding:24px 14px 70px}
+.brand{color:var(--gold2);font-size:9px;letter-spacing:.18em;text-transform:uppercase}
+h1{margin:9px 0 6px;font-family:var(--serif);font-size:clamp(40px,10vw,62px);font-weight:400;line-height:1.02}
+.intro{margin:0;color:var(--muted);line-height:1.6}
+.journey{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:18px}
+.journey span{padding:8px 5px;border:1px solid var(--line);font-size:9px;text-align:center;color:var(--muted)}
+.journey .done{color:var(--ok);border-color:rgba(169,208,173,.38)}
+.journey .current{color:var(--gold2);border-color:var(--gold)}
+.summary,.payment{
+  margin-top:14px;padding:19px;border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(22,15,10,.95),rgba(10,7,5,.97));
+  box-shadow:0 24px 80px rgba(0,0,0,.32)
+}
+.summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.summary-grid div{padding:12px;border:1px solid rgba(221,181,96,.14)}
+.summary-grid span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase}
+.summary-grid strong{display:block;margin-top:5px;font-size:14px}
+.payment h2{margin:0;font-family:var(--serif);font-size:30px;font-weight:400}
+.amount{margin-top:10px;color:var(--gold2);font-size:40px;font-weight:900}
+.status{margin-top:9px;color:var(--muted)}
+.action{
+  min-height:60px;margin-top:16px;display:grid;place-items:center;
+  border:1px solid rgba(255,237,190,.45);
+  background:linear-gradient(135deg,#fff0bd,#d8aa4d 56%,#9c681f);
+  color:#171006;text-decoration:none;font-weight:900;
+  box-shadow:0 0 30px rgba(212,170,86,.13)
+}
+.action.disabled{opacity:.45;pointer-events:none}
+.note{margin-top:12px;color:var(--muted);font-size:11px;line-height:1.55}
+.security{display:flex;gap:8px;align-items:flex-start;margin-top:13px;color:#d8ccb8;font-size:11px}
+.security:before{content:"✓";color:var(--ok);font-weight:900}
+.checkout-assurance{margin-top:14px;padding:13px;border:1px solid rgba(221,181,96,.18);text-align:center}
+.checkout-assurance strong{display:block;color:var(--gold2);font-family:var(--serif);font-size:21px;font-weight:400}
+.checkout-assurance span{display:block;margin-top:5px;color:var(--muted);font-size:10px;line-height:1.45}
+.secondary-payment{opacity:.78}
+.payment.primary-focus{border-color:rgba(255,237,190,.42);box-shadow:0 28px 90px rgba(0,0,0,.36),0 0 32px rgba(212,170,86,.11)}
+@media(max-width:620px){.summary-grid,.journey{grid-template-columns:1fr}.journey span{text-align:left}}
+
 </style>
 <meta name="wte-release" content="1.0.0">
 
@@ -39,11 +79,12 @@ h1{margin:8px 0 6px;font-family:Georgia,serif;font-size:32px;font-weight:400}.in
 })();
 </script>
 
+<script src="/wte-analytics.js" defer></script>
 </head>
 <body>
 <main>
 <div class="brand">Wedding Tattoo Experience</div>
-<h1>Conferma la vostra data</h1>
+<h1>Riservate la vostra data</h1>
 <p class="intro">Un ultimo passaggio per riservare definitivamente la data del vostro matrimonio.</p>
 <div class="journey">
 <span class="done">1. Proposta</span>
@@ -60,16 +101,16 @@ h1{margin:8px 0 6px;font-family:Georgia,serif;font-size:32px;font-weight:400}.in
 </div>
 </section>
 
-<section class="payment">
+<section class="payment primary-focus">
 <h2>Acconto</h2>
 <div class="amount" id="depositAmount">—</div>
 <div class="status" id="depositStatus">Verifica della disponibilità…</div>
 <div class="rows"><div class="row"><span>Scadenza</span><strong id="depositDue">—</strong></div></div>
-<a class="action disabled" id="depositAction">Conferma la tua data</a>
+<a class="action disabled" id="depositAction">Blocca la vostra data</a>
 <a class="action secondary" id="coupleAction" hidden>Apri Area Sposi</a>
 </section>
 
-<section class="payment">
+<section class="payment secondary-payment" id="balanceSection" hidden>
 <h2>Saldo</h2>
 <div class="amount" id="balanceAmount">—</div>
 <div class="status" id="balanceStatus">In attesa</div>
@@ -77,7 +118,11 @@ h1{margin:8px 0 6px;font-family:Georgia,serif;font-size:32px;font-weight:400}.in
 <a class="action disabled" id="balanceAction">Paga il saldo</a>
 </section>
 
-<p class="note">Pagamento sicuro gestito da Stripe. Dopo la conferma riceverete automaticamente accesso all’Area Sposi e tutta la documentazione.</p>
+<div class="checkout-assurance">
+  <strong>Un solo passaggio per confermare</strong>
+  <span>Pagamento protetto · Nessun costo nascosto · Ricevuta automatica</span>
+</div>
+<div class="security">Dopo la conferma riceverete subito accesso all’Area Sposi e alla documentazione.</div>
 </main>
 <script>
 const API='https://wte-cloud-api.onrender.com';
@@ -149,11 +194,13 @@ async function load(){
   $('depositAction').textContent='Pagamento completato';
   $('coupleAction').href=booking.coupleUrl;
   $('coupleAction').hidden=false;
+  $('balanceSection').hidden=false;
  }else{
+  $('balanceSection').hidden=true;
   $('depositStatus').textContent='Data pronta da confermare';
   $('depositAction').href='#';
   $('depositAction').classList.remove('disabled');
-  $('depositAction').textContent='Conferma la tua data';
+  $('depositAction').textContent='Blocca la vostra data';
   $('depositAction').onclick=event=>{
     event.preventDefault();
     startCheckout('deposit',$('depositAction'));

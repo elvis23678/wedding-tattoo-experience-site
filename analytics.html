@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050302">
+<title>Conversioni - Wedding Tattoo Experience</title>
+<style>
+:root{--bg:#050302;--panel:#100b07;--gold:#d4aa56;--gold2:#fff0bd;--text:#f7f0e5;--muted:#bcae99;--line:rgba(221,181,96,.24);--ok:#a9d0ad}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 50% 0,rgba(212,170,86,.12),transparent 32%),var(--bg);color:var(--text);font-family:Arial,sans-serif}
+main{max-width:1100px;margin:auto;padding:22px 14px 60px}
+.brand{color:var(--gold2);font-size:9px;letter-spacing:.18em;text-transform:uppercase}
+h1{margin:8px 0;font-family:Georgia,serif;font-size:clamp(38px,8vw,58px);font-weight:400}
+p{color:var(--muted);line-height:1.55}
+.login,.panel{margin-top:14px;padding:17px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(22,15,10,.96),rgba(8,6,4,.98))}
+.login-grid{display:grid;grid-template-columns:1fr auto;gap:8px}
+input,button{min-height:50px;border:1px solid var(--line);background:#080503;color:#fff;padding:0 12px}
+button{font-weight:800}.gold{border:0;background:linear-gradient(135deg,#fff0bd,#d8aa4d 56%,#9c681f);color:#171006}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}
+.card{padding:14px;border:1px solid var(--line);background:var(--panel)}
+.card span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase}
+.card strong{display:block;margin-top:7px;color:var(--gold2);font-family:Georgia,serif;font-size:30px;font-weight:400}
+.funnel{display:grid;gap:7px;margin-top:12px}
+.step{position:relative;padding:12px;border:1px solid rgba(221,181,96,.15);overflow:hidden}
+.step:before{content:"";position:absolute;inset:0 auto 0 0;width:var(--width);background:rgba(212,170,86,.08)}
+.step-content{position:relative;display:flex;justify-content:space-between;gap:14px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:10px 7px;border-bottom:1px solid rgba(221,181,96,.12);text-align:left;font-size:12px}
+th{color:var(--gold2);font-size:9px;text-transform:uppercase}
+.status{margin-top:10px;color:var(--muted);font-size:12px}
+@media(max-width:760px){.cards{grid-template-columns:1fr 1fr}.login-grid{grid-template-columns:1fr}.step-content{display:block}}
+</style>
+</head>
+<body>
+<main>
+<div class="brand">Wedding Tattoo Experience</div>
+<h1>Conversioni</h1>
+<p>Qui vedi quante coppie passano da visita a proposta, firma e prenotazione.</p>
+
+<section class="login">
+<div class="login-grid">
+<input id="token" type="password" placeholder="Token amministratore">
+<button class="gold" id="load" type="button">Carica ultimi 30 giorni</button>
+</div>
+<div class="status" id="status"></div>
+</section>
+
+<section id="dashboard" hidden>
+<div class="cards">
+<div class="card"><span>Visite</span><strong id="visits">0</strong></div>
+<div class="card"><span>Inizi</span><strong id="starts">0</strong></div>
+<div class="card"><span>Proposte</span><strong id="proposals">0</strong></div>
+<div class="card"><span>Prenotazioni</span><strong id="bookings">0</strong></div>
+</div>
+
+<section class="panel">
+<h2>Funnel</h2>
+<div class="funnel" id="funnel"></div>
+</section>
+
+<section class="panel">
+<h2>Pacchetti proposti</h2>
+<table>
+<thead><tr><th>Pacchetto</th><th>Proposte</th><th>Prezzo medio</th></tr></thead>
+<tbody id="packages"></tbody>
+</table>
+</section>
+
+<section class="panel">
+<h2>Andamento giornaliero</h2>
+<table>
+<thead><tr><th>Data</th><th>Visite</th><th>Inizi</th><th>Proposte</th><th>Prenotazioni</th></tr></thead>
+<tbody id="daily"></tbody>
+</table>
+</section>
+</section>
+</main>
+
+<script>
+const API='https://wte-cloud-api.onrender.com';
+const $=id=>document.getElementById(id);
+const labels={
+ page_view:'Visita',
+ experience_started:'Percorso iniziato',
+ date_available:'Data disponibile',
+ proposal_created:'Proposta pronta',
+ contract_signed:'Contratto firmato',
+ checkout_redirected:'Pagamento aperto',
+ booking_confirmed:'Prenotazione confermata',
+ couple_area_opened:'Area Sposi aperta'
+};
+
+function count(data,name){
+ return data.steps.find(x=>x.eventName===name)?.sessions||0;
+}
+
+async function load(){
+ $('status').textContent='Caricamento…';
+
+ const response=await fetch(`${API}/api/analytics/overview?days=30`,{
+  cache:'no-store',
+  headers:{Authorization:`Bearer ${$('token').value.trim()}`}
+ });
+
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||`Errore ${response.status}`);
+
+ $('dashboard').hidden=false;
+ $('visits').textContent=count(data,'page_view');
+ $('starts').textContent=count(data,'experience_started');
+ $('proposals').textContent=count(data,'proposal_created');
+ $('bookings').textContent=count(data,'booking_confirmed');
+
+ const max=Math.max(...data.steps.map(x=>x.sessions),1);
+ $('funnel').innerHTML=data.steps.map(step=>`
+  <div class="step" style="--width:${(step.sessions/max)*100}%">
+   <div class="step-content">
+    <span>${labels[step.eventName]||step.eventName}</span>
+    <strong>${step.sessions} · ${step.conversionFromPrevious}%</strong>
+   </div>
+  </div>
+ `).join('');
+
+ $('packages').innerHTML=data.packages.length
+  ?data.packages.map(row=>`
+    <tr>
+      <td>${row.package_name}</td>
+      <td>${row.proposals}</td>
+      <td>${row.average_price
+        ?new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(row.average_price)
+        :'—'}</td>
+    </tr>
+  `).join('')
+  :'<tr><td colspan="3">Nessun dato ancora disponibile.</td></tr>';
+
+ $('daily').innerHTML=data.daily.length
+  ?data.daily.map(row=>`
+    <tr>
+      <td>${new Date(row.day).toLocaleDateString('it-IT')}</td>
+      <td>${row.page_views}</td>
+      <td>${row.starts}</td>
+      <td>${row.proposals}</td>
+      <td>${row.bookings}</td>
+    </tr>
+  `).join('')
+  :'<tr><td colspan="5">Nessun dato ancora disponibile.</td></tr>';
+
+ $('status').textContent='Dati aggiornati.';
+}
+
+$('load').onclick=()=>load().catch(error=>{
+ $('status').textContent=error.message;
+});
+</script>
+</body>
+</html>
