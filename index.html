@@ -1983,6 +1983,129 @@ body.flow-open .backdrop{
 }
 </style>
 
+
+<style id="wte-luxury-tuning-final">
+/* 1) Logo leggermente più piccolo: circa -12% */
+@media(max-width:520px){
+  .gold-logo.wte-real-logo{
+    width:clamp(122px,30vw,168px) !important;
+    max-width:168px !important;
+  }
+
+  /* 2) Bagliore più sottile e raffinato */
+  .wte-real-logo-img{
+    filter:
+      drop-shadow(0 0 2px rgba(255,229,155,.16))
+      drop-shadow(0 0 7px rgba(215,162,53,.10)) !important;
+  }
+
+  /* 3) Brillantino più piccolo, discreto e lento */
+  .wte-logo-spark{
+    width:2.8px !important;
+    height:2.8px !important;
+    margin:-1.4px 0 0 -1.4px !important;
+    background:#fff2b0 !important;
+    box-shadow:
+      0 0 2px rgba(255,250,213,.92),
+      0 0 5px rgba(255,214,103,.76),
+      0 0 9px rgba(222,163,39,.54) !important;
+    animation-duration:7.2s !important;
+  }
+
+  /* 4) CTA: bagliore morbido + riflesso satinato ogni ~5.6s */
+  .primary{
+    position:relative !important;
+    overflow:hidden !important;
+    box-shadow:
+      0 14px 34px rgba(0,0,0,.28),
+      0 0 16px rgba(220,166,51,.11) !important;
+    animation:wteFinalCtaGlow 4.6s ease-in-out infinite !important;
+  }
+
+  .primary::before{
+    content:"" !important;
+    position:absolute !important;
+    inset:-20% auto -20% -38% !important;
+    width:26% !important;
+    background:linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.34),
+      rgba(255,245,213,.15),
+      transparent
+    ) !important;
+    transform:skewX(-18deg) !important;
+    filter:blur(.5px) !important;
+    animation:wteFinalCtaSheen 5.6s ease-in-out infinite !important;
+    pointer-events:none !important;
+    z-index:1 !important;
+  }
+
+  .primary::after{
+    content:"" !important;
+    position:absolute !important;
+    inset:-5px !important;
+    border-radius:inherit !important;
+    background:radial-gradient(
+      circle at 50% 50%,
+      rgba(255,222,129,.18),
+      transparent 68%
+    ) !important;
+    filter:blur(10px) !important;
+    opacity:.30 !important;
+    animation:wteFinalCtaAura 4.6s ease-in-out infinite !important;
+    pointer-events:none !important;
+    z-index:-1 !important;
+  }
+
+  .primary > *{
+    position:relative;
+    z-index:2;
+  }
+}
+
+@media(max-width:390px){
+  .gold-logo.wte-real-logo{
+    width:clamp(112px,31vw,138px) !important;
+    max-width:138px !important;
+  }
+}
+
+@keyframes wteFinalCtaGlow{
+  0%,100%{
+    box-shadow:
+      0 14px 34px rgba(0,0,0,.28),
+      0 0 13px rgba(220,166,51,.08);
+  }
+  50%{
+    box-shadow:
+      0 15px 36px rgba(0,0,0,.30),
+      0 0 22px rgba(231,179,61,.18);
+  }
+}
+
+@keyframes wteFinalCtaAura{
+  0%,100%{opacity:.20;transform:scale(.995)}
+  50%{opacity:.38;transform:scale(1.01)}
+}
+
+@keyframes wteFinalCtaSheen{
+  0%,62%{left:-38%;opacity:0}
+  68%{opacity:.72}
+  84%{left:122%;opacity:.16}
+  100%{left:122%;opacity:0}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .wte-logo-spark,
+  .primary,
+  .primary::before,
+  .primary::after{
+    animation:none !important;
+  }
+}
+</style>
+
 </head>
 
 <body>
