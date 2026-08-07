@@ -1546,163 +1546,294 @@ body.flow-open .backdrop{
 </style>
 <script src="/wte-analytics.js" defer></script>
 
-<!-- WTE RELEASE 1.0 — HERO MOBILE FINAL FIX V2 -->
-<style id="wte-release-1-0-hero-mobile-fix">
-@media (max-width: 520px){
+<!-- WTE RELEASE 1.0 — HERO REFERENCE EXACT MOBILE -->
+<style id="wte-release-1-0-reference-mobile">
+/* Desktop invariato */
+.hero-title-line{display:inline}
+.hero-title-line + .hero-title-line::before{content:" "}
 
-  /* Header mobile: blocchi in colonna, nessuna sovrapposizione */
+@media (max-width:520px){
+
+  /* VIDEO: pieno schermo, cinematografico, come reference */
+  .video{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    object-position:56% center !important;
+    filter:saturate(.82) contrast(1.08) brightness(.63) !important;
+  }
+
+  .backdrop{
+    background:
+      linear-gradient(180deg,
+        rgba(4,3,2,.10) 0%,
+        rgba(4,3,2,.08) 25%,
+        rgba(4,3,2,.18) 48%,
+        rgba(4,3,2,.42) 70%,
+        rgba(4,3,2,.78) 100%) !important;
+  }
+
+  /* TESTATA: logo grande a sinistra, stato a destra */
   .topbar{
     position:absolute !important;
-    top:0 !important;
-    left:0 !important;
-    right:0 !important;
-    width:100% !important;
+    inset:0 0 auto 0 !important;
+    z-index:20 !important;
     display:flex !important;
-    flex-direction:column !important;
-    align-items:center !important;
-    justify-content:flex-start !important;
-    gap:0 !important;
-    padding:max(12px, env(safe-area-inset-top)) 14px 0 !important;
+    flex-direction:row !important;
+    align-items:flex-start !important;
+    justify-content:space-between !important;
+    gap:14px !important;
+    padding:
+      max(22px, env(safe-area-inset-top))
+      18px
+      0 !important;
     box-sizing:border-box !important;
   }
 
   .gold-logo{
-    position:static !important;
-    width:92px !important;
-    max-width:24vw !important;
-    margin:0 auto !important;
-    transform:none !important;
-    text-align:center !important;
+    position:relative !important;
     flex:0 0 auto !important;
+    width:31vw !important;
+    min-width:150px !important;
+    max-width:205px !important;
+    margin:0 !important;
+    transform:none !important;
+    color:#f5c968 !important;
+    text-align:center !important;
+    filter:
+      drop-shadow(0 0 5px rgba(255,226,145,.78))
+      drop-shadow(0 0 16px rgba(229,172,60,.45))
+      drop-shadow(0 0 34px rgba(229,172,60,.22)) !important;
+    animation:wteLogoGlow 3.6s ease-in-out infinite !important;
   }
+
+  @keyframes wteLogoGlow{
+    0%,100%{
+      filter:
+        drop-shadow(0 0 4px rgba(255,226,145,.62))
+        drop-shadow(0 0 14px rgba(229,172,60,.35))
+        drop-shadow(0 0 28px rgba(229,172,60,.17));
+    }
+    50%{
+      filter:
+        drop-shadow(0 0 7px rgba(255,235,173,.90))
+        drop-shadow(0 0 22px rgba(229,172,60,.58))
+        drop-shadow(0 0 44px rgba(229,172,60,.28));
+    }
+  }
+
+  .gold-logo-mark{font-size:50px !important;margin-bottom:7px !important}
+  .gold-logo-main{font-size:28px !important;line-height:.96 !important}
+  .gold-logo-sub{font-size:15px !important;margin-top:7px !important}
+  .gold-logo-by{font-size:11px !important;margin-top:4px !important}
+  .gold-logo-tattoo{font-size:20px !important;margin-top:4px !important;padding-top:7px !important}
+  .gold-logo-small{font-size:8px !important}
+  .gold-logo-rings{font-size:16px !important;margin-top:5px !important}
 
   .topbar-right{
     position:static !important;
-    width:100% !important;
-    max-width:none !important;
-    margin:12px auto 0 !important;
+    flex:0 1 auto !important;
+    width:43vw !important;
+    max-width:250px !important;
+    min-width:0 !important;
+    margin:6px 0 0 auto !important;
     display:flex !important;
     flex-direction:column !important;
-    align-items:center !important;
-    justify-content:center !important;
-    gap:7px !important;
-    text-align:center !important;
+    align-items:stretch !important;
+    gap:10px !important;
   }
 
   .service-pill{
-    width:auto !important;
-    max-width:calc(100vw - 36px) !important;
-    margin:0 auto !important;
-    padding:7px 11px !important;
+    width:100% !important;
+    min-height:42px !important;
+    box-sizing:border-box !important;
+    justify-content:center !important;
+    gap:9px !important;
+    padding:8px 10px !important;
+    border:1px solid rgba(236,205,123,.52) !important;
+    background:rgba(8,6,4,.58) !important;
+    color:#fff6df !important;
+    font-size:9.5px !important;
+    letter-spacing:.085em !important;
     white-space:nowrap !important;
-    font-size:7px !important;
+    backdrop-filter:blur(5px) !important;
+  }
+
+  .service-dot{
+    width:10px !important;
+    height:10px !important;
+    flex:0 0 10px !important;
+    box-shadow:0 0 14px rgba(151,237,170,.62) !important;
   }
 
   .top-note{
     width:100% !important;
-    max-width:280px !important;
-    margin:0 auto !important;
+    max-width:none !important;
+    margin:0 !important;
+    color:#f7dfad !important;
+    font-size:9.5px !important;
+    line-height:1.5 !important;
+    letter-spacing:.16em !important;
     text-align:center !important;
-    font-size:7px !important;
-    line-height:1.35 !important;
   }
 
-  /* Hero centrata nello spazio disponibile sotto il blocco logo/status */
+  /* HERO: contenuto in basso a sinistra, come nell'immagine */
   .hero{
     min-height:100svh !important;
     height:100svh !important;
     display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
+    align-items:flex-end !important;
+    justify-content:flex-start !important;
     padding:
-      245px
-      18px
-      max(18px, env(safe-area-inset-bottom)) !important;
+      0
+      20px
+      max(28px, calc(env(safe-area-inset-bottom) + 18px)) !important;
     box-sizing:border-box !important;
     overflow:hidden !important;
   }
 
   .hero-inner{
     width:100% !important;
-    max-width:460px !important;
-    padding-top:0 !important;
-    margin:0 auto !important;
-    text-align:center !important;
-    transform:translateY(-3vh) !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:0 !important;
+    text-align:left !important;
+    transform:none !important;
   }
 
   .kicker{
-    margin:0 0 9px !important;
-    text-align:center !important;
+    margin:0 0 15px !important;
+    color:#f7dfad !important;
+    font-size:10px !important;
+    line-height:1.2 !important;
+    letter-spacing:.27em !important;
+    text-align:left !important;
+    white-space:nowrap !important;
   }
 
   .hero h1{
     width:100% !important;
-    max-width:430px !important;
-    margin:0 auto !important;
-    text-align:center !important;
-    font-size:clamp(36px,10.2vw,50px) !important;
-    line-height:.94 !important;
-    letter-spacing:-.04em !important;
+    max-width:94vw !important;
+    margin:0 !important;
+    font-size:clamp(48px, 10.8vw, 70px) !important;
+    line-height:.95 !important;
+    letter-spacing:-.052em !important;
+    text-align:left !important;
+    text-wrap:initial !important;
+  }
+
+  .hero-title-line{
+    display:block !important;
+    white-space:nowrap !important;
+  }
+  .hero-title-line + .hero-title-line::before{content:none !important}
+
+  .gold-word{
+    color:#f1c55d !important;
   }
 
   .hero-copy{
-    max-width:360px !important;
-    margin:11px auto 0 !important;
-    text-align:center !important;
+    width:100% !important;
+    max-width:none !important;
+    margin:18px 0 0 !important;
+    color:#f1e6d5 !important;
+    font-size:15px !important;
+    line-height:1.35 !important;
+    text-align:left !important;
   }
 
   .primary{
-    width:min(100%,420px) !important;
-    margin:14px auto 0 !important;
+    width:100% !important;
+    min-height:74px !important;
+    margin:24px 0 0 !important;
+    padding:0 20px !important;
+    border:1px solid rgba(255,239,196,.78) !important;
+    background:linear-gradient(105deg,#ffe69a 0%,#e8b73f 52%,#c7830b 100%) !important;
+    box-shadow:
+      0 16px 42px rgba(0,0,0,.34),
+      0 0 30px rgba(221,166,46,.18) !important;
+    color:#171006 !important;
+    font-size:15px !important;
+    font-weight:900 !important;
+    letter-spacing:.06em !important;
+    text-transform:uppercase !important;
   }
 
-  .resume-link,
-  .micro{
-    margin-left:auto !important;
-    margin-right:auto !important;
-    text-align:center !important;
-  }
-
-  .hero-trust{
-    justify-content:center !important;
-    text-align:center !important;
-  }
+  .resume-link{margin:10px 0 0 !important;text-align:left !important}
+  .micro,.hero-trust{display:none !important}
 }
 
-@media (max-width:380px), (max-height:720px){
-  .gold-logo{
-    width:78px !important;
+/* Telefoni più stretti: stesse proporzioni, senza sovrapposizioni */
+@media (max-width:390px){
+  .topbar{
+    padding-left:14px !important;
+    padding-right:14px !important;
   }
 
+  .gold-logo{
+    width:30vw !important;
+    min-width:118px !important;
+  }
+
+  .gold-logo-mark{font-size:40px !important}
+  .gold-logo-main{font-size:22px !important}
+  .gold-logo-sub{font-size:12px !important}
+  .gold-logo-by{font-size:9px !important}
+  .gold-logo-tattoo{font-size:16px !important}
+  .gold-logo-small{font-size:7px !important}
+  .gold-logo-rings{font-size:13px !important}
+
   .topbar-right{
-    margin-top:8px !important;
-    gap:5px !important;
+    width:47vw !important;
+    max-width:190px !important;
+    gap:8px !important;
+  }
+
+  .service-pill{
+    min-height:38px !important;
+    padding:7px 8px !important;
+    font-size:8px !important;
+  }
+
+  .top-note{
+    font-size:8px !important;
   }
 
   .hero{
-    padding:
-      205px
-      14px
-      max(12px, env(safe-area-inset-bottom)) !important;
+    padding-left:16px !important;
+    padding-right:16px !important;
+    padding-bottom:max(20px, calc(env(safe-area-inset-bottom) + 12px)) !important;
   }
 
-  .hero-inner{
-    transform:translateY(-1.5vh) !important;
+  .kicker{
+    margin-bottom:11px !important;
+    font-size:8.5px !important;
   }
 
   .hero h1{
-    font-size:clamp(32px,9.5vw,44px) !important;
+    font-size:clamp(41px,10.9vw,54px) !important;
   }
 
   .hero-copy{
-    margin-top:8px !important;
+    margin-top:12px !important;
+    font-size:13px !important;
   }
 
   .primary{
-    min-height:52px !important;
-    margin-top:10px !important;
+    min-height:62px !important;
+    margin-top:16px !important;
+    font-size:13px !important;
   }
+}
+
+/* Telefoni bassi: riduce solo quanto serve, senza cambiare composizione */
+@media (max-height:740px) and (max-width:520px){
+  .gold-logo{transform:scale(.86) !important;transform-origin:top left !important}
+  .topbar-right{transform:scale(.90) !important;transform-origin:top right !important}
+  .hero h1{font-size:clamp(38px,9.8vw,50px) !important}
+  .kicker{margin-bottom:9px !important}
+  .hero-copy{margin-top:9px !important}
+  .primary{min-height:58px !important;margin-top:12px !important}
 }
 </style>
 
@@ -1745,8 +1876,10 @@ body.flow-open .backdrop{
     <div class="hero-inner">
       <p class="kicker">Love. Marked. Forever.</p>
       <h1>
-        Il ricordo più <span class="gold-word">indelebile</span>
-        del vostro matrimonio.
+        <span class="hero-title-line">Il ricordo più</span>
+        <span class="hero-title-line gold-word">indelebile</span>
+        <span class="hero-title-line">del vostro</span>
+        <span class="hero-title-line">matrimonio.</span>
       </h1>
       <p class="hero-copy">
         Scoprite subito la vostra proposta.
