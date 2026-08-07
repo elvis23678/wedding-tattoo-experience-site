@@ -1,12 +1,223 @@
 <!doctype html>
 <html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050403"><meta name="robots" content="noindex,nofollow"><link rel="manifest" href="/manager.webmanifest"><title>WTE Manager</title><style>
 :root{--bg:#050403;--panel:#0d0a06;--gold:#c99a43;--gold2:#f0ddb0;--text:#f5eee3;--muted:#aa9d8c;--line:rgba(240,221,176,.13);--ok:#8eb894;--bad:#d28278;--serif:Georgia,"Times New Roman",serif}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}button,input,select,textarea{font:inherit}[hidden]{display:none!important}button{cursor:pointer}.login{min-height:100svh;display:grid;place-items:center;padding:18px;background:radial-gradient(circle at 50% 10%,rgba(201,154,67,.13),transparent 35%),var(--bg)}.card{border:1px solid var(--line);background:#0a0704}.login .card{width:min(430px,100%);padding:24px}.mark{width:58px;height:58px;margin:auto;display:grid;place-items:center;border:1px solid var(--line);color:var(--gold2);font:26px var(--serif)}h1,h2,h3{font-family:var(--serif);font-weight:400}.login h1{text-align:center;margin:14px 0 4px;font-size:34px}.login p{text-align:center;color:var(--muted);font-size:12px;margin:0 0 18px}.field{display:grid;gap:6px;margin-top:10px;color:#bdae98;font-size:8px;letter-spacing:.08em;text-transform:uppercase}.field input,.field select,.field textarea{width:100%;min-height:50px;padding:10px 12px;border:1px solid var(--line);background:#100d09;color:#fff;outline:none}.field textarea{min-height:100px}.gold{width:100%;min-height:50px;margin-top:12px;border:0;background:linear-gradient(135deg,#f3e0ae,#cf9f47 58%,#9e6923);color:#171006;font-weight:900}.error{color:var(--bad);font-size:11px;text-align:center;margin-top:8px}.top{position:sticky;top:0;z-index:20;min-height:62px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);background:rgba(5,4,3,.94);backdrop-filter:blur(16px)}.brand{display:flex;gap:9px;align-items:center}.brand .mark{width:38px;height:38px;margin:0;font-size:18px}.brand small{display:block;color:var(--gold2);font-size:7px;letter-spacing:.14em;text-transform:uppercase}.brand strong{display:block;margin-top:2px;font:18px var(--serif)}.logout{width:40px;height:40px;border:1px solid var(--line);background:transparent;color:#ddd0bd}main{max-width:900px;margin:auto;padding:14px 12px 88px}.intro{padding:8px 2px 16px}.intro small,.section-head small{color:var(--gold2);font-size:8px;letter-spacing:.14em;text-transform:uppercase}.intro h1,.section-head h2{margin:4px 0 0;font-size:32px}.intro p{margin:7px 0 0;color:var(--muted);font-size:12px}.home{display:grid;gap:9px}.home button{min-height:132px;padding:18px;border:1px solid var(--line);background:linear-gradient(180deg,#100c08,#080604);color:#fff;text-align:left}.home button small{color:var(--gold2);font-size:8px}.home button strong{display:block;margin-top:10px;font:27px var(--serif)}.home button span{display:block;margin-top:6px;color:var(--muted);font-size:11px}.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.back{min-height:38px;padding:0 10px;border:1px solid var(--line);background:transparent;color:#cfc2b0;font-size:9px}.filters{display:flex;gap:7px;overflow:auto;margin-bottom:9px}.filters button{flex:0 0 auto;min-height:38px;padding:0 12px;border:1px solid var(--line);background:#0b0805;color:#948775;font-size:9px}.filters .active{color:var(--gold2);border-color:rgba(201,154,67,.45)}.list{display:grid;gap:8px}.client,.pkg{padding:14px;border:1px solid var(--line);background:#0b0805}.client{display:grid;grid-template-columns:1fr auto;gap:10px;text-align:left;color:#fff}.client strong{font:19px var(--serif)}.client p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.45}.badge{padding:5px 7px;border:1px solid var(--line);font-size:7px;height:max-content}.ok{color:var(--ok)}.empty{padding:36px;border:1px solid var(--line);color:var(--muted);text-align:center;font-size:12px}.flashbar{display:flex;justify-content:flex-end;margin-bottom:9px}.flashbar .gold{width:auto;margin:0;padding:0 14px}.flashgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.flash{padding:7px;border:1px solid var(--line);background:#0b0805;color:#fff;text-align:left}.flash img{width:100%;aspect-ratio:1;object-fit:cover;background:#fff}.flash strong{display:block;margin-top:7px}.flash span{display:block;margin-top:3px;color:var(--muted);font-size:9px}.flash.off{opacity:.42}.pkg h3{margin:0;font-size:23px}.price{margin-top:6px;color:var(--gold2);font-size:25px;font-weight:900}.meta{margin-top:5px;color:var(--muted);font-size:10px}.pkg button{width:100%;min-height:42px;margin-top:9px;border:1px solid var(--line);background:transparent;color:#ddd0bd}.drawer{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.82);backdrop-filter:blur(12px)}.panel{position:absolute;inset:0 0 0 auto;width:min(560px,100%);overflow:auto;background:#060403;border-left:1px solid var(--line)}.drawerhead{position:sticky;top:0;z-index:2;min-height:62px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);background:#070503}.drawerhead strong{font:21px var(--serif)}.close{width:40px;height:40px;border:1px solid var(--line);background:transparent;color:#fff;font-size:20px}.body{padding:12px}.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.actions a{min-height:44px;display:grid;place-items:center;border:1px solid var(--line);color:#ddd0bd;text-decoration:none;font-size:9px}.save{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.save button{min-height:48px}.secondary{border:1px solid var(--line);background:transparent;color:#ddd0bd}.editor{width:100%;aspect-ratio:1;border:1px solid var(--line);background:#fff;touch-action:none}.editor canvas{width:100%;height:100%}.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.tools button{min-height:40px;border:1px solid var(--line);background:#0d0906;color:#ddd0bd}.bottom{position:fixed;inset:auto 0 0;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);padding:7px 8px calc(7px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:rgba(5,4,3,.97)}.bottom button{min-height:50px;border:0;background:transparent;color:#817563;font-size:9px}.bottom .active{color:var(--gold2)}.toast{position:fixed;left:50%;bottom:80px;z-index:120;transform:translateX(-50%);padding:10px 14px;border:1px solid var(--line);background:#151009;font-size:10px}@media(min-width:720px){.home{grid-template-columns:repeat(3,1fr)}.flashgrid{grid-template-columns:repeat(4,1fr)}main{padding:20px 18px 94px}}
+
+.bottom-nav.four{grid-template-columns:repeat(4,1fr)}
+.offer-card{
+  padding:15px;
+  border:1px solid var(--line);
+  background:#0b0805;
+}
+.offer-card-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+}
+.offer-card h3{
+  margin:0;
+  font-family:var(--serif);
+  font-size:22px;
+  font-weight:400;
+}
+.offer-card .offer-value{
+  margin-top:6px;
+  color:var(--gold2);
+  font-size:24px;
+  font-weight:900;
+}
+.offer-card p{
+  margin:7px 0 0;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.45;
+}
+.offer-card button{
+  width:100%;
+  min-height:42px;
+  margin-top:10px;
+  border:1px solid var(--line);
+  background:transparent;
+  color:#ddd0bd;
+}
+.offer-dates{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.offer-check{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  margin-top:12px;
+  color:#d4c7b5;
+  font-size:11px;
+  line-height:1.4;
+}
+.offer-check input{margin-top:2px}
+.offer-preview{
+  margin-top:15px;
+  padding:18px;
+  border:1px solid rgba(201,154,67,.25);
+  background:
+    radial-gradient(circle at 50% 0,rgba(201,154,67,.15),transparent 38%),
+    #080604;
+  text-align:center;
+}
+.offer-preview small{
+  color:var(--gold2);
+  font-size:8px;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+}
+.offer-preview strong{
+  display:block;
+  margin-top:10px;
+  font-family:var(--serif);
+  font-size:26px;
+  font-weight:400;
+}
+.offer-preview span{
+  display:block;
+  margin-top:9px;
+  color:var(--gold2);
+  font-size:22px;
+  font-weight:900;
+}
+.offer-preview p{
+  margin:9px auto 0;
+  max-width:360px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.5;
+}
+.offer-preview em{
+  display:block;
+  margin-top:10px;
+  color:#dfd2bd;
+  font-size:9px;
+  font-style:normal;
+}
+.offer-actions{grid-template-columns:1fr 1fr}
+.danger-button{
+  width:100%;
+  min-height:46px;
+  margin-top:9px;
+  border:1px solid rgba(210,130,120,.32);
+  background:transparent;
+  color:var(--danger);
+}
+.poster-modal{
+  position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.88);
+  display:grid;place-items:center;padding:10px;backdrop-filter:blur(14px)
+}
+.poster-panel{
+  width:min(520px,100%);max-height:96svh;overflow:auto;
+  border:1px solid var(--line);background:#060403
+}
+.poster-body{padding:10px}
+.poster-body canvas{
+  display:block;width:100%;height:auto;background:#080604;border:1px solid var(--line)
+}
+.poster-download{
+  display:grid;place-items:center;text-decoration:none
+}
+
 </style></head><body>
 <section class="login" id="login"><form class="card" id="loginForm"><div class="mark">W</div><h1>WTE Manager</h1><p>Tre cose. Nessuna confusione.</p><label class="field">Email collaboratrice (facoltativa per Admin)<input id="email" type="email"></label><label class="field">Password<input id="password" type="password" required></label><button class="gold">Entra</button><div class="error" id="loginError"></div></form></section>
 <div id="app" hidden><header class="top"><div class="brand"><div class="mark">W</div><div><small>Wedding Tattoo Experience</small><strong>Manager</strong></div></div><button class="logout" id="logout">↗</button></header><main><section id="homeView"><div class="intro"><small>Area staff</small><h1 id="welcome">Buongiorno.</h1><p id="today">Caricamento appuntamenti…</p></div><div class="home"><button data-open="clients"><small>01</small><strong>Clienti</strong><span>Appuntamenti, messaggi, avvisi e note.</span></button><button data-open="flash"><small>02</small><strong>Flash</strong><span>Aggiungi, modifica o togli flash dal sito.</span></button><button data-open="packages"><small>03</small><strong>Pacchetti</strong><span>Prezzi, durata e servizi inclusi.</span></button></div></section><section id="clientsView" hidden><div class="section-head"><div><small>Gestione</small><h2>Clienti</h2></div><button class="back" data-home>Home</button></div><div class="filters" id="filters"><button class="active" data-f="upcoming">Prossimi</button><button data-f="today">Oggi</button><button data-f="all">Tutti</button></div><div class="list" id="clients"></div></section><section id="flashView" hidden><div class="section-head"><div><small>Catalogo</small><h2>Flash</h2></div><button class="back" data-home>Home</button></div><div class="flashbar"><button class="gold" id="newFlash">+ Nuovo flash</button></div><div class="flashgrid" id="flashes"></div></section><section id="packagesView" hidden><div class="section-head"><div><small>Configurazione</small><h2>Pacchetti</h2></div><button class="back" data-home>Home</button></div><div class="list" id="packages"></div></section></main><nav class="bottom"><button data-nav="clients">Clienti</button><button data-nav="flash">Flash</button><button data-nav="packages">Pacchetti</button></nav></div>
 <div class="drawer" id="clientDrawer" hidden><div class="panel"><div class="drawerhead"><strong id="clientTitle">Cliente</strong><button class="close" data-close="clientDrawer">×</button></div><div class="body"><label class="field">Stato<select id="status"><option>Nuova</option><option>Da contattare</option><option>In attesa</option><option>Confermata</option><option>Completata</option><option>Annullata</option></select></label><label class="field">Avviso<input id="reminder" placeholder="Es. richiamare lunedì"></label><label class="field">Note interne<textarea id="notes"></textarea></label><div class="actions"><a id="call">Chiama</a><a id="wa" target="_blank">WhatsApp</a><a id="mail">Email</a></div><div class="save"><button class="secondary" data-close="clientDrawer">Chiudi</button><button class="gold" id="saveClient" style="margin:0">Salva</button></div></div></div></div>
 <div class="drawer" id="flashDrawer" hidden><div class="panel"><div class="drawerhead"><strong id="flashTitleHead">Nuovo flash</strong><button class="close" data-close="flashDrawer">×</button></div><div class="body"><input id="imageInput" type="file" accept="image/*"><div class="editor"><canvas id="canvas" width="1000" height="1000"></canvas></div><div class="tools"><button id="left">↺ Ruota</button><button id="fit">Adatta</button><button id="right">Ruota ↻</button></div><label class="field">Zoom<input id="zoom" type="range" min=".5" max="3" step=".01" value="1"></label><label class="field">Nome<input id="flashName"></label><label class="field">Categoria<input id="category"></label><label class="field">Stato<select id="active"><option value="true">Visibile</option><option value="false">Nascosto</option></select></label><div class="save"><button class="secondary" data-close="flashDrawer">Annulla</button><button class="gold" id="saveFlash" style="margin:0">Salva</button></div></div></div></div>
-<div class="drawer" id="packageDrawer" hidden><div class="panel"><div class="drawerhead"><strong id="pkgHead">Pacchetto</strong><button class="close" data-close="packageDrawer">×</button></div><div class="body"><label class="field">Nome<input id="pkgName"></label><label class="field">Prezzo (€)<input id="pkgPrice" type="number" step="10"></label><label class="field">Durata (ore)<input id="pkgHours" type="number"></label><label class="field">Acconto (%)<input id="pkgDeposit" type="number"></label><label class="field">Descrizione<textarea id="pkgDesc"></textarea></label><label class="field">Servizi inclusi (uno per riga)<textarea id="pkgFeatures"></textarea></label><div class="save"><button class="secondary" data-close="packageDrawer">Annulla</button><button class="gold" id="savePkg" style="margin:0">Salva</button></div><div class="error" id="pkgError"></div></div></div></div><div class="toast" id="toast" hidden></div>
+<div class="drawer" id="packageDrawer" hidden><div class="panel"><div class="drawerhead"><strong id="pkgHead">Pacchetto</strong><button class="close" data-close="packageDrawer">×</button></div><div class="body"><label class="field">Nome<input id="pkgName"></label><label class="field">Prezzo (€)<input id="pkgPrice" type="number" step="10"></label><label class="field">Durata (ore)<input id="pkgHours" type="number"></label><label class="field">Acconto (%)<input id="pkgDeposit" type="number"></label><label class="field">Descrizione<textarea id="pkgDesc"></textarea></label><label class="field">Servizi inclusi (uno per riga)<textarea id="pkgFeatures"></textarea></label><div class="save"><button class="secondary" data-close="packageDrawer">Annulla</button><button class="gold" id="savePkg" style="margin:0">Salva</button></div><div class="error" id="pkgError"></div></div></div></div>
+<div class="drawer" id="offerDrawer" hidden>
+  <div class="drawer-panel">
+    <div class="drawer-head">
+      <strong id="offerDrawerTitle">Nuova offerta</strong>
+      <button class="icon-button" data-close="offerDrawer">×</button>
+    </div>
+    <div class="drawer-body">
+      <label class="field">Titolo
+        <input id="offerTitle" maxlength="120" placeholder="Es. Wedding Week">
+      </label>
+
+      <label class="field">Tipo
+        <select id="offerType">
+          <option value="percent">Sconto percentuale</option>
+          <option value="fixed">Sconto in euro</option>
+          <option value="gift">Extra / omaggio</option>
+        </select>
+      </label>
+
+      <label class="field" id="offerValueWrap">Valore
+        <input id="offerValue" type="number" min="0" step="1" placeholder="10">
+      </label>
+
+      <label class="field" id="offerGiftWrap" hidden>Extra / omaggio
+        <input id="offerGift" maxlength="180" placeholder="Es. 2 tattoo più grandi per gli sposi">
+      </label>
+
+      <div class="offer-dates">
+        <label class="field">Data inizio
+          <input id="offerStart" type="date">
+        </label>
+        <label class="field">Data fine
+          <input id="offerEnd" type="date">
+        </label>
+      </div>
+
+      <label class="field">Uso
+        <select id="offerScope">
+          <option value="global">Offerta pubblica sul sito</option>
+          <option value="personal">Offerta personale per un cliente</option>
+        </select>
+      </label>
+
+      <label class="field" id="offerClientWrap" hidden>Cliente
+        <select id="offerClient"></select>
+      </label>
+
+      <label class="field">Testo breve
+        <textarea id="offerMessage" placeholder="Es. Solo per pochi giorni: una condizione speciale per il vostro Wedding Tattoo Experience."></textarea>
+      </label>
+
+      <label class="offer-check">
+        <input id="offerPopup" type="checkbox" checked>
+        <span>Mostra popup automatico sul sito durante il periodo</span>
+      </label>
+
+      <label class="offer-check">
+        <input id="offerActive" type="checkbox" checked>
+        <span>Offerta attiva</span>
+      </label>
+
+      <div class="offer-preview" id="offerPreview">
+        <small>Anteprima</small>
+        <strong id="offerPreviewTitle">Wedding Tattoo Experience</strong>
+        <span id="offerPreviewValue">Offerta speciale</span>
+        <p id="offerPreviewMessage">La vostra promozione comparirà qui.</p>
+        <em id="offerPreviewDates"></em>
+      </div>
+
+      <div class="save-row offer-actions">
+        <button class="secondary" id="generatePosterBtn" type="button">Locandina Instagram</button>
+        <button class="gold-button" id="saveOfferBtn" type="button" style="margin:0">Salva offerta</button>
+      </div>
+
+      <button class="danger-button" id="deleteOfferBtn" type="button" hidden>Elimina offerta</button>
+      <div class="message" id="offerMessageBox"></div>
+    </div>
+  </div>
+</div>
+
+<div class="poster-modal" id="posterModal" hidden>
+  <div class="poster-panel">
+    <div class="drawer-head">
+      <strong>Locandina Instagram</strong>
+      <button class="icon-button" id="closePosterBtn">×</button>
+    </div>
+    <div class="poster-body">
+      <canvas id="posterCanvas" width="1080" height="1350"></canvas>
+      <a class="gold-button poster-download" id="downloadPoster" download="wte-offerta-instagram.png">Salva immagine</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
 <script>
 const API='https://wte-cloud-api.onrender.com',TK='wte_manager_token',$=id=>document.getElementById(id);let token=localStorage.getItem(TK)||'',user=null,practices=[],flashItems=[],pkgItems=[],current=null,currentFlash=null,currentPkg=null,filter='upcoming';
 function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')}function toast(m){const e=$('toast');e.textContent=m;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,1800)}async function api(path,opt={}){const r=await fetch(API+path,{cache:'no-store',...opt,headers:{...(opt.body?{'Content-Type':'application/json'}:{}),...(token?{Authorization:'Bearer '+token}:{}),...(opt.headers||{})}});const d=await r.json().catch(()=>({}));if(r.status===401){logout();throw Error('Sessione scaduta')}if(!r.ok)throw Error(d.error||'Errore '+r.status);return d}function logout(){token='';localStorage.removeItem(TK);$('app').hidden=true;$('login').hidden=false}$('logout').onclick=logout;$('loginForm').onsubmit=async e=>{e.preventDefault();$('loginError').textContent='';try{const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});token=d.token;user=d.user;localStorage.setItem(TK,token);start()}catch(x){$('loginError').textContent=x.message}};

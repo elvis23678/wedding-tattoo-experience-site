@@ -1541,6 +1541,59 @@ body.flow-open .backdrop{
   }
 }
 
+
+.offer-popup{
+  position:fixed;inset:0;z-index:200;
+  display:grid;place-items:center;padding:16px;
+  background:rgba(2,1,1,.78);
+  backdrop-filter:blur(14px);
+}
+.offer-popup-card{
+  position:relative;
+  width:min(520px,100%);
+  padding:28px 22px 22px;
+  border:1px solid rgba(240,221,176,.26);
+  background:
+    radial-gradient(circle at 50% 0,rgba(212,170,86,.17),transparent 36%),
+    linear-gradient(180deg,#120d08,#070503);
+  box-shadow:0 35px 100px rgba(0,0,0,.62);
+  text-align:center;
+}
+.offer-popup-close{
+  position:absolute;top:9px;right:9px;
+  width:38px;height:38px;border:0;background:transparent;
+  color:rgba(255,255,255,.54);font-size:24px
+}
+.offer-popup-card small{
+  color:var(--gold-bright);
+  font-size:8px;letter-spacing:.18em;text-transform:uppercase
+}
+.offer-popup-card h2{
+  margin:10px 0 0;
+  font-family:var(--serif);
+  font-size:38px!important;
+  font-weight:400
+}
+.offer-popup-card>strong{
+  display:block;margin-top:10px;
+  color:var(--gold-bright);
+  font-size:34px
+}
+.offer-popup-card p{
+  margin:10px auto 0!important;
+  max-width:420px;
+  color:#c9baa5!important;
+  font-size:13px!important;
+  line-height:1.5!important
+}
+.offer-popup-card em{
+  display:block;margin-top:10px;
+  color:#a99b88;font-size:9px;font-style:normal
+}
+.offer-popup-card .primary{
+  width:100%;margin-top:18px
+}
+
 </style>
 <script src="/wte-analytics.js" defer></script>
 </head>
@@ -3027,7 +3080,65 @@ const heroVideo=document.getElementById('heroVideo');
 if(heroVideo){
   heroVideo.playbackRate=.82;
 }
+
+function publicOfferValue(offer){
+  if(offer.type==='percent')return `-${Number(offer.value||0)}%`;
+  if(offer.type==='fixed'){
+    return `-${new Intl.NumberFormat('it-IT',{
+      style:'currency',currency:'EUR',maximumFractionDigits:0
+    }).format(Number(offer.value||0))}`;
+  }
+  return offer.gift||'Extra incluso';
+}
+function publicOfferDate(value){
+  if(!value)return '';
+  const d=new Date(`${value}T12:00:00`);
+  return new Intl.DateTimeFormat('it-IT',{day:'numeric',month:'long'}).format(d);
+}
+async function loadActivePublicOffer(){
+  try{
+    const response=await fetch(`${API}/api/public/offers/active`,{
+      cache:'no-store'
+    });
+    if(!response.ok)return;
+    const data=await response.json();
+    const offer=data.offer;
+    if(!offer)return;
+
+    const seenKey=`wte_offer_seen_${offer.id}`;
+    if(sessionStorage.getItem(seenKey))return;
+
+    document.getElementById('offerPopupTitle').textContent=offer.title;
+    document.getElementById('offerPopupValue').textContent=publicOfferValue(offer);
+    document.getElementById('offerPopupMessage').textContent=
+      offer.message||'Una condizione speciale per il vostro matrimonio.';
+
+    const dates=[
+      offer.startDate?`dal ${publicOfferDate(offer.startDate)}`:'',
+      offer.endDate?`al ${publicOfferDate(offer.endDate)}`:''
+    ].filter(Boolean).join(' ');
+    document.getElementById('offerPopupDates').textContent=dates;
+
+    const popup=document.getElementById('offerPopup');
+    popup.hidden=false;
+
+    document.getElementById('offerPopupClose').onclick=()=>{
+      sessionStorage.setItem(seenKey,'1');
+      popup.hidden=true;
+    };
+
+    document.getElementById('offerPopupCta').onclick=()=>{
+      sessionStorage.setItem(seenKey,'1');
+      popup.hidden=true;
+      openExperience();
+    };
+  }catch(error){
+    console.warn('Offerta pubblica non disponibile',error);
+  }
+}
+
 loadHeroVideo();
+loadActivePublicOffer();
 
 window.addEventListener('unhandledrejection',event=>{
   console.error('WTE unhandled rejection',event.reason);
@@ -3037,5 +3148,18 @@ window.addEventListener('error',event=>{
   console.error('WTE frontend error',event.error||event.message);
 });
 </script>
+
+<div class="offer-popup" id="offerPopup" hidden>
+  <div class="offer-popup-card" role="dialog" aria-modal="true" aria-labelledby="offerPopupTitle">
+    <button class="offer-popup-close" id="offerPopupClose" type="button" aria-label="Chiudi">×</button>
+    <small>Wedding Tattoo Experience</small>
+    <h2 id="offerPopupTitle">Offerta speciale</h2>
+    <strong id="offerPopupValue"></strong>
+    <p id="offerPopupMessage"></p>
+    <em id="offerPopupDates"></em>
+    <button class="primary" id="offerPopupCta" type="button">Verifica disponibilità →</button>
+  </div>
+</div>
+
 </body>
 </html>
