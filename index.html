@@ -1946,18 +1946,21 @@ body.flow-open .backdrop{
   z-index:2 !important;
   left:50% !important;
   top:16.5% !important;
-  width:4px !important;
-  height:4px !important;
-  margin:-2px 0 0 -2px !important;
+  width:2.8px !important;
+  height:2.8px !important;
+  margin:-1.4px 0 0 -1.4px !important;
   border-radius:50% !important;
-  background:#fff4ba !important;
+  background:#fff2b0 !important;
   box-shadow:
-    0 0 3px #fff7d2,
-    0 0 7px #ffd86b,
-    0 0 14px rgba(238,177,44,.95) !important;
-  offset-path:path("M 0 -30 L 44 14 L 0 58 L -44 14 Z") !important;
+    0 0 2px rgba(255,250,213,.92),
+    0 0 5px rgba(255,214,103,.76),
+    0 0 9px rgba(222,163,39,.54) !important;
+
+  /* Tracciato calibrato sul rombo superiore reale del logo */
+  offset-path:path("M -43 17 L 0 -28 L 43 17 M 32 18 L 0 -15 L -32 18") !important;
   offset-rotate:0deg !important;
-  animation:wteRealLogoSpark 5.6s linear infinite !important;
+  offset-anchor:50% 50% !important;
+  animation:wteRealLogoSpark 8.4s linear infinite !important;
   pointer-events:none !important;
 }
 
@@ -1974,7 +1977,6 @@ body.flow-open .backdrop{
     max-width:154px !important;
   }
   .wte-logo-spark{
-    offset-path:path("M 0 -24 L 36 12 L 0 48 L -36 12 Z") !important;
   }
 }
 
@@ -2103,6 +2105,19 @@ body.flow-open .backdrop{
   .primary::after{
     animation:none !important;
   }
+}
+</style>
+
+
+<style id="wte-spark-path-polish">
+@keyframes wteRealLogoSpark{
+  0%   {offset-distance:0%;   opacity:0}
+  3%   {opacity:.95}
+  22%  {opacity:1}
+  48%  {opacity:.92}
+  72%  {opacity:1}
+  96%  {opacity:.95}
+  100% {offset-distance:100%; opacity:0}
 }
 </style>
 
