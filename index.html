@@ -377,7 +377,7 @@ input{
 .flow-card{
   width:min(720px,100%);
   min-height:0;
-  padding:12px 18px 18px;
+  padding:12px 18px 16px;
   border:1px solid var(--line);
   background:
     linear-gradient(180deg,rgba(20,14,9,.90),rgba(8,6,4,.94));
@@ -405,7 +405,7 @@ input{
   padding:0;
   border:0;
   background:transparent;
-  color:rgba(211,197,175,.30);
+  color:rgba(211,197,175,.22);
   font-size:7px;
   font-weight:400;
   letter-spacing:.03em;
@@ -451,8 +451,8 @@ input{
   position:absolute;
   top:1px;
   left:50%;
-  width:5px;
-  height:5px;
+  width:4px;
+  height:4px;
   border:1px solid rgba(188,174,153,.22);
   border-radius:50%;
   background:#0b0805;
@@ -478,7 +478,7 @@ input{
 .milestone.active:before{
   border-color:var(--gold-bright);
   background:var(--gold-bright);
-  box-shadow:0 0 0 4px rgba(212,170,86,.06),0 0 13px rgba(212,170,86,.30);
+  box-shadow:0 0 0 3px rgba(212,170,86,.05),0 0 10px rgba(212,170,86,.24);
 }
 .progress-label{
   display:none;
@@ -488,13 +488,21 @@ input{
   position:relative;
   display:none;
   min-height:0;
-  padding-top:8px;
-  animation:stepIn .32s ease both;
+  padding-top:6px;
+  animation:stepIn .30s cubic-bezier(.2,.7,.2,1) both;
 }
 .step.active{display:flex;flex-direction:column}
 @keyframes stepIn{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:none}
+  from{
+    opacity:0;
+    transform:translate3d(18px,0,0);
+    filter:blur(2px);
+  }
+  to{
+    opacity:1;
+    transform:translate3d(0,0,0);
+    filter:blur(0);
+  }
 }
 .step small{
   color:var(--gold);
@@ -783,6 +791,24 @@ input{
 }
 .result-reassurance span{white-space:nowrap}
 .result .primary{margin-left:auto;margin-right:auto}
+
+.nav .primary,
+.nav button.primary{
+  width:min(100%,520px);
+  min-height:56px;
+  margin:0 auto;
+  border:1px solid rgba(255,242,205,.58);
+  background:linear-gradient(135deg,#fff4ca 0%,#e1b75a 50%,#a66f22 100%);
+  box-shadow:
+    0 16px 38px rgba(0,0,0,.34),
+    0 0 22px rgba(218,169,72,.16),
+    inset 0 1px 0 rgba(255,255,255,.36);
+}
+.nav .primary:active,
+.nav button.primary:active{
+  transform:scale(.987);
+}
+
 .secondary{
   display:inline-block;
   margin-top:14px;
@@ -1266,6 +1292,25 @@ body.flow-open .topbar{display:none}
   .reset-flow{font-size:6px}
 }
 
+
+@media(max-width:520px){
+  .flow{padding:28px 8px 12px}
+  .flow-card{padding:9px 11px 13px}
+  .step{padding-top:4px}
+  .field{margin-top:16px}
+  .smart-hint{margin-top:5px}
+  .nav{margin-top:14px}
+  .nav .primary,
+  .nav button.primary{
+    width:100%;
+    min-height:54px;
+  }
+  .milestone:before{
+    width:4px;
+    height:4px;
+  }
+}
+
 @media(prefers-reduced-data:reduce){
   .video{display:none}
   .shell{background:#100b07}
@@ -1371,8 +1416,8 @@ body.flow-open .topbar{display:none}
 
       <section class="step active" data-step="0">
         <small>Iniziamo</small>
-        <h2>Come vi chiamate?</h2>
-        <p>Il nome del referente principale è sufficiente.</p>
+        <h2>Iniziamo da voi.</h2>
+        <p>Diteci semplicemente come possiamo chiamarvi.</p>
         <label class="field">
           Nome e cognome
           <input name="name" required minlength="2" maxlength="180" autocomplete="name">
