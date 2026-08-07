@@ -342,6 +342,58 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
   );
 }
 
+
+let offersSchemaReady=false;
+async function ensureOffersSchema(){
+  if(offersSchemaReady)return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS wte_offers (
+      id BIGSERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      type TEXT NOT NULL CHECK (type IN ('percent','fixed','gift')),
+      value NUMERIC(12,2) NOT NULL DEFAULT 0,
+      gift TEXT NOT NULL DEFAULT '',
+      start_date DATE,
+      end_date DATE,
+      scope TEXT NOT NULL DEFAULT 'global' CHECK (scope IN ('global','personal')),
+      client_id TEXT,
+      client_name TEXT,
+      message TEXT NOT NULL DEFAULT '',
+      show_popup BOOLEAN NOT NULL DEFAULT TRUE,
+      active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_wte_offers_active_dates
+    ON wte_offers(active,start_date,end_date);
+  `);
+  offersSchemaReady=true;
+}
+
+function offerRow(row){
+  return {
+    id:row.id,
+    title:row.title,
+    type:row.type,
+    value:Number(row.value||0),
+    gift:row.gift||'',
+    startDate:row.start_date
+      ?new Date(row.start_date).toISOString().slice(0,10)
+      :null,
+    endDate:row.end_date
+      ?new Date(row.end_date).toISOString().slice(0,10)
+      :null,
+    scope:row.scope,
+    clientId:row.client_id||null,
+    clientName:row.client_name||null,
+    message:row.message||'',
+    showPopup:Boolean(row.show_popup),
+    active:Boolean(row.active),
+    createdAt:row.created_at,
+    updatedAt:row.updated_at
+  };
+}
+
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
   res.json({ok:true, version:'5.0.0-conversion-analytics', dbTime:result.rows[0].now});
@@ -3222,46 +3274,6 @@ function deterministicRecommendation(data,packages) {
   };
 }
 
-
-function budgetCeiling(code) {
-  if(code==='under1000')return 100000;
-  if(code==='1000-1500')return 150000;
-  if(code==='1500-2200')return 220000;
-  if(code==='over2200')return Number.POSITIVE_INFINITY;
-  return null;
-}
-
-function budgetRecommendation(budget,packages,recommendedCode) {
-  const ceiling=budgetCeiling(budget);
-  if(ceiling===null)return null;
-
-  const priced=packages
-    .filter(item=>Number(item.price_cents||0)>0)
-    .sort((a,b)=>Number(a.price_cents)-Number(b.price_cents));
-
-  if(!priced.length)return null;
-
-  let selected;
-
-  if(!Number.isFinite(ceiling)){
-    selected=priced[priced.length-1];
-  }else{
-    const affordable=priced.filter(
-      item=>Number(item.price_cents)<=ceiling
-    );
-    selected=affordable.length
-      ?affordable[affordable.length-1]
-      :priced[0];
-  }
-
-  return {
-    budget,
-    packageCode:selected.code,
-    matchesRecommended:selected.code===recommendedCode,
-    package:selected
-  };
-}
-
 function outputTextFromResponse(payload) {
   if(typeof payload?.output_text==='string')return payload.output_text;
   for(const item of payload?.output||[]){
@@ -3771,6 +3783,145 @@ app.get('/api/analytics/overview', auth, adminOnly, async (req,res) => {
 });
 
 
+
+// ============================================================
+// WTE Manager — Offerte e sconti programmati
+// ============================================================
+app.get('/api/offers', auth, async (_req,res) => {
+  await ensureOffersSchema();
+  const result=await pool.query(
+    `SELECT * FROM wte_offers
+     ORDER BY active DESC,
+              COALESCE(start_date,CURRENT_DATE) DESC,
+              id DESC`
+  );
+  res.json({offers:result.rows.map(offerRow)});
+});
+
+app.post('/api/offers', auth, async (req,res) => {
+  await ensureOffersSchema();
+
+  const parsed=z.object({
+    title:z.string().min(1).max(120),
+    type:z.enum(['percent','fixed','gift']),
+    value:z.coerce.number().min(0).default(0),
+    gift:z.string().max(180).optional().default(''),
+    startDate:z.string().nullable().optional(),
+    endDate:z.string().nullable().optional(),
+    scope:z.enum(['global','personal']).default('global'),
+    clientId:z.string().nullable().optional(),
+    clientName:z.string().nullable().optional(),
+    message:z.string().max(600).optional().default(''),
+    showPopup:z.boolean().default(true),
+    active:z.boolean().default(true)
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Offerta non valida.'});
+  }
+
+  const o=parsed.data;
+  if(o.startDate&&o.endDate&&o.endDate<o.startDate){
+    return res.status(400).json({error:'Intervallo date non valido.'});
+  }
+
+  const result=await pool.query(
+    `INSERT INTO wte_offers
+     (title,type,value,gift,start_date,end_date,scope,
+      client_id,client_name,message,show_popup,active)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+     RETURNING *`,
+    [
+      o.title,o.type,o.value,o.gift,
+      o.startDate||null,o.endDate||null,o.scope,
+      o.scope==='personal'?(o.clientId||null):null,
+      o.scope==='personal'?(o.clientName||null):null,
+      o.message,o.showPopup,o.active
+    ]
+  );
+
+  res.status(201).json({offer:offerRow(result.rows[0])});
+});
+
+app.patch('/api/offers/:id', auth, async (req,res) => {
+  await ensureOffersSchema();
+
+  const parsed=z.object({
+    title:z.string().min(1).max(120),
+    type:z.enum(['percent','fixed','gift']),
+    value:z.coerce.number().min(0).default(0),
+    gift:z.string().max(180).optional().default(''),
+    startDate:z.string().nullable().optional(),
+    endDate:z.string().nullable().optional(),
+    scope:z.enum(['global','personal']).default('global'),
+    clientId:z.string().nullable().optional(),
+    clientName:z.string().nullable().optional(),
+    message:z.string().max(600).optional().default(''),
+    showPopup:z.boolean().default(true),
+    active:z.boolean().default(true)
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Offerta non valida.'});
+  }
+
+  const o=parsed.data;
+  if(o.startDate&&o.endDate&&o.endDate<o.startDate){
+    return res.status(400).json({error:'Intervallo date non valido.'});
+  }
+
+  const result=await pool.query(
+    `UPDATE wte_offers
+     SET title=$2,type=$3,value=$4,gift=$5,
+         start_date=$6,end_date=$7,scope=$8,
+         client_id=$9,client_name=$10,message=$11,
+         show_popup=$12,active=$13,updated_at=NOW()
+     WHERE id=$1
+     RETURNING *`,
+    [
+      req.params.id,o.title,o.type,o.value,o.gift,
+      o.startDate||null,o.endDate||null,o.scope,
+      o.scope==='personal'?(o.clientId||null):null,
+      o.scope==='personal'?(o.clientName||null):null,
+      o.message,o.showPopup,o.active
+    ]
+  );
+
+  if(!result.rowCount){
+    return res.status(404).json({error:'Offerta non trovata.'});
+  }
+
+  res.json({offer:offerRow(result.rows[0])});
+});
+
+app.delete('/api/offers/:id', auth, async (req,res) => {
+  await ensureOffersSchema();
+  await pool.query('DELETE FROM wte_offers WHERE id=$1',[req.params.id]);
+  res.json({ok:true});
+});
+
+app.get('/api/public/offers/active', publicRateLimit, async (_req,res) => {
+  await ensureOffersSchema();
+
+  const result=await pool.query(
+    `SELECT *
+     FROM wte_offers
+     WHERE active=TRUE
+       AND scope='global'
+       AND show_popup=TRUE
+       AND (start_date IS NULL OR start_date<=CURRENT_DATE)
+       AND (end_date IS NULL OR end_date>=CURRENT_DATE)
+     ORDER BY
+       COALESCE(end_date,CURRENT_DATE+INTERVAL '100 years') ASC,
+       id DESC
+     LIMIT 1`
+  );
+
+  res.json({
+    offer:result.rowCount?offerRow(result.rows[0]):null
+  });
+});
+
 app.get('/api/public/availability/:date', publicRateLimit, async (req,res) => {
   try{
     const result=await dateAvailability.check(req.params.date,{
@@ -3982,7 +4133,6 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
         code:selected.code,
         name:selected.name,
         description:selected.description,
-        reason:selected.reason,
         priceCents:selected.price_cents,
         priceLabel:selected.price_cents?euroFromCents(selected.price_cents):'Su misura',
         depositPercent:selected.deposit_percent,
@@ -3990,44 +4140,6 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
         features:selected.features||[]
       }
     },
-    budgetRecommendation:(()=>{
-      const match=budgetRecommendation(
-        normalizedData.budget,
-        packages,
-        selected.code
-      );
-      if(!match)return null;
-      return {
-        budget:match.budget,
-        matchesRecommended:match.matchesRecommended,
-        package:{
-          code:match.package.code,
-          name:match.package.name,
-          description:match.package.description,
-          reason:match.package.reason,
-          priceCents:match.package.price_cents,
-          priceLabel:match.package.price_cents
-            ?euroFromCents(match.package.price_cents)
-            :'Su misura',
-          depositPercent:match.package.deposit_percent,
-          includedHours:Number(match.package.included_hours),
-          features:match.package.features||[]
-        }
-      };
-    })(),
-    packages:packages.map(item=>({
-      code:item.code,
-      name:item.name,
-      description:item.description,
-      reason:item.reason,
-      priceCents:item.price_cents,
-      priceLabel:item.price_cents?euroFromCents(item.price_cents):'Su misura',
-      depositPercent:item.deposit_percent,
-      includedHours:Number(item.included_hours),
-      minGuests:item.min_guests,
-      maxGuests:item.max_guests,
-      features:item.features||[]
-    })),
     ai:{
       enabled:Boolean(OPENAI_API_KEY),
       used:Boolean(recommendation.aiUsed),
@@ -4036,121 +4148,6 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
     }
   });
 });
-
-
-app.post('/api/public/advisor/:salesToken/select-package', publicRateLimit, async (req,res) => {
-  const parsed=z.object({
-    packageCode:z.string().min(1).max(80),
-    contractToken:z.string().min(10).max(200)
-  }).safeParse(req.body);
-
-  if(!parsed.success){
-    return res.status(400).json({
-      error:'Selezione pacchetto non valida.'
-    });
-  }
-
-  const sessionResult=await pool.query(
-    `SELECT token,contract_token,status
-     FROM wte_sales_sessions
-     WHERE token=$1
-     LIMIT 1`,
-    [req.params.salesToken]
-  );
-
-  if(!sessionResult.rowCount){
-    return res.status(404).json({
-      error:'Sessione proposta non trovata.'
-    });
-  }
-
-  const session=sessionResult.rows[0];
-
-  if(session.contract_token!==parsed.data.contractToken){
-    return res.status(403).json({
-      error:'Contratto non associato alla sessione.'
-    });
-  }
-
-  const packages=await activePackages();
-  const selected=packages.find(
-    item=>item.code===parsed.data.packageCode
-  );
-
-  if(!selected){
-    return res.status(404).json({
-      error:'Pacchetto non disponibile.'
-    });
-  }
-
-  const selectionMeta={
-    selectedByCustomer:true,
-    selectedPackageCode:selected.code,
-    selectedAt:new Date().toISOString()
-  };
-
-  const client=await pool.connect();
-
-  try{
-    await client.query('BEGIN');
-
-    await client.query(
-      `UPDATE wte_sales_sessions
-       SET package_code=$2,
-           recommendation=
-             COALESCE(recommendation,'{}'::jsonb) ||
-             $3::jsonb
-       WHERE token=$1`,
-      [
-        req.params.salesToken,
-        selected.code,
-        JSON.stringify(selectionMeta)
-      ]
-    );
-
-    await client.query(
-      `UPDATE wte_contracts
-       SET package_code=$2,
-           package_snapshot=$3::jsonb,
-           updated_at=NOW()
-       WHERE token=$1`,
-      [
-        parsed.data.contractToken,
-        selected.code,
-        JSON.stringify(selected)
-      ]
-    );
-
-    await client.query('COMMIT');
-  }catch(error){
-    await client.query('ROLLBACK');
-    throw error;
-  }finally{
-    client.release();
-  }
-
-  res.json({
-    ok:true,
-    contractUrl:salesPublicUrl(parsed.data.contractToken),
-    draftPdf:absoluteApiUrl(
-      contractPdfUrl(parsed.data.contractToken)
-    ),
-    package:{
-      code:selected.code,
-      name:selected.name,
-      description:selected.description,
-      reason:selected.reason,
-      priceCents:selected.price_cents,
-      priceLabel:selected.price_cents
-        ?euroFromCents(selected.price_cents)
-        :'Su misura',
-      depositPercent:selected.deposit_percent,
-      includedHours:Number(selected.included_hours),
-      features:selected.features||[]
-    }
-  });
-});
-
 
 app.get('/api/public/contracts/:token', async (req,res) => {
   const bundle=await salesBundleByContractToken(req.params.token);
