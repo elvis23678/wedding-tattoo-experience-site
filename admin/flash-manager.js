@@ -2,6 +2,12 @@
 (() => {
   const API='https://wte-cloud-api.onrender.com';
   let catalog=[];
+  const imageObjectUrls=new Set();
+
+  function clearImageObjectUrls(){
+    imageObjectUrls.forEach(url=>URL.revokeObjectURL(url));
+    imageObjectUrls.clear();
+  }
 
   const $=id=>document.getElementById(id);
   const token=()=>localStorage.getItem('wte_cloud_token_v4')
@@ -21,6 +27,74 @@
     const data=await response.json().catch(()=>({}));
     if(!response.ok)throw new Error(data.error||`Errore ${response.status}`);
     return data;
+  }
+
+  async function requestImageBlob(id){
+    const response=await fetch(`${API}/api/flash-catalog/${encodeURIComponent(id)}/image?t=${Date.now()}`,{
+      method:'GET',
+      cache:'no-store',
+      headers:{Authorization:`Bearer ${token()}`}
+    });
+    if(!response.ok)throw new Error(`Immagine non disponibile (${response.status})`);
+    const blob=await response.blob();
+    if(!blob.type.startsWith('image/'))throw new Error('Il Cloud non ha restituito un’immagine valida.');
+    return blob;
+  }
+
+  async function hydrateCardImage(img,item){
+    try{
+      const blob=await requestImageBlob(item.id);
+      const url=URL.createObjectURL(blob);
+      imageObjectUrls.add(url);
+      img.src=url;
+      img.dataset.previewSrc=url;
+      img.classList.remove('flash-image-error');
+    }catch(error){
+      // Compatibilità con cataloghi iniziali presenti come file statici.
+      const fallback=`/flash/${encodeURIComponent(item.code)}.png`;
+      img.src=fallback;
+      img.dataset.previewSrc=fallback;
+      img.onerror=()=>{
+        img.onerror=null;
+        img.removeAttribute('src');
+        img.classList.add('flash-image-error');
+        img.alt=`${item.code} — immagine non disponibile`;
+      };
+    }
+  }
+
+  function installFlashPreview(){
+    if(document.getElementById('wteFlashPreview'))return;
+    const style=document.createElement('style');
+    style.textContent=`
+      .flash-manager-card>img{cursor:zoom-in}
+      .flash-manager-card>img.flash-image-error{min-height:220px;background:#17120d}
+      .wte-flash-preview{position:fixed;inset:0;z-index:17000;display:none;align-items:center;justify-content:center;padding:12px;background:rgba(0,0,0,.94)}
+      .wte-flash-preview.open{display:flex}
+      .wte-flash-preview figure{position:relative;margin:0;width:min(920px,100%);max-height:94vh;display:flex;align-items:center;justify-content:center}
+      .wte-flash-preview img{display:block;max-width:100%;max-height:88vh;object-fit:contain;background:#fff;border:1px solid rgba(214,170,85,.4)}
+      .wte-flash-preview button{position:absolute;right:0;top:-48px;width:42px;height:42px;border:1px solid rgba(214,170,85,.38);background:#0d0906;color:#fff;font-size:25px}
+    `;
+    document.head.appendChild(style);
+    const modal=document.createElement('div');
+    modal.id='wteFlashPreview';
+    modal.className='wte-flash-preview';
+    modal.innerHTML='<figure><button type="button" aria-label="Chiudi">×</button><img alt="Anteprima flash"></figure>';
+    document.body.appendChild(modal);
+    const close=()=>modal.classList.remove('open');
+    modal.querySelector('button').addEventListener('click',close);
+    modal.addEventListener('click',e=>{if(e.target===modal)close()});
+  }
+
+  function openFlashPreview(img,item){
+    const src=img.dataset.previewSrc||img.src;
+    if(!src||img.classList.contains('flash-image-error'))return alert('Immagine non disponibile. Premi Aggiorna e riprova.');
+    installFlashPreview();
+    const modal=document.getElementById('wteFlashPreview');
+    const preview=modal.querySelector('img');
+    preview.src=src;
+    preview.alt=item.title||item.code||'Flash';
+    modal.classList.add('open');
   }
 
   function tags(value){
@@ -334,6 +408,7 @@
       return true;
     });
 
+    clearImageObjectUrls();
     flashManagerGrid.innerHTML='';
 
     if(!filtered.length){
@@ -344,11 +419,7 @@
       const card=document.createElement('article');
       card.className=`flash-manager-card ${item.active?'':'inactive'}`;
       card.innerHTML=`
-        <img loading="lazy" decoding="async"
-             src="${API}/api/public/flash-catalog/${encodeURIComponent(item.id)}/image?v=${encodeURIComponent(item.updated_at||Date.now())}"
-             data-fallback="/flash/${encodeURIComponent(item.code)}.png"
-             onerror="if(!this.dataset.used){this.dataset.used='1';this.src=this.dataset.fallback}"
-             alt="${item.code}">
+        <img loading="lazy" decoding="async" alt="${item.code}" aria-label="Apri ${item.code}">
         <div class="flash-manager-card-head">
           <div><strong>${item.code}</strong><span>${item.image_size?Math.round(item.image_size/1024)+' KB':''}</span></div>
           <span>${item.active?'Attivo':'Disattivato'}</span>
@@ -367,6 +438,10 @@
           <button data-action="delete" class="danger">Elimina</button>
           <button data-action="copy">Copia codice</button>
         </div>`;
+
+      const cardImage=card.querySelector(':scope > img');
+      hydrateCardImage(cardImage,item);
+      cardImage.addEventListener('click',()=>openFlashPreview(cardImage,item));
 
       const imageInput=card.querySelector('[data-action="image-file"]');
       card.querySelector('[data-action="replace-image"]').onclick=()=>imageInput.click();
