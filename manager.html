@@ -32,7 +32,7 @@ main{max-width:900px;margin:auto;padding:16px 12px 88px}.intro small,.head small
 .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.back{min-height:38px;padding:0 10px;border:1px solid var(--line);background:transparent;color:#cfc2b0;font-size:9px}
 .list{display:grid;gap:8px}.item{padding:14px;border:1px solid var(--line);background:#0b0805}.client{display:grid;grid-template-columns:1fr auto;gap:10px;text-align:left;color:#fff;width:100%}.client strong{font:18px var(--serif)}.client p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.45}
 .badge{padding:5px 7px;border:1px solid var(--line);font-size:7px;height:max-content}.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
-.toolbar{display:flex;justify-content:flex-end;margin-bottom:10px}.toolbar .gold{width:auto;margin:0;padding:0 14px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.toolbar .gold{width:auto;margin:0;padding:0 14px}.flash-filter{min-height:44px;max-width:58%;padding:0 10px;border:1px solid var(--line);background:#100d09;color:#fff;outline:none}
 .flashgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.flash{padding:7px;border:1px solid var(--line);background:#0b0805;color:#fff;text-align:left}.flash img{width:100%;aspect-ratio:1;object-fit:cover;background:#fff}.flash strong{display:block;margin-top:7px}.flash span{display:block;margin-top:3px;color:var(--muted);font-size:9px}.flash.off{opacity:.42}
 .price{margin-top:6px;color:var(--gold2);font-size:25px;font-weight:900}.meta{margin-top:5px;color:var(--muted);font-size:10px}.item button.secondary{width:100%;min-height:42px;margin-top:9px}
 .secondary{border:1px solid var(--line);background:transparent;color:#ddd0bd}
@@ -69,7 +69,7 @@ main{max-width:900px;margin:auto;padding:16px 12px 88px}.intro small,.head small
 </div></section>
 
 <section id="clientsView" hidden><div class="head"><div><small>Gestione</small><h2>Clienti</h2></div><button class="back" data-home>Home</button></div><div class="list" id="clients"></div></section>
-<section id="flashView" hidden><div class="head"><div><small>Catalogo</small><h2>Flash</h2></div><button class="back" data-home>Home</button></div><div class="toolbar"><button class="gold" id="newFlash">+ Flash</button></div><div class="flashgrid" id="flashes"></div></section>
+<section id="flashView" hidden><div class="head"><div><small>Catalogo</small><h2>Flash</h2></div><button class="back" data-home>Home</button></div><div class="toolbar"><select class="flash-filter" id="flashFilter" aria-label="Filtra per categoria"><option value="">Tutte le categorie</option></select><button class="gold" id="newFlash">+ Flash</button></div><div class="flashgrid" id="flashes"></div></section>
 <section id="packagesView" hidden><div class="head"><div><small>Configurazione</small><h2>Pacchetti</h2></div><button class="back" data-home>Home</button></div><div class="list" id="packages"></div></section>
 <section id="offersView" hidden><div class="head"><div><small>Promozioni</small><h2>Offerte</h2></div><button class="back" data-home>Home</button></div><div class="toolbar"><button class="gold" id="newOffer">+ Offerta</button></div><div class="list" id="offers"></div></section>
 </main></div>
@@ -119,22 +119,9 @@ async function loadClients(){practices=(await api('/api/practices')).practices||
 function openClient(id){current=practices.find(p=>String(p.id)===String(id));$('clientTitle').textContent=current.name||'Cliente';$('status').value=current.status||'Nuova';$('reminder').value=current.reminder||'';$('notes').value=current.notes||'';const p=phone(current).replace(/\\s+/g,''),m=current.email||'';$('call').href=p?'tel:'+p:'#';$('wa').href=p?'https://wa.me/'+p.replace(/^\\+/,''):'#';$('mail').href=m?'mailto:'+m:'#';$('clientDrawer').hidden=false}
 $('saveClient').onclick=async()=>{current.status=$('status').value;current.reminder=$('reminder').value.trim();current.notes=$('notes').value.trim();await api('/api/practices/sync',{method:'POST',body:JSON.stringify({practices})});$('clientDrawer').hidden=true;loadClients();toast('Cliente aggiornato')}
 function today(){const t=iso(),ev=practices.filter(p=>p.date===t&&!/annull/i.test(p.status||'')),up=practices.filter(p=>p.date&&p.date>=t&&!/annull/i.test(p.status||'')).sort((a,b)=>a.date.localeCompare(b.date));$('today').textContent=ev.length?`Oggi avete ${ev.length} ${ev.length===1?'evento':'eventi'}.`:up[0]?`Prossimo: ${up[0].name||'Cliente'} · ${fdate(up[0].date)}.`:'Nessun evento futuro.'}
-const flashObjectUrls=new Map();
-async function getFlashImageUrl(id){
-  if(flashObjectUrls.has(String(id)))return flashObjectUrls.get(String(id));
-  const r=await fetch(API+'/api/flash-catalog/'+encodeURIComponent(id)+'/image',{cache:'no-store',headers:{Authorization:'Bearer '+token}});
-  if(r.status===401){logout();throw Error('Sessione scaduta')}
-  if(!r.ok)throw Error('Immagine non disponibile');
-  const blob=await r.blob(),url=URL.createObjectURL(blob);
-  flashObjectUrls.set(String(id),url);
-  return url;
-}
-async function loadFlash(){
-  flashItems=(await api('/api/flash-catalog')).items||[];
-  $('flashes').innerHTML=flashItems.map(x=>`<button class="flash ${x.active?'':'off'}" data-flash="${x.id}"><img data-flash-img="${x.id}" alt="${esc(x.title||x.code||'Flash')}"><strong>${esc(x.title||x.code)}</strong><span>${esc(x.category||'Altro')} · ${x.active?'Visibile':'Nascosto'}</span></button>`).join('');
-  document.querySelectorAll('[data-flash]').forEach(b=>b.onclick=()=>editFlash(b.dataset.flash));
-  document.querySelectorAll('[data-flash-img]').forEach(async el=>{try{el.src=await getFlashImageUrl(el.dataset.flashImg)}catch(e){el.alt='Immagine non disponibile'}});
-}
+function renderFlash(){const f=$('flashFilter').value;const items=f?flashItems.filter(x=>(x.category||'Altro')===f):flashItems;$('flashes').innerHTML=items.length?items.map(x=>`<button class="flash ${x.active?'':'off'}" data-flash="${x.id}"><img src="${x.image}" alt=""><strong>${esc(x.title||x.code)}</strong><span>${esc(x.category||'Altro')} · ${x.active?'Visibile':'Nascosto'}</span></button>`).join(''):'<div class="item">Nessun flash in questa categoria.</div>';document.querySelectorAll('[data-flash]').forEach(b=>b.onclick=()=>editFlash(b.dataset.flash))}
+async function loadFlash(){flashItems=(await api('/api/flash-catalog')).items||[];const selected=$('flashFilter').value;const cats=[...new Set(flashItems.map(x=>(x.category||'Altro').trim()||'Altro'))].sort((a,b)=>a.localeCompare(b,'it'));$('flashFilter').innerHTML='<option value="">Tutte le categorie</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');if(cats.includes(selected))$('flashFilter').value=selected;renderFlash()}
+$('flashFilter').onchange=renderFlash;
 const c=$('canvas'),ctx=c.getContext('2d');let img=null,st={s:1,r:0,x:0,y:0},drag=false,last=null;function draw(){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);if(!img)return;ctx.save();ctx.translate(c.width/2+st.x,c.height/2+st.y);ctx.rotate(st.r*Math.PI/180);const b=Math.min(c.width/img.width,c.height/img.height),w=img.width*b*st.s,h=img.height*b*st.s;ctx.drawImage(img,-w/2,-h/2,w,h);ctx.restore()}
 $('imageInput').onchange=()=>{const f=$('imageInput').files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const i=new Image();i.onload=()=>{img=i;st={s:1,r:0,x:0,y:0};draw()};i.src=rd.result};rd.readAsDataURL(f)};$('left').onclick=()=>{st.r-=90;draw()};$('right').onclick=()=>{st.r+=90;draw()};$('fit').onclick=()=>{st={...st,s:1,x:0,y:0};draw()};$('zoom').oninput=()=>{st.s=+$('zoom').value;draw()};c.onpointerdown=e=>{drag=true;last={x:e.clientX,y:e.clientY}};c.onpointermove=e=>{if(!drag)return;const r=c.getBoundingClientRect();st.x+=(e.clientX-last.x)*c.width/r.width;st.y+=(e.clientY-last.y)*c.height/r.height;last={x:e.clientX,y:e.clientY};draw()};c.onpointerup=()=>drag=false;
 $('newFlash').onclick=()=>{currentFlash=null;img=null;st={s:1,r:0,x:0,y:0};$('zoom').value='1';draw();$('flashName').value='';$('category').value='';$('active').value='true';$('imageInput').value='';$('flashDrawer').hidden=false};
@@ -154,7 +141,7 @@ function editFlash(id){
 
   $('flashDrawer').hidden=false;
 
-  if(currentFlash.id){
+  if(currentFlash.image){
     const i=new Image();
     i.onload=()=>{
       img=i;
@@ -167,7 +154,7 @@ function editFlash(id){
       draw();
       toast('Impossibile caricare l’immagine del Flash');
     };
-    getFlashImageUrl(currentFlash.id).then(url=>i.src=url).catch(()=>i.onerror());
+    i.src=currentFlash.image;
   }
 }
 $('saveFlash').onclick=async()=>{const title=$('flashName').value.trim(),category=$('category').value.trim()||'Altro',active=$('active').value==='true';if(currentFlash)await api('/api/flash-catalog/'+currentFlash.id,{method:'PATCH',body:JSON.stringify({title,category,active})});else{if(!img)return toast('Carica un’immagine');await api('/api/flash-catalog',{method:'POST',body:JSON.stringify({imageData:c.toDataURL('image/jpeg',.86),title,category,tags:[],prefix:'WTE',sortOrder:0})})}$('flashDrawer').hidden=true;loadFlash();toast('Flash salvato')}
