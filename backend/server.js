@@ -83,16 +83,6 @@ const dateAvailability = createDateAvailabilityEngine({
   logger:console
 });
 
-const releaseDiagnostics = createReleaseDiagnostics({
-  pool,
-  workflow,
-  scheduler,
-  notifications,
-  pdfEngine,
-  dateAvailability,
-  stripe,
-  env:process.env
-});
 
 const releaseManager = createReleaseManager({
   pool,
@@ -141,6 +131,17 @@ const scheduler = createSchedulerEngine({
       metadata
     });
   }
+});
+
+const releaseDiagnostics = createReleaseDiagnostics({
+  pool,
+  workflow,
+  scheduler,
+  notifications,
+  pdfEngine,
+  dateAvailability,
+  stripe,
+  env:process.env
 });
 
 app.use(helmet());
