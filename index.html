@@ -366,7 +366,7 @@ input{
   min-height:100svh;
   display:grid;
   place-items:start center;
-  padding:72px 13px 24px;
+  padding:44px 12px 18px;
 }
 .flow-layout{
   width:min(1180px,100%);
@@ -377,7 +377,7 @@ input{
 .flow-card{
   width:min(720px,100%);
   min-height:0;
-  padding:16px 20px 20px;
+  padding:12px 18px 18px;
   border:1px solid var(--line);
   background:
     linear-gradient(180deg,rgba(20,14,9,.90),rgba(8,6,4,.94));
@@ -387,16 +387,15 @@ input{
   backdrop-filter:blur(18px);
 }
 .lux-progress{
-  margin-bottom:12px;
-  padding:0 2px 8px;
-  border-bottom:1px solid rgba(221,181,96,.055);
+  margin-bottom:8px;
+  padding:0 0 7px;
+  border-bottom:1px solid rgba(221,181,96,.045);
 }
 .lux-progress-top{
   display:flex;
   align-items:center;
   justify-content:flex-end;
-  gap:10px;
-  min-height:12px;
+  min-height:8px;
 }
 .lux-progress-title{
   display:none;
@@ -406,24 +405,24 @@ input{
   padding:0;
   border:0;
   background:transparent;
-  color:rgba(211,197,175,.42);
-  font-size:8px;
+  color:rgba(211,197,175,.30);
+  font-size:7px;
   font-weight:400;
-  letter-spacing:.02em;
+  letter-spacing:.03em;
   text-decoration:none;
 }
 .lux-track-wrap{
   position:relative;
-  margin-top:8px;
-  padding-top:4px;
+  margin-top:5px;
+  padding-top:3px;
 }
 .lux-track{
   position:absolute;
-  top:7px;
-  left:2px;
-  right:2px;
+  top:6px;
+  left:7%;
+  right:7%;
   height:1px;
-  background:rgba(255,255,255,.055);
+  background:rgba(255,255,255,.045);
   overflow:hidden;
 }
 .lux-track-fill{
@@ -442,8 +441,8 @@ input{
 }
 .milestone{
   position:relative;
-  padding-top:12px;
-  color:rgba(188,174,153,.28);
+  padding-top:11px;
+  color:rgba(188,174,153,.22);
   text-align:center;
   transition:color .28s ease;
 }
@@ -466,9 +465,9 @@ input{
 .milestone strong{
   display:block;
   margin-top:2px;
-  font-size:7px;
+  font-size:6px;
   font-weight:500;
-  letter-spacing:.01em;
+  letter-spacing:.08em;
 }
 .milestone.done{color:rgba(232,214,176,.66)}
 .milestone.done:before{
@@ -489,7 +488,7 @@ input{
   position:relative;
   display:none;
   min-height:0;
-  padding-top:18px;
+  padding-top:8px;
   animation:stepIn .32s ease both;
 }
 .step.active{display:flex;flex-direction:column}
@@ -1245,6 +1244,28 @@ input{
 
 body.flow-open .topbar{display:none}
 
+
+.flow-open .gold-logo,
+.flow-open .service-pill,
+.flow-open .top-note{
+  display:none!important;
+}
+.flow-open .shell{
+  background:transparent;
+}
+
+
+@media(max-width:520px){
+  .flow{padding:34px 8px 14px}
+  .flow-card{padding:10px 12px 16px}
+  .lux-progress{margin-bottom:6px;padding-bottom:6px}
+  .lux-track-wrap{margin-top:3px}
+  .milestone{padding-top:10px}
+  .milestone strong{font-size:6px;letter-spacing:.06em}
+  .step{padding-top:6px}
+  .reset-flow{font-size:6px}
+}
+
 @media(prefers-reduced-data:reduce){
   .video{display:none}
   .shell{background:#100b07}
@@ -1320,7 +1341,7 @@ body.flow-open .topbar{display:none}
       <form class="flow-card" id="wizard" novalidate aria-label="Configuratore Wedding Tattoo Experience">
       <div class="lux-progress" aria-label="Avanzamento configuratore">
         <div class="lux-progress-top">
-          <span class="lux-progress-title" aria-hidden="true"></span>
+          
           <button class="reset-flow" id="resetFlow" type="button">Ricomincia</button>
         </div>
 
@@ -1331,21 +1352,21 @@ body.flow-open .topbar{display:none}
 
           <div class="lux-steps" id="milestones">
             <div class="milestone active" data-milestone="0">
-              <span>01</span><strong>Profilo</strong>
+              <span>01</span><strong>VOI</strong>
             </div>
             <div class="milestone" data-milestone="1">
-              <span>02</span><strong>Evento</strong>
+              <span>02</span><strong>EVENTO</strong>
             </div>
             <div class="milestone" data-milestone="2">
-              <span>03</span><strong>Proposta</strong>
+              <span>03</span><strong>PROPOSTA</strong>
             </div>
             <div class="milestone" data-milestone="3">
-              <span>04</span><strong>Conferma</strong>
+              <span>04</span><strong>CONFERMA</strong>
             </div>
           </div>
         </div>
 
-        <div class="progress-label" id="progressLabel">Profilo</div>
+        <div class="progress-label" id="progressLabel" aria-hidden="true"></div>
       </div>
 
       <section class="step active" data-step="0">
