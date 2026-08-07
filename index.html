@@ -365,8 +365,8 @@ input{
 .flow{
   min-height:100svh;
   display:grid;
-  place-items:center;
-  padding:92px 13px 30px;
+  place-items:start center;
+  padding:72px 13px 24px;
 }
 .flow-layout{
   width:min(1180px,100%);
@@ -376,8 +376,8 @@ input{
 }
 .flow-card{
   width:min(720px,100%);
-  min-height:560px;
-  padding:20px;
+  min-height:0;
+  padding:16px 20px 20px;
   border:1px solid var(--line);
   background:
     linear-gradient(180deg,rgba(20,14,9,.90),rgba(8,6,4,.94));
@@ -387,52 +387,51 @@ input{
   backdrop-filter:blur(18px);
 }
 .lux-progress{
-  margin-bottom:24px;
-  padding:0 2px 13px;
-  border-bottom:1px solid rgba(221,181,96,.09);
+  margin-bottom:12px;
+  padding:0 2px 8px;
+  border-bottom:1px solid rgba(221,181,96,.055);
 }
 .lux-progress-top{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:16px;
+  justify-content:flex-end;
+  gap:10px;
+  min-height:12px;
 }
 .lux-progress-title{
-  color:var(--gold-bright);
-  font-size:9px;
-  letter-spacing:.22em;
-  text-transform:uppercase;
+  display:none;
 }
 .reset-flow{
   min-height:auto;
   padding:0;
   border:0;
   background:transparent;
-  color:rgba(211,197,175,.52);
-  font-size:9px;
+  color:rgba(211,197,175,.42);
+  font-size:8px;
   font-weight:400;
+  letter-spacing:.02em;
   text-decoration:none;
 }
 .lux-track-wrap{
   position:relative;
-  margin-top:16px;
-  padding-top:8px;
+  margin-top:8px;
+  padding-top:4px;
 }
 .lux-track{
   position:absolute;
-  top:11px;
-  left:0;
-  right:0;
+  top:7px;
+  left:2px;
+  right:2px;
   height:1px;
-  background:rgba(255,255,255,.08);
+  background:rgba(255,255,255,.055);
   overflow:hidden;
 }
 .lux-track-fill{
   display:block;
   width:0;
   height:100%;
-  background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright));
-  box-shadow:0 0 10px rgba(255,226,154,.25);
+  background:linear-gradient(90deg,rgba(183,125,31,.62),rgba(255,236,188,.88));
+  box-shadow:0 0 7px rgba(255,226,154,.14);
   transition:width .4s cubic-bezier(.2,.7,.2,1);
 }
 .lux-steps{
@@ -443,34 +442,33 @@ input{
 }
 .milestone{
   position:relative;
-  padding-top:16px;
-  color:rgba(188,174,153,.40);
+  padding-top:12px;
+  color:rgba(188,174,153,.28);
   text-align:center;
   transition:color .28s ease;
 }
 .milestone:before{
   content:"";
   position:absolute;
-  top:0;
+  top:1px;
   left:50%;
-  width:6px;
-  height:6px;
-  border:1px solid rgba(188,174,153,.30);
+  width:5px;
+  height:5px;
+  border:1px solid rgba(188,174,153,.22);
   border-radius:50%;
   background:#0b0805;
   transform:translateX(-50%);
   transition:.28s ease;
 }
 .milestone span{
-  display:block;
-  font-size:7px;
-  letter-spacing:.13em;
+  display:none;
 }
 .milestone strong{
   display:block;
-  margin-top:3px;
-  font-size:8px;
-  font-weight:600;
+  margin-top:2px;
+  font-size:7px;
+  font-weight:500;
+  letter-spacing:.01em;
 }
 .milestone.done{color:rgba(232,214,176,.66)}
 .milestone.done:before{
@@ -484,19 +482,14 @@ input{
   box-shadow:0 0 0 4px rgba(212,170,86,.06),0 0 13px rgba(212,170,86,.30);
 }
 .progress-label{
-  margin-top:10px;
-  color:rgba(211,197,175,.56);
-  font-size:8px;
-  letter-spacing:.12em;
-  text-align:right;
-  text-transform:uppercase;
+  display:none;
 }
 
 .step{
   position:relative;
   display:none;
-  min-height:430px;
-  padding-top:38px;
+  min-height:0;
+  padding-top:18px;
   animation:stepIn .32s ease both;
 }
 .step.active{display:flex;flex-direction:column}
@@ -1239,15 +1232,18 @@ input{
 
 
 @media(max-width:520px){
-  .lux-progress{margin-bottom:18px;padding-bottom:11px}
-  .lux-progress-title{font-size:8px;letter-spacing:.18em}
-  .reset-flow{font-size:8px}
-  .lux-track-wrap{margin-top:14px}
-  .milestone{padding-top:15px}
-  .milestone span{font-size:6px}
-  .milestone strong{font-size:7px}
-  .progress-label{display:none}
+  .flow{padding:58px 10px 18px}
+  .flow-card{padding:14px 14px 18px}
+  .lux-progress{margin-bottom:10px;padding-bottom:7px}
+  .reset-flow{font-size:7px}
+  .lux-track-wrap{margin-top:6px}
+  .milestone{padding-top:11px}
+  .milestone strong{font-size:6px}
+  .step{padding-top:14px}
 }
+
+
+body.flow-open .topbar{display:none}
 
 @media(prefers-reduced-data:reduce){
   .video{display:none}
@@ -1324,7 +1320,7 @@ input{
       <form class="flow-card" id="wizard" novalidate aria-label="Configuratore Wedding Tattoo Experience">
       <div class="lux-progress" aria-label="Avanzamento configuratore">
         <div class="lux-progress-top">
-          <span class="lux-progress-title">Wedding Experience</span>
+          <span class="lux-progress-title" aria-hidden="true"></span>
           <button class="reset-flow" id="resetFlow" type="button">Ricomincia</button>
         </div>
 
@@ -1341,7 +1337,7 @@ input{
               <span>02</span><strong>Evento</strong>
             </div>
             <div class="milestone" data-milestone="2">
-              <span>03</span><strong>Esperienza</strong>
+              <span>03</span><strong>Proposta</strong>
             </div>
             <div class="milestone" data-milestone="3">
               <span>04</span><strong>Conferma</strong>
@@ -2163,6 +2159,7 @@ function openExperience(){
 
   hero.hidden=true;
   flow.hidden=false;
+  document.body.classList.add('flow-open');
   flowHistoryActive=true;
   history.pushState({wteFlow:true,step:0},'', '#step-1');
   setStep(0);
@@ -2200,6 +2197,7 @@ function restartFlow(){
   document.getElementById('resumeModal').hidden=true;
   hero.hidden=true;
   flow.hidden=false;
+  document.body.classList.add('flow-open');
   flowHistoryActive=true;
   history.replaceState({wteFlow:true,step:0},'', '#step-1');
   setStep(0);
@@ -2723,6 +2721,7 @@ window.addEventListener('popstate',event=>{
   flowHistoryActive=false;
   flow.hidden=true;
   hero.hidden=false;
+  document.body.classList.remove('flow-open');
   history.replaceState(null,'',location.pathname);
   announce('Tornati alla presentazione iniziale.');
 });
