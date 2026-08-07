@@ -37,6 +37,7 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--black)}
+body.hero-locked{overflow:hidden}
 body{
   color:var(--text);
   font-family:var(--sans);
@@ -94,17 +95,17 @@ input{
   isolation:isolate;
 }
 .video{
-  position:fixed;
+  position:absolute;
   inset:0;
   z-index:-5;
   width:100%;
   height:100%;
   object-fit:cover;
-  object-position:center;
-  filter:saturate(.78) contrast(1.08) brightness(.58);
+  object-position:center 46%;
+  filter:saturate(.80) contrast(1.08) brightness(.56);
 }
 .backdrop{
-  position:fixed;
+  position:absolute;
   inset:0;
   z-index:-4;
   background:
@@ -133,6 +134,55 @@ input{
   padding:14px 16px;
 }
 .logo{width:82px;height:auto;display:block}
+
+.gold-logo{
+  width:118px;
+  color:var(--gold-bright);
+  text-align:center;
+  line-height:1;
+  text-shadow:
+    0 0 8px rgba(255,230,164,.32),
+    0 0 22px rgba(212,170,86,.22);
+}
+.gold-logo-mark{
+  font-size:38px;
+  line-height:.65;
+  transform:scaleX(1.25);
+  margin-bottom:5px;
+}
+.gold-logo-main{
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:.02em;
+}
+.gold-logo-sub{
+  margin-top:5px;
+  font-size:12px;
+  font-weight:500;
+}
+.gold-logo-by{
+  margin-top:3px;
+  font-family:var(--serif);
+  font-style:italic;
+  font-size:9px;
+}
+.gold-logo-tattoo{
+  margin-top:3px;
+  padding-top:5px;
+  border-top:1px solid rgba(255,240,189,.5);
+  font-size:16px;
+  letter-spacing:.08em;
+}
+.gold-logo-small{
+  margin-top:2px;
+  font-size:7px;
+}
+.gold-logo-rings{
+  margin-top:3px;
+  font-size:12px;
+  letter-spacing:-.14em;
+}
+
 .topbar-right{
   display:flex;
   align-items:flex-end;
@@ -187,10 +237,12 @@ input{
 }
 
 .hero{
-  min-height:88svh;
+  min-height:100svh;
+  height:100svh;
   display:flex;
   align-items:flex-end;
-  padding:118px 16px 24px;
+  padding:104px 16px 18px;
+  overflow:hidden;
 }
 .hero-inner{width:100%;max-width:820px}
 .kicker{
@@ -827,7 +879,6 @@ input{
 
 @media(min-width:760px){
   .topbar{padding:24px 5vw}
-  .logo{width:126px}
   .hero{align-items:center;padding:150px 6vw 70px}
   .flow{padding:100px 20px 50px}
   .flow-layout{grid-template-columns:minmax(0,1fr) 330px}
@@ -835,35 +886,38 @@ input{
   .choices.two{grid-template-columns:1fr 1fr}
 }
 @media(max-width:520px){
-  .topbar{padding:12px 14px}
-  .logo{width:76px}
-  .topbar-right{gap:6px}
-  .service-pill{padding:6px 8px;font-size:7px}
-  .top-note{max-width:150px;font-size:7px;line-height:1.35}
+  .topbar{padding:14px 14px 0}
+  .gold-logo{width:118px}
+  .topbar-right{gap:7px}
+  .service-pill{padding:7px 10px;font-size:7px}
+  .top-note{max-width:170px;font-size:7px;line-height:1.35}
   .hero{
-    min-height:86svh;
+    min-height:100svh;
+    height:100svh;
     align-items:flex-end;
-    padding:104px 14px 18px;
+    padding:0 14px 16px;
   }
+  .hero-inner{padding-top:315px}
   .hero h1{
-    font-size:clamp(42px,11.7vw,60px);
-    line-height:.92;
-    letter-spacing:-.045em;
+    font-size:clamp(40px,11vw,56px);
+    line-height:.94;
+    letter-spacing:-.044em;
   }
-  .kicker{margin-bottom:9px;font-size:8px}
+  .kicker{margin-bottom:8px;font-size:8px}
   .hero-copy{
-    margin-top:12px;
-    font-size:14px;
-    line-height:1.4;
+    margin-top:10px;
+    font-size:13px;
+    line-height:1.34;
   }
   .primary{
     min-height:56px;
-    margin-top:14px;
-    font-size:14px;
+    margin-top:12px;
+    font-size:13px;
+    letter-spacing:.015em;
   }
-  .micro{font-size:9px;line-height:1.35}
+  .micro{display:none}
   .hero-trust{display:none}
-  .resume-link{margin-top:8px;font-size:10px}
+  .resume-link{margin-top:7px;font-size:9px}
   .flow-card{min-height:590px}
   .nav{grid-template-columns:1fr 1.65fr}
   .live-summary{position:static;order:-1}
@@ -879,16 +933,21 @@ input{
 
 @media(max-width:380px), (max-height:720px){
   .hero{
-    min-height:84svh;
-    padding-top:94px;
-    padding-bottom:14px;
+    min-height:100svh;
+    height:100svh;
+    padding-bottom:10px;
   }
+  .hero-inner{padding-top:285px}
   .hero h1{
-    font-size:clamp(38px,10.8vw,52px);
+    font-size:clamp(36px,10vw,49px);
   }
   .hero-copy{
-    font-size:13px;
-    line-height:1.34;
+    font-size:12px;
+    line-height:1.3;
+  }
+  .primary{
+    min-height:52px;
+    margin-top:10px;
   }
   .micro{display:none}
 }
@@ -920,11 +979,19 @@ input{
   <div class="backdrop"></div>
 
   <header class="topbar">
-    <img class="logo" src="logo.png" alt="Wedding Tattoo Experience">
+    <div class="gold-logo" aria-label="Wedding Tattoo Experience">
+      <div class="gold-logo-mark">⌃</div>
+      <div class="gold-logo-main">WEDDING</div>
+      <div class="gold-logo-sub">tattoo experience</div>
+      <div class="gold-logo-by">by</div>
+      <div class="gold-logo-tattoo">TATTOO</div>
+      <div class="gold-logo-small">beauty saloon</div>
+      <div class="gold-logo-rings">◯◯</div>
+    </div>
     <div class="topbar-right">
       <div class="service-pill" id="servicePill">
         <span class="service-dot"></span>
-        <strong id="serviceText">Servizio online</strong>
+        <strong id="serviceText">Prenotazione online</strong>
       </div>
       <div class="top-note">Proposta personalizzata<br>in meno di 2 minuti</div>
     </div>
@@ -938,10 +1005,10 @@ input{
         del vostro matrimonio.
       </h1>
       <p class="hero-copy">
-        Scoprite in 2 minuti la proposta e confermate la vostra data online.
+        Scoprite subito la vostra proposta.
       </p>
       <button class="primary" id="startExperience" type="button" aria-describedby="startDescription">
-        Verifica la tua data
+        Verifica disponibilità →
       </button>
       <button class="resume-link" id="resumeExperience" type="button" hidden>
         Riprendi il percorso salvato
@@ -1461,7 +1528,7 @@ async function checkApiHealth(){
     apiOnline=response.ok;
 
     if(response.ok){
-      setServiceState('online','Servizio online');
+      setServiceState('online','Prenotazione online');
       return true;
     }
 
@@ -1758,6 +1825,7 @@ function setStep(index){
 }
 
 function openExperience(){
+  document.body.classList.remove('hero-locked');
   const saved=readFlowState();
 
   if(saved){
@@ -2187,6 +2255,7 @@ loadHeroVideo();
 window.addEventListener('unhandledrejection',event=>{
   console.error('WTE unhandled rejection',event.reason);
 });
+document.body.classList.add('hero-locked');
 window.addEventListener('error',event=>{
   console.error('WTE frontend error',event.error||event.message);
 });
