@@ -1546,294 +1546,351 @@ body.flow-open .backdrop{
 </style>
 <script src="/wte-analytics.js" defer></script>
 
-<!-- WTE RELEASE 1.0 — HERO REFERENCE EXACT MOBILE -->
-<style id="wte-release-1-0-reference-mobile">
-/* Desktop invariato */
-.hero-title-line{display:inline}
-.hero-title-line + .hero-title-line::before{content:" "}
+
+
+
+<!-- WTE RELEASE 1.0 — HERO LUXURY FINAL -->
+<style id="wte-release-1-0-luxury-final">
+.logo-diamond{
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:visible;
+}
+.logo-diamond-line{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2.1;
+  vector-effect:non-scaling-stroke;
+  filter:drop-shadow(0 0 3px rgba(255,222,126,.32));
+}
+.logo-spark-core{
+  fill:#fff2b5;
+  filter:
+    drop-shadow(0 0 2px #fff5c7)
+    drop-shadow(0 0 5px #f0be49)
+    drop-shadow(0 0 10px rgba(235,174,40,.9));
+}
+.logo-spark-halo{
+  fill:rgba(244,188,60,.19);
+  filter:blur(2.2px);
+}
+
+/* piccolo respiro, non "neon" */
+.gold-logo{
+  text-shadow:
+    0 0 5px rgba(255,225,148,.18),
+    0 0 14px rgba(203,149,46,.11) !important;
+}
+
+/* Bagliore CTA elegante e lento */
+.primary{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+}
+.primary::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:-3px;
+  border-radius:inherit;
+  background:radial-gradient(
+    circle at 50% 50%,
+    rgba(255,224,132,.30) 0%,
+    rgba(225,165,47,.12) 45%,
+    transparent 72%
+  );
+  filter:blur(12px);
+  opacity:.45;
+  animation:wteCtaAura 3.4s ease-in-out infinite;
+}
+.primary::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255,255,255,.30) 47%,
+    rgba(255,255,255,.10) 53%,
+    transparent 79%
+  );
+  transform:translateX(-130%);
+  animation:wteCtaSweep 4.8s ease-in-out infinite;
+}
+@keyframes wteCtaAura{
+  0%,100%{opacity:.26;transform:scale(.99)}
+  50%{opacity:.58;transform:scale(1.015)}
+}
+@keyframes wteCtaSweep{
+  0%,58%{transform:translateX(-130%)}
+  78%,100%{transform:translateX(130%)}
+}
 
 @media (max-width:520px){
 
-  /* VIDEO: pieno schermo, cinematografico, come reference */
+  /* HERO = esattamente uno schermo */
+  .hero{
+    height:100svh !important;
+    min-height:100svh !important;
+    max-height:100svh !important;
+    display:flex !important;
+    align-items:flex-end !important;
+    padding:
+      0
+      18px
+      max(22px, env(safe-area-inset-bottom)) !important;
+    overflow:hidden !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Il video riempie SOLO la hero, senza ingrandire la pagina */
   .video{
     width:100% !important;
     height:100% !important;
+    min-height:0 !important;
     object-fit:cover !important;
-    object-position:56% center !important;
-    filter:saturate(.82) contrast(1.08) brightness(.63) !important;
+    object-position:57% center !important;
+    transform:none !important;
+    filter:
+      saturate(.84)
+      contrast(1.06)
+      brightness(.70)
+      sepia(.08) !important;
   }
 
+  /* sfumatura cinematografica: immagine leggibile, testo protetto */
   .backdrop{
     background:
       linear-gradient(180deg,
-        rgba(4,3,2,.10) 0%,
-        rgba(4,3,2,.08) 25%,
-        rgba(4,3,2,.18) 48%,
-        rgba(4,3,2,.42) 70%,
-        rgba(4,3,2,.78) 100%) !important;
+        rgba(5,3,1,.10) 0%,
+        rgba(5,3,1,.04) 26%,
+        rgba(5,3,1,.09) 44%,
+        rgba(5,3,1,.30) 68%,
+        rgba(5,3,1,.70) 100%) !important;
+  }
+  .backdrop::after{
+    opacity:.08 !important;
   }
 
-  /* TESTATA: logo grande a sinistra, stato a destra */
+  /* Testata: stessa geometria della reference */
   .topbar{
     position:absolute !important;
     inset:0 0 auto 0 !important;
     z-index:20 !important;
-    display:flex !important;
-    flex-direction:row !important;
-    align-items:flex-start !important;
-    justify-content:space-between !important;
-    gap:14px !important;
+    display:grid !important;
+    grid-template-columns:minmax(132px,34vw) minmax(0,1fr) !important;
+    align-items:start !important;
+    column-gap:14px !important;
     padding:
-      max(22px, env(safe-area-inset-top))
-      18px
+      max(18px, env(safe-area-inset-top))
+      16px
       0 !important;
     box-sizing:border-box !important;
   }
 
   .gold-logo{
-    position:relative !important;
-    flex:0 0 auto !important;
-    width:31vw !important;
-    min-width:150px !important;
-    max-width:205px !important;
+    position:static !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:190px !important;
     margin:0 !important;
     transform:none !important;
-    color:#f5c968 !important;
-    text-align:center !important;
-    filter:
-      drop-shadow(0 0 5px rgba(255,226,145,.78))
-      drop-shadow(0 0 16px rgba(229,172,60,.45))
-      drop-shadow(0 0 34px rgba(229,172,60,.22)) !important;
-    animation:wteLogoGlow 3.6s ease-in-out infinite !important;
+    color:#eac35c !important;
   }
 
-  @keyframes wteLogoGlow{
-    0%,100%{
-      filter:
-        drop-shadow(0 0 4px rgba(255,226,145,.62))
-        drop-shadow(0 0 14px rgba(229,172,60,.35))
-        drop-shadow(0 0 28px rgba(229,172,60,.17));
-    }
-    50%{
-      filter:
-        drop-shadow(0 0 7px rgba(255,235,173,.90))
-        drop-shadow(0 0 22px rgba(229,172,60,.58))
-        drop-shadow(0 0 44px rgba(229,172,60,.28));
-    }
+  .gold-logo-mark{
+    width:62px !important;
+    height:62px !important;
+    margin:0 auto 2px !important;
+    font-size:0 !important;
+    line-height:1 !important;
+    transform:none !important;
   }
-
-  .gold-logo-mark{font-size:50px !important;margin-bottom:7px !important}
-  .gold-logo-main{font-size:28px !important;line-height:.96 !important}
-  .gold-logo-sub{font-size:15px !important;margin-top:7px !important}
-  .gold-logo-by{font-size:11px !important;margin-top:4px !important}
-  .gold-logo-tattoo{font-size:20px !important;margin-top:4px !important;padding-top:7px !important}
-  .gold-logo-small{font-size:8px !important}
-  .gold-logo-rings{font-size:16px !important;margin-top:5px !important}
+  .gold-logo-main{
+    font-size:clamp(22px,6.5vw,32px) !important;
+    line-height:.98 !important;
+    letter-spacing:.005em !important;
+  }
+  .gold-logo-sub{
+    margin-top:5px !important;
+    font-size:clamp(11px,3.4vw,16px) !important;
+  }
+  .gold-logo-by{
+    margin-top:3px !important;
+    font-size:9px !important;
+  }
+  .gold-logo-tattoo{
+    margin-top:3px !important;
+    padding-top:5px !important;
+    font-size:clamp(15px,4.7vw,21px) !important;
+  }
+  .gold-logo-small{font-size:7px !important}
+  .gold-logo-rings{font-size:12px !important}
 
   .topbar-right{
     position:static !important;
-    flex:0 1 auto !important;
-    width:43vw !important;
-    max-width:250px !important;
+    width:100% !important;
+    max-width:none !important;
     min-width:0 !important;
-    margin:6px 0 0 auto !important;
+    margin:10px 0 0 !important;
     display:flex !important;
     flex-direction:column !important;
     align-items:stretch !important;
-    gap:10px !important;
+    gap:9px !important;
   }
 
   .service-pill{
     width:100% !important;
     min-height:42px !important;
+    padding:7px 9px !important;
     box-sizing:border-box !important;
     justify-content:center !important;
-    gap:9px !important;
-    padding:8px 10px !important;
-    border:1px solid rgba(236,205,123,.52) !important;
-    background:rgba(8,6,4,.58) !important;
-    color:#fff6df !important;
-    font-size:9.5px !important;
-    letter-spacing:.085em !important;
+    border:1px solid rgba(235,203,121,.54) !important;
+    background:rgba(7,5,3,.48) !important;
+    color:#fff5df !important;
+    font-size:clamp(8px,2.45vw,10.5px) !important;
+    letter-spacing:.075em !important;
     white-space:nowrap !important;
     backdrop-filter:blur(5px) !important;
   }
-
   .service-dot{
-    width:10px !important;
-    height:10px !important;
-    flex:0 0 10px !important;
-    box-shadow:0 0 14px rgba(151,237,170,.62) !important;
+    width:9px !important;
+    height:9px !important;
+    flex:0 0 9px !important;
   }
-
   .top-note{
     width:100% !important;
     max-width:none !important;
     margin:0 !important;
-    color:#f7dfad !important;
-    font-size:9.5px !important;
-    line-height:1.5 !important;
-    letter-spacing:.16em !important;
+    color:#efd9aa !important;
+    font-size:clamp(8px,2.25vw,10px) !important;
+    line-height:1.45 !important;
+    letter-spacing:.145em !important;
     text-align:center !important;
   }
 
-  /* HERO: contenuto in basso a sinistra, come nell'immagine */
-  .hero{
-    min-height:100svh !important;
-    height:100svh !important;
-    display:flex !important;
-    align-items:flex-end !important;
-    justify-content:flex-start !important;
-    padding:
-      0
-      20px
-      max(28px, calc(env(safe-area-inset-bottom) + 18px)) !important;
-    box-sizing:border-box !important;
-    overflow:hidden !important;
-  }
-
+  /* Parte testuale compatta: TUTTO resta dentro il viewport */
   .hero-inner{
     width:100% !important;
     max-width:none !important;
     margin:0 !important;
-    padding:0 !important;
-    text-align:left !important;
+    padding:0 0 0 !important;
     transform:none !important;
+    text-align:left !important;
   }
 
   .kicker{
-    margin:0 0 15px !important;
-    color:#f7dfad !important;
-    font-size:10px !important;
+    margin:0 0 11px !important;
+    font-size:clamp(8px,2.3vw,10px) !important;
     line-height:1.2 !important;
     letter-spacing:.27em !important;
-    text-align:left !important;
     white-space:nowrap !important;
+    text-align:left !important;
   }
 
   .hero h1{
     width:100% !important;
-    max-width:94vw !important;
+    max-width:none !important;
     margin:0 !important;
-    font-size:clamp(48px, 10.8vw, 70px) !important;
-    line-height:.95 !important;
-    letter-spacing:-.052em !important;
+    font-size:clamp(40px,10.7vw,60px) !important;
+    line-height:.91 !important;
+    letter-spacing:-.048em !important;
     text-align:left !important;
-    text-wrap:initial !important;
   }
-
   .hero-title-line{
     display:block !important;
     white-space:nowrap !important;
   }
   .hero-title-line + .hero-title-line::before{content:none !important}
 
-  .gold-word{
-    color:#f1c55d !important;
-  }
-
   .hero-copy{
     width:100% !important;
     max-width:none !important;
-    margin:18px 0 0 !important;
-    color:#f1e6d5 !important;
-    font-size:15px !important;
+    margin:13px 0 0 !important;
+    font-size:clamp(13px,3.6vw,17px) !important;
     line-height:1.35 !important;
     text-align:left !important;
   }
 
   .primary{
     width:100% !important;
-    min-height:74px !important;
-    margin:24px 0 0 !important;
-    padding:0 20px !important;
-    border:1px solid rgba(255,239,196,.78) !important;
-    background:linear-gradient(105deg,#ffe69a 0%,#e8b73f 52%,#c7830b 100%) !important;
-    box-shadow:
-      0 16px 42px rgba(0,0,0,.34),
-      0 0 30px rgba(221,166,46,.18) !important;
+    min-height:64px !important;
+    margin:17px 0 0 !important;
+    padding:0 18px !important;
+    border:1px solid rgba(255,240,197,.76) !important;
+    background:
+      linear-gradient(105deg,#ffe9a5 0%,#e6b43d 53%,#c78611 100%) !important;
     color:#171006 !important;
-    font-size:15px !important;
+    box-shadow:
+      0 13px 30px rgba(0,0,0,.28),
+      0 0 22px rgba(218,165,52,.13) !important;
+    font-size:clamp(13px,3.55vw,16px) !important;
     font-weight:900 !important;
-    letter-spacing:.06em !important;
+    letter-spacing:.045em !important;
     text-transform:uppercase !important;
   }
 
-  .resume-link{margin:10px 0 0 !important;text-align:left !important}
-  .micro,.hero-trust{display:none !important}
+  /* non erano nella reference */
+  .micro,
+  .hero-trust{
+    display:none !important;
+  }
+
+  .resume-link{
+    margin:8px 0 0 !important;
+    text-align:left !important;
+  }
 }
 
-/* Telefoni più stretti: stesse proporzioni, senza sovrapposizioni */
+/* Samsung / telefoni stretti */
 @media (max-width:390px){
   .topbar{
-    padding-left:14px !important;
-    padding-right:14px !important;
+    grid-template-columns:minmax(118px,35vw) minmax(0,1fr) !important;
+    column-gap:10px !important;
+    padding-left:13px !important;
+    padding-right:13px !important;
   }
-
-  .gold-logo{
-    width:30vw !important;
-    min-width:118px !important;
+  .gold-logo-mark{
+    width:52px !important;
+    height:52px !important;
   }
-
-  .gold-logo-mark{font-size:40px !important}
-  .gold-logo-main{font-size:22px !important}
-  .gold-logo-sub{font-size:12px !important}
-  .gold-logo-by{font-size:9px !important}
-  .gold-logo-tattoo{font-size:16px !important}
-  .gold-logo-small{font-size:7px !important}
-  .gold-logo-rings{font-size:13px !important}
-
-  .topbar-right{
-    width:47vw !important;
-    max-width:190px !important;
-    gap:8px !important;
-  }
-
   .service-pill{
     min-height:38px !important;
-    padding:7px 8px !important;
-    font-size:8px !important;
+    padding-left:7px !important;
+    padding-right:7px !important;
   }
-
-  .top-note{
-    font-size:8px !important;
-  }
-
   .hero{
-    padding-left:16px !important;
-    padding-right:16px !important;
-    padding-bottom:max(20px, calc(env(safe-area-inset-bottom) + 12px)) !important;
+    padding-left:15px !important;
+    padding-right:15px !important;
   }
-
-  .kicker{
-    margin-bottom:11px !important;
-    font-size:8.5px !important;
-  }
-
   .hero h1{
-    font-size:clamp(41px,10.9vw,54px) !important;
+    font-size:clamp(37px,10.5vw,48px) !important;
   }
-
-  .hero-copy{
-    margin-top:12px !important;
-    font-size:13px !important;
-  }
-
   .primary{
-    min-height:62px !important;
-    margin-top:16px !important;
-    font-size:13px !important;
+    min-height:58px !important;
+    margin-top:14px !important;
   }
 }
 
-/* Telefoni bassi: riduce solo quanto serve, senza cambiare composizione */
-@media (max-height:740px) and (max-width:520px){
-  .gold-logo{transform:scale(.86) !important;transform-origin:top left !important}
-  .topbar-right{transform:scale(.90) !important;transform-origin:top right !important}
-  .hero h1{font-size:clamp(38px,9.8vw,50px) !important}
-  .kicker{margin-bottom:9px !important}
-  .hero-copy{margin-top:9px !important}
-  .primary{min-height:58px !important;margin-top:12px !important}
+/* Telefono basso: riduzione proporzionale, niente scroll della hero */
+@media (max-height:720px) and (max-width:520px){
+  .gold-logo-mark{
+    width:44px !important;
+    height:44px !important;
+  }
+  .gold-logo-main{font-size:20px !important}
+  .gold-logo-sub{font-size:10px !important}
+  .gold-logo-tattoo{font-size:14px !important}
+  .topbar-right{margin-top:5px !important;gap:5px !important}
+  .service-pill{min-height:34px !important}
+  .top-note{line-height:1.3 !important}
+  .kicker{margin-bottom:7px !important}
+  .hero h1{font-size:clamp(34px,9.6vw,43px) !important}
+  .hero-copy{margin-top:8px !important}
+  .primary{min-height:52px !important;margin-top:10px !important}
 }
 </style>
 
@@ -1855,7 +1912,19 @@ body.flow-open .backdrop{
 
   <header class="topbar">
     <div class="gold-logo" aria-label="Wedding Tattoo Experience">
-      <div class="gold-logo-mark">⌃</div>
+      <div class="gold-logo-mark" aria-hidden="true">
+        <svg class="logo-diamond" viewBox="0 0 100 100" role="presentation">
+          <path class="logo-diamond-line" d="M50 5 L95 50 L50 95 L5 50 Z"></path>
+          <circle class="logo-spark-core" r="3.2">
+            <animateMotion dur="4.8s" repeatCount="indefinite"
+              path="M50 5 L95 50 L50 95 L5 50 Z"></animateMotion>
+          </circle>
+          <circle class="logo-spark-halo" r="7">
+            <animateMotion dur="4.8s" repeatCount="indefinite"
+              path="M50 5 L95 50 L50 95 L5 50 Z"></animateMotion>
+          </circle>
+        </svg>
+      </div>
       <div class="gold-logo-main">WEDDING</div>
       <div class="gold-logo-sub">tattoo experience</div>
       <div class="gold-logo-by">by</div>
