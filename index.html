@@ -102,15 +102,16 @@ input{
   height:100%;
   object-fit:cover;
   object-position:center 46%;
-  filter:saturate(.80) contrast(1.08) brightness(.56);
+  filter:saturate(.76) contrast(1.06) brightness(.50);
 }
 .backdrop{
   position:absolute;
   inset:0;
   z-index:-4;
   background:
-    radial-gradient(circle at 50% 14%,rgba(222,177,82,.12),transparent 34%),
-    linear-gradient(180deg,rgba(5,3,2,.20),rgba(5,3,2,.57) 48%,rgba(5,3,2,.94));
+    radial-gradient(circle at 50% 16%,rgba(222,177,82,.11),transparent 34%),
+    radial-gradient(circle at center,transparent 48%,rgba(3,2,1,.48) 100%),
+    linear-gradient(180deg,rgba(5,3,2,.16),rgba(5,3,2,.50) 46%,rgba(5,3,2,.95));
 }
 .backdrop:after{
   content:"";
@@ -136,7 +137,7 @@ input{
 .logo{width:82px;height:auto;display:block}
 
 .gold-logo{
-  width:118px;
+  width:102px;
   color:var(--gold-bright);
   text-align:center;
   line-height:1;
@@ -244,7 +245,15 @@ input{
   padding:104px 16px 18px;
   overflow:hidden;
 }
-.hero-inner{width:100%;max-width:820px}
+.hero-inner{
+  width:100%;
+  max-width:820px;
+  animation:heroIn .72s cubic-bezier(.2,.7,.2,1) both;
+}
+@keyframes heroIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
 .kicker{
   margin:0 0 13px;
   color:var(--gold-bright);
@@ -257,7 +266,7 @@ input{
   max-width:780px;
   margin:0;
   font-family:var(--serif);
-  font-size:clamp(46px,12.5vw,88px);
+  font-size:clamp(44px,12vw,84px);
   font-weight:400;
   line-height:.94;
   letter-spacing:-.048em;
@@ -266,8 +275,24 @@ input{
 .gold-word{
   color:var(--gold-bright);
   text-shadow:
-    0 0 12px rgba(255,230,164,.16),
-    0 0 34px rgba(218,169,72,.22);
+    0 0 10px rgba(255,236,192,.30),
+    0 0 28px rgba(218,169,72,.28),
+    0 0 54px rgba(218,169,72,.12);
+  animation:goldBreath 5.8s ease-in-out infinite;
+}
+@keyframes goldBreath{
+  0%,100%{
+    text-shadow:
+      0 0 10px rgba(255,236,192,.26),
+      0 0 26px rgba(218,169,72,.24),
+      0 0 48px rgba(218,169,72,.10);
+  }
+  50%{
+    text-shadow:
+      0 0 14px rgba(255,242,206,.42),
+      0 0 36px rgba(218,169,72,.34),
+      0 0 64px rgba(218,169,72,.16);
+  }
 }
 .hero-copy{
   max-width:620px;
@@ -866,6 +891,205 @@ input{
   font-weight:800;
 }
 
+
+.advisor-result{justify-content:flex-start;text-align:center}
+.advisor-intro{
+  max-width:610px!important;
+  margin:0 auto 18px!important
+}
+.advisor-grid{
+  width:100%;
+  display:grid;
+  gap:12px;
+  margin-top:8px;
+}
+.advisor-card{
+  position:relative;
+  padding:18px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(18,13,9,.96),rgba(8,6,4,.98));
+  text-align:left;
+}
+.advisor-card.recommended{
+  border-color:rgba(255,231,170,.52);
+  box-shadow:0 0 34px rgba(212,170,86,.10)
+}
+.advisor-card.budget-card{
+  border-color:rgba(169,208,173,.34)
+}
+.advisor-label{
+  color:var(--gold-bright);
+  font-size:9px;
+  letter-spacing:.12em;
+  text-transform:uppercase
+}
+.budget-card .advisor-label{color:var(--ok)}
+.advisor-card h3{
+  margin:8px 0 0;
+  font-family:var(--serif);
+  font-size:30px;
+  font-weight:400
+}
+.advisor-price{
+  margin-top:7px;
+  color:#fff;
+  font-size:30px;
+  font-weight:900
+}
+.advisor-card p{
+  margin:9px 0!important;
+  color:var(--muted);
+  font-size:12px!important;
+  line-height:1.5!important
+}
+.advisor-features{
+  display:grid;
+  gap:6px;
+  margin-top:12px
+}
+.advisor-feature{
+  display:flex;
+  gap:8px;
+  color:#ddd0bd;
+  font-size:11px;
+  line-height:1.4
+}
+.advisor-feature:before{
+  content:"✓";
+  color:var(--ok);
+  font-weight:900
+}
+.choose-package{
+  width:100%;
+  min-height:50px;
+  margin-top:15px;
+  border:1px solid rgba(255,237,190,.42);
+  background:linear-gradient(135deg,#fff0bd,#d8aa4d 56%,#9c681f);
+  color:#171006;
+  font-weight:900
+}
+.all-packages{
+  width:100%;
+  margin-top:13px
+}
+.packages-toggle{
+  width:100%;
+  min-height:48px;
+  border:1px solid var(--line);
+  background:rgba(5,3,2,.70);
+  color:#d9cbb7
+}
+.packages-list{
+  display:grid;
+  gap:8px;
+  margin-top:8px
+}
+.package-option{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:13px;
+  border:1px solid rgba(221,181,96,.14);
+  background:rgba(5,3,2,.58);
+  text-align:left
+}
+.package-option.current{
+  border-color:var(--gold)
+}
+.package-option h4{
+  margin:0;
+  font-family:var(--serif);
+  font-size:20px;
+  font-weight:400
+}
+.package-option p{
+  margin:4px 0 0!important;
+  font-size:10px!important
+}
+.package-option-price{
+  color:var(--gold-bright);
+  font-weight:900;
+  white-space:nowrap
+}
+.final-summary{
+  width:100%;
+  margin-top:20px;
+  padding:18px;
+  border:1px solid rgba(255,231,170,.34);
+  background:linear-gradient(180deg,rgba(20,14,9,.97),rgba(8,6,4,.99));
+  box-shadow:0 26px 80px rgba(0,0,0,.38)
+}
+.summary-title{
+  color:var(--gold-bright);
+  font-size:9px;
+  letter-spacing:.18em;
+  text-transform:uppercase
+}
+.final-summary-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:7px;
+  margin-top:13px
+}
+.final-summary-grid div,
+.final-money>div{
+  padding:11px;
+  border:1px solid rgba(221,181,96,.13);
+  text-align:left
+}
+.final-summary-grid span,
+.chosen-package span,
+.final-money span{
+  display:block;
+  color:var(--muted);
+  font-size:8px;
+  letter-spacing:.1em;
+  text-transform:uppercase
+}
+.final-summary-grid strong,
+.chosen-package strong{
+  display:block;
+  margin-top:5px;
+  color:#fff;
+  font-size:12px
+}
+.chosen-package{
+  margin-top:8px;
+  padding:13px;
+  border:1px solid rgba(212,170,86,.30);
+  text-align:left
+}
+.chosen-package strong{
+  color:var(--gold-bright);
+  font-family:var(--serif);
+  font-size:25px;
+  font-weight:400
+}
+.final-money{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin-top:8px
+}
+.final-money strong{
+  display:block;
+  margin-top:5px;
+  color:#fff;
+  font-size:18px
+}
+.final-money .accent{
+  border-color:rgba(169,208,173,.34)
+}
+.final-money .accent strong{color:var(--ok)}
+@media(min-width:760px){
+  .advisor-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:520px){
+  .final-summary-grid,
+  .final-money{grid-template-columns:1fr}
+}
+
 .footer{
   padding:24px 18px 35px;
   border-top:1px solid var(--line);
@@ -877,17 +1101,34 @@ input{
 .footer-links{display:flex;justify-content:center;flex-wrap:wrap;gap:18px;margin-bottom:12px}
 .footer a{color:#d7c9b5;text-decoration:none}
 
+
+.primary{animation:ctaBreath 6.5s ease-in-out infinite}
+.primary:before{
+  content:"";position:absolute;top:-40%;bottom:-40%;width:34%;left:-48%;
+  transform:skewX(-18deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.48),transparent);
+  animation:ctaSheen 7s ease-in-out infinite
+}
+.primary:active{transform:scale(.985) translateY(1px)}
+@keyframes ctaBreath{
+  0%,100%{box-shadow:0 18px 48px rgba(0,0,0,.42),0 0 22px rgba(218,169,72,.18)}
+  50%{box-shadow:0 20px 52px rgba(0,0,0,.44),0 0 34px rgba(218,169,72,.30)}
+}
+@keyframes ctaSheen{
+  0%,72%{left:-48%;opacity:0}78%{opacity:.95}92%{left:122%;opacity:.2}100%{left:122%;opacity:0}
+}
+
 @media(min-width:760px){
   .topbar{padding:24px 5vw}
   .hero{align-items:center;padding:150px 6vw 70px}
   .flow{padding:100px 20px 50px}
-  .flow-layout{grid-template-columns:minmax(0,1fr) 330px}
+  .flow-layout{grid-template-columns:minmax(0,1fr)}
   .flow-card{padding:28px 34px}
   .choices.two{grid-template-columns:1fr 1fr}
 }
 @media(max-width:520px){
   .topbar{padding:14px 14px 0}
-  .gold-logo{width:118px}
+  .gold-logo{width:96px}
   .topbar-right{gap:7px}
   .service-pill{padding:7px 10px;font-size:7px}
   .top-note{max-width:170px;font-size:7px;line-height:1.35}
@@ -899,7 +1140,7 @@ input{
   }
   .hero-inner{padding-top:315px}
   .hero h1{
-    font-size:clamp(40px,11vw,56px);
+    font-size:clamp(39px,10.7vw,54px);
     line-height:.94;
     letter-spacing:-.044em;
   }
@@ -1120,7 +1361,41 @@ input{
         <input name="experience" type="hidden" value="equilibrato">
       </section>
 
+
       <section class="step" data-step="5">
+        <small>Il vostro investimento</small>
+        <h2>Quale budget avete pensato?</h2>
+        <p>
+          Non è vincolante. Ci serve per mostrarvi sia la soluzione ideale,
+          sia cosa possiamo offrirvi restando nel budget indicato.
+        </p>
+        <div class="choices budget-choices" data-choice-group="budget">
+          <button class="choice" type="button" data-value="">
+            <strong>Non lo sappiamo ancora</strong>
+            <span>Vi consiglieremo senza vincoli di budget.</span>
+          </button>
+          <button class="choice" type="button" data-value="under1000">
+            <strong>Fino a 1.000 €</strong>
+            <span>Vediamo il massimo valore possibile entro questa cifra.</span>
+          </button>
+          <button class="choice" type="button" data-value="1000-1500">
+            <strong>1.000 – 1.500 €</strong>
+            <span>Una fascia adatta a esperienze complete.</span>
+          </button>
+          <button class="choice" type="button" data-value="1500-2200">
+            <strong>1.500 – 2.200 €</strong>
+            <span>Più copertura, flessibilità e presenza.</span>
+          </button>
+          <button class="choice luxury" type="button" data-value="over2200">
+            <span class="badge">Senza compromessi</span>
+            <strong>Oltre 2.200 €</strong>
+            <span>Valutiamo l’esperienza più completa disponibile.</span>
+          </button>
+        </div>
+        <input name="budget" type="hidden">
+      </section>
+
+      <section class="step" data-step="6">
         <small>Contatti</small>
         <h2>Dove inviamo la proposta?</h2>
         <p>Riceverete contratto e conferme a questo indirizzo.</p>
@@ -1131,7 +1406,7 @@ input{
         <div class="smart-hint">Premi Invio per continuare</div>
       </section>
 
-      <section class="step" data-step="6">
+      <section class="step" data-step="7">
         <small>Ultimo dato</small>
         <h2>Qual è il vostro numero?</h2>
         <p>Lo useremo solo per le comunicazioni importanti sulla pratica.</p>
@@ -1142,7 +1417,7 @@ input{
         <div class="smart-hint">Premi Invio per preparare la proposta</div>
       </section>
 
-      <section class="step loading" data-step="7">
+      <section class="step loading" data-step="8">
         <div class="loading-mark">✦</div>
         <small>Preparazione in corso</small>
         <h2>Stiamo creando la vostra proposta.</h2>
@@ -1159,57 +1434,97 @@ input{
         </button>
       </section>
 
-      <section class="step result" data-step="8">
+      <section class="step result advisor-result" data-step="9">
         <div class="result-mark">✓</div>
-        <small>Proposta pronta</small>
-        <h2>La vostra data è disponibile.</h2>
+        <small>Wedding Advisor</small>
+        <h2>Abbiamo preparato le vostre soluzioni.</h2>
+        <p class="advisor-intro">
+          Vi mostriamo prima ciò che riteniamo ideale per l’evento e,
+          se avete indicato un budget, la soluzione migliore entro quella cifra.
+          La scelta finale resta sempre vostra.
+        </p>
 
-        <div class="result-card">
-          <div class="result-package-row">
-            <div>
-              <span>Esperienza consigliata</span>
-              <strong class="package-name" id="resultPackage"></strong>
-            </div>
-            <div class="price" id="resultPrice"></div>
+        <div class="advisor-grid">
+          <article class="advisor-card recommended" id="recommendedCard">
+            <div class="advisor-label">⭐ La nostra raccomandazione</div>
+            <h3 id="recommendedName">—</h3>
+            <div class="advisor-price" id="recommendedPrice">—</div>
+            <p id="recommendedReason"></p>
+            <div class="advisor-features" id="recommendedFeatures"></div>
+            <button class="choose-package" type="button" id="chooseRecommended">
+              Scegli questa soluzione
+            </button>
+          </article>
+
+          <article class="advisor-card budget-card" id="budgetCard" hidden>
+            <div class="advisor-label">€ In base al vostro budget</div>
+            <h3 id="budgetName">—</h3>
+            <div class="advisor-price" id="budgetPrice">—</div>
+            <p id="budgetReason"></p>
+            <div class="advisor-features" id="budgetFeatures"></div>
+            <button class="choose-package" type="button" id="chooseBudget">
+              Continua con questa soluzione
+            </button>
+          </article>
+        </div>
+
+        <div class="all-packages">
+          <button class="packages-toggle" id="packagesToggle" type="button">
+            Oppure scegliete liberamente un’altra soluzione ↓
+          </button>
+          <div class="packages-list" id="packagesList" hidden></div>
+        </div>
+
+        <div class="final-summary" id="finalSummary" hidden>
+          <div class="summary-title">Il vostro evento</div>
+
+          <div class="final-summary-grid">
+            <div><span>Data</span><strong id="finalDate">—</strong></div>
+            <div><span>Location</span><strong id="finalLocation">—</strong></div>
+            <div><span>Invitati</span><strong id="finalGuests">—</strong></div>
+            <div><span>Durata</span><strong id="finalHours">—</strong></div>
           </div>
 
-          <div class="result-details">
-            <div>
-              <span>Data</span>
-              <strong id="resultDate">—</strong>
-            </div>
-            <div>
-              <span>Durata</span>
-              <strong id="resultHours">—</strong>
-            </div>
-            <div>
-              <span>Invitati</span>
-              <strong id="resultGuests">—</strong>
-            </div>
+          <div class="chosen-package">
+            <span>Soluzione scelta</span>
+            <strong id="chosenPackageName">—</strong>
           </div>
 
-          <div class="deposit" id="resultDeposit"></div>
+          <div class="final-money">
+            <div>
+              <span>Totale</span>
+              <strong id="chosenTotal">—</strong>
+            </div>
+            <div class="accent">
+              <span>Acconto per riservare la data</span>
+              <strong id="chosenDeposit">—</strong>
+            </div>
+            <div>
+              <span>Saldo</span>
+              <strong id="chosenBalance">—</strong>
+            </div>
+          </div>
 
           <div class="hold-box" id="holdBox" hidden>
             <span>La data è riservata durante la conferma</span>
             <strong id="holdCountdown">30:00</strong>
             <small>Nessun importo viene addebitato prima del pagamento.</small>
           </div>
+
+          <a class="primary result-cta" id="contractLink">
+            Firma e blocca la data
+          </a>
+
+          <div class="result-reassurance">
+            <span>✓ Contratto digitale</span>
+            <span>✓ Pagamento protetto</span>
+            <span>✓ Area Sposi automatica</span>
+          </div>
+
+          <a class="secondary" id="draftPdf" target="_blank" rel="noopener">
+            Leggi la proposta in PDF
+          </a>
         </div>
-
-        <a class="primary result-cta" id="contractLink">
-          Firma e blocca la data
-        </a>
-
-        <div class="result-reassurance">
-          <span>✓ Contratto digitale</span>
-          <span>✓ Pagamento protetto</span>
-          <span>✓ Accesso immediato all’Area Sposi</span>
-        </div>
-
-        <a class="secondary" id="draftPdf" target="_blank" rel="noopener">
-          Leggi la proposta in PDF
-        </a>
       </section>
 
       <div class="nav" id="navigation">
@@ -1217,26 +1532,6 @@ input{
         <button class="next" id="nextButton" type="button">Avanti →</button>
       </div>
       </form>
-
-      <aside class="live-summary" id="liveSummary" aria-live="polite">
-        <div class="summary-kicker">La vostra esperienza</div>
-        <h3>Riepilogo in tempo reale</h3>
-        <div class="summary-list">
-          <div><span>Data</span><strong id="summaryDate">Da scegliere</strong></div>
-          <div><span>Location</span><strong id="summaryLocation">Da inserire</strong></div>
-          <div><span>Invitati</span><strong id="summaryGuests">Da scegliere</strong></div>
-          <div><span>Durata</span><strong id="summaryHours">Da scegliere</strong></div>
-          <div><span>Pacchetto</span><strong id="summaryPackage">In definizione</strong></div>
-        </div>
-        <div class="summary-price">
-          <span>Stima indicativa</span>
-          <strong id="summaryEstimate">—</strong>
-          <small>Il prezzo definitivo viene calcolato dal sistema al termine.</small>
-        </div>
-        <div class="summary-status" id="summaryStatus">
-          Iniziate il percorso: il riepilogo si aggiornerà automaticamente.
-        </div>
-      </aside>
     </div>
   </section>
 </div>
@@ -1267,7 +1562,7 @@ input{
 
 <script>
 const API='https://wte-cloud-api.onrender.com';
-const TOTAL_VISIBLE_STEPS=7;
+const TOTAL_VISIBLE_STEPS=8;
 const hero=document.getElementById('hero');
 const flow=document.getElementById('flow');
 const form=document.getElementById('wizard');
@@ -1393,35 +1688,7 @@ function startHoldCountdown(expiresAt){
   holdCountdownTimer=setInterval(render,1000);
 }
 
-function updateLiveSummary(){
-  const selection=estimateSelection();
-
-  document.getElementById('summaryDate').textContent=
-    formatDate(form.elements.date.value);
-  document.getElementById('summaryLocation').textContent=
-    form.elements.location.value.trim()||'Da inserire';
-  document.getElementById('summaryGuests').textContent=
-    guestLabel(form.elements.guests.value);
-  document.getElementById('summaryHours').textContent=
-    hourLabel(form.elements.hours.value);
-  document.getElementById('summaryPackage').textContent=
-    selection.packageName;
-  document.getElementById('summaryEstimate').textContent=
-    selection.estimate?money(selection.estimate):'—';
-
-  const status=document.getElementById('summaryStatus');
-  if(!form.elements.date.value){
-    status.textContent='Scegliete la data: controlleremo subito la disponibilità.';
-  }else if(!dateAvailable){
-    status.textContent='La disponibilità della data deve ancora essere confermata.';
-  }else if(!form.elements.hours.value){
-    status.textContent='Data disponibile. Ora scegliete la durata del servizio.';
-  }else if(!form.elements.email.value){
-    status.textContent='La proposta sta prendendo forma. Mancano solo i contatti.';
-  }else{
-    status.textContent='Quasi fatto: il sistema può preparare la proposta definitiva.';
-  }
-}
+function updateLiveSummary(){ /* riepilogo mostrato solo alla fine */ }
 
 
 
@@ -1581,7 +1848,7 @@ function submissionPayload(){
     guests:Number(raw.guests),
     hours:Number(raw.hours),
     experience:raw.experience,
-    budget:'1000-1500',
+    budget:raw.budget||undefined,
     notes:'',
     holdToken
   };
@@ -1628,7 +1895,7 @@ function collectFlowState(){
   return {
     version:FLOW_STORAGE_VERSION,
     savedAt:new Date().toISOString(),
-    current:Math.min(current,6),
+    current:Math.min(current,7),
     values,
     dateAvailable,
     holdToken,
@@ -1731,7 +1998,7 @@ function restoreFlowState(state){
 
     const target=Math.max(
       0,
-      Math.min(Number(state.current)||0,6)
+      Math.min(Number(state.current)||0,7)
     );
 
     setStep(target);
@@ -1749,8 +2016,8 @@ function restoreFlowState(state){
 
 function milestoneForStep(index){
   if(index<=1)return 0;
-  if(index<=3)return 1;
-  if(index<=5)return 2;
+  if(index<=4)return 1;
+  if(index<=6)return 2;
   return 3;
 }
 
@@ -1773,7 +2040,7 @@ function autoAdvance(delay=380){
   setTimeout(()=>{
     activeStep.classList.remove('auto-advancing');
 
-    if(current<6){
+    if(current<7){
       setStep(current+1);
     }
   },delay);
@@ -1783,8 +2050,8 @@ function setStep(index){
   current=index;
   steps.forEach((step,i)=>step.classList.toggle('active',i===index));
 
-  const isLoading=index===7;
-  const isResult=index===8;
+  const isLoading=index===8;
+  const isResult=index===9;
   navigation.hidden=isLoading||isResult;
 
   if(index<TOTAL_VISIBLE_STEPS){
@@ -1919,6 +2186,10 @@ document.querySelectorAll('[data-choice-group]').forEach(group=>{
           button.dataset.style==='premium'?'premium':'equilibrato';
       }
 
+      if(name==='budget'){
+        form.elements.budget.value=button.dataset.value;
+      }
+
       updateLiveSummary();
       saveFlowState();
       pulseHaptic(8);
@@ -2006,7 +2277,7 @@ nextButton.onclick=async()=>{
     if(current!==1)return;
   }
 
-  if(current<6){
+  if(current<7){
     setStep(current+1);
     return;
   }
@@ -2019,6 +2290,196 @@ function markLoading(id,text){
   element.classList.add('done');
   element.textContent=`✓ ${text}`;
 }
+
+
+function budgetLabel(value){
+  return ({
+    under1000:'Fino a 1.000 €',
+    '1000-1500':'1.000 – 1.500 €',
+    '1500-2200':'1.500 – 2.200 €',
+    over2200:'Oltre 2.200 €'
+  })[value]||'Nessun limite indicato';
+}
+
+function renderFeatures(target,features=[]){
+  target.innerHTML=(features||[])
+    .slice(0,6)
+    .map(feature=>`<div class="advisor-feature">${String(feature)}</div>`)
+    .join('');
+}
+
+function packageMoney(pack){
+  return pack?.priceLabel ||
+    new Intl.NumberFormat('it-IT',{
+      style:'currency',
+      currency:'EUR'
+    }).format(Number(pack?.priceCents||0)/100);
+}
+
+function renderPackageChoice(data,raw){
+  const recommended=data.recommendation.package;
+  const budgetPack=data.budgetRecommendation?.package||null;
+
+  document.getElementById('recommendedName').textContent=recommended.name;
+  document.getElementById('recommendedPrice').textContent=packageMoney(recommended);
+  document.getElementById('recommendedReason').textContent=
+    data.recommendation.explanation ||
+    'È la soluzione che riteniamo più adatta alle caratteristiche del vostro evento.';
+  renderFeatures(
+    document.getElementById('recommendedFeatures'),
+    recommended.features
+  );
+
+  const budgetCard=document.getElementById('budgetCard');
+  if(budgetPack && budgetPack.code!==recommended.code){
+    budgetCard.hidden=false;
+    document.getElementById('budgetName').textContent=budgetPack.name;
+    document.getElementById('budgetPrice').textContent=packageMoney(budgetPack);
+    document.getElementById('budgetReason').textContent=
+      `Con il budget ${budgetLabel(raw.budget)}, questa è la soluzione che offre il miglior equilibrio tra investimento e copertura.`;
+    renderFeatures(
+      document.getElementById('budgetFeatures'),
+      budgetPack.features
+    );
+  }else if(raw.budget && budgetPack){
+    budgetCard.hidden=false;
+    document.getElementById('budgetName').textContent=budgetPack.name;
+    document.getElementById('budgetPrice').textContent=packageMoney(budgetPack);
+    document.getElementById('budgetReason').textContent=
+      'Ottima notizia: la soluzione che consigliamo coincide con il budget che avete indicato.';
+    renderFeatures(
+      document.getElementById('budgetFeatures'),
+      budgetPack.features
+    );
+  }else{
+    budgetCard.hidden=true;
+  }
+
+  const list=document.getElementById('packagesList');
+  list.innerHTML=(data.packages||[]).map(pack=>`
+    <button class="package-option" type="button" data-package="${pack.code}">
+      <div>
+        <h4>${pack.name}</h4>
+        <p>${pack.description||pack.reason||''}</p>
+      </div>
+      <div class="package-option-price">${packageMoney(pack)}</div>
+    </button>
+  `).join('');
+
+  list.querySelectorAll('[data-package]').forEach(button=>{
+    button.onclick=()=>{
+      const pack=(data.packages||[]).find(
+        item=>item.code===button.dataset.package
+      );
+      if(pack)selectPackage(pack,data,raw);
+    };
+  });
+
+  document.getElementById('chooseRecommended').onclick=()=>{
+    selectPackage(recommended,data,raw);
+  };
+
+  document.getElementById('chooseBudget').onclick=()=>{
+    if(budgetPack)selectPackage(budgetPack,data,raw);
+  };
+
+  document.getElementById('packagesToggle').onclick=()=>{
+    list.hidden=!list.hidden;
+    document.getElementById('packagesToggle').textContent=
+      list.hidden
+        ?'Oppure scegliete liberamente un’altra soluzione ↓'
+        :'Nascondi le altre soluzioni ↑';
+  };
+}
+
+async function selectPackage(pack,data,raw){
+  const buttonCandidates=[
+    document.getElementById('chooseRecommended'),
+    document.getElementById('chooseBudget')
+  ];
+  buttonCandidates.forEach(button=>button.disabled=true);
+
+  try{
+    const response=await fetch(
+      `${API}/api/public/advisor/${encodeURIComponent(data.salesToken)}/select-package`,
+      {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Accept':'application/json'
+        },
+        body:JSON.stringify({
+          packageCode:pack.code,
+          contractToken:data.contractToken
+        })
+      }
+    );
+
+    const selection=await response.json().catch(()=>({}));
+    if(!response.ok){
+      throw new Error(
+        selection.error||'Non è stato possibile selezionare il pacchetto.'
+      );
+    }
+
+    const selected=selection.package;
+    const total=Number(selected.priceCents||0);
+    const depositPercent=Number(selected.depositPercent||30);
+    const deposit=Math.round(total*depositPercent/100);
+    const balance=Math.max(0,total-deposit);
+
+    document.getElementById('finalDate').textContent=formatDate(raw.date);
+    document.getElementById('finalLocation').textContent=raw.location;
+    document.getElementById('finalGuests').textContent=guestLabel(raw.guests);
+    document.getElementById('finalHours').textContent=hourLabel(raw.hours);
+    document.getElementById('chosenPackageName').textContent=selected.name;
+    document.getElementById('chosenTotal').textContent=
+      new Intl.NumberFormat('it-IT',{
+        style:'currency',currency:'EUR'
+      }).format(total/100);
+    document.getElementById('chosenDeposit').textContent=
+      new Intl.NumberFormat('it-IT',{
+        style:'currency',currency:'EUR'
+      }).format(deposit/100);
+    document.getElementById('chosenBalance').textContent=
+      new Intl.NumberFormat('it-IT',{
+        style:'currency',currency:'EUR'
+      }).format(balance/100);
+
+    document.getElementById('contractLink').href=selection.contractUrl;
+    document.getElementById('draftPdf').href=selection.draftPdf;
+    document.getElementById('contractLink').onclick=()=>{
+      WTEAnalytics?.track('contract_opened',{
+        packageName:selected.name,
+        priceCents:total
+      });
+      clearFlowState();
+    };
+
+    document.getElementById('finalSummary').hidden=false;
+    document.getElementById('finalSummary').scrollIntoView({
+      behavior:'smooth',
+      block:'start'
+    });
+
+    document.querySelectorAll('.package-option').forEach(item=>{
+      item.classList.toggle(
+        'current',
+        item.dataset.package===selected.code
+      );
+    });
+
+    startHoldCountdown(
+      data.availability?.expiresAt ||
+      new Date(Date.now()+30*60*1000).toISOString()
+    );
+  }catch(error){
+    showGlobalAlert(error.message);
+  }finally{
+    buttonCandidates.forEach(button=>button.disabled=false);
+  }
+}
+
 
 async function createRecommendation(){
   if(submissionInProgress)return;
@@ -2097,49 +2558,12 @@ async function createRecommendation(){
     }
 
     const raw=lastSubmissionPayload;
-    const packageData=data.recommendation.package;
-    const depositCents=Math.round(
-      Number(packageData.priceCents||0) *
-      Number(packageData.depositPercent||30) / 100
-    );
-
-    document.getElementById('resultPackage').textContent=packageData.name;
-    document.getElementById('resultPrice').textContent=packageData.priceLabel;
-    document.getElementById('resultDate').textContent=formatDate(raw.date);
-    document.getElementById('resultHours').textContent=hourLabel(raw.hours);
-    document.getElementById('resultGuests').textContent=guestLabel(raw.guests);
-    document.getElementById('summaryPackage').textContent=packageData.name;
-    document.getElementById('summaryEstimate').textContent=packageData.priceLabel;
-    document.getElementById('summaryStatus').textContent=
-      'Proposta definitiva pronta. Potete proseguire al contratto.';
-
-    document.getElementById('resultDeposit').innerHTML=
-      `<strong>Acconto per riservare la data</strong><br>`+
-      `${new Intl.NumberFormat('it-IT',{
-        style:'currency',
-        currency:'EUR'
-      }).format(depositCents/100)}`+
-      `<br><small>Il saldo restante sarà gestito dalla vostra Area Sposi.</small>`;
-
-    document.getElementById('contractLink').href=data.contractUrl;
-    document.getElementById('contractLink').onclick=()=>{
-      WTEAnalytics?.track('contract_opened',{
-        packageName:packageData.name,
-        priceCents:Number(packageData.priceCents||0)
-      });
-      clearFlowState();
-    };
-    document.getElementById('contractLink').textContent=
-      'Firma e blocca la data';
-    document.getElementById('draftPdf').href=data.draftPdf;
-
-    startHoldCountdown(
-      data.availability?.expiresAt ||
-      new Date(Date.now()+30*60*1000).toISOString()
-    );
-
+    renderPackageChoice(data,lastSubmissionPayload);
     saveFlowState();
-    setStep(8);
+    setStep(9);
+    pulseHaptic([18,60,28]);
+    announce('Proposta pronta. Scegliete la soluzione che preferite.');
+    hideGlobalAlert();
     pulseHaptic([18,60,28]);
     announce('Proposta pronta. La vostra data è disponibile.');
     hideGlobalAlert();
@@ -2205,7 +2629,7 @@ window.addEventListener('offline',()=>{
 
 window.addEventListener('beforeunload',event=>{
   const state=readFlowState();
-  if(!state||current===8)return;
+  if(!state||current===9)return;
 
   const hasMeaningfulData=Boolean(
     state.values?.name||
@@ -2250,6 +2674,10 @@ if('serviceWorker' in navigator){
   });
 }
 
+const heroVideo=document.getElementById('heroVideo');
+if(heroVideo){
+  heroVideo.playbackRate=.82;
+}
 loadHeroVideo();
 
 window.addEventListener('unhandledrejection',event=>{
