@@ -32,7 +32,7 @@ main{max-width:900px;margin:auto;padding:16px 12px 88px}.intro small,.head small
 .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.back{min-height:38px;padding:0 10px;border:1px solid var(--line);background:transparent;color:#cfc2b0;font-size:9px}
 .list{display:grid;gap:8px}.item{padding:14px;border:1px solid var(--line);background:#0b0805}.client{display:grid;grid-template-columns:1fr auto;gap:10px;text-align:left;color:#fff;width:100%}.client strong{font:18px var(--serif)}.client p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.45}
 .badge{padding:5px 7px;border:1px solid var(--line);font-size:7px;height:max-content}.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
-.toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}.toolbar .gold{width:auto;margin:0;padding:0 14px}.flash-filter{min-height:50px;flex:1;padding:0 10px;border:1px solid var(--line);background:#100d09;color:#fff;outline:none}.danger{border:1px solid rgba(214,129,119,.45);background:rgba(214,129,119,.08);color:#e9a59d}
+.toolbar{display:flex;justify-content:flex-end;margin-bottom:10px}.toolbar .gold{width:auto;margin:0;padding:0 14px}
 .flashgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.flash{padding:7px;border:1px solid var(--line);background:#0b0805;color:#fff;text-align:left}.flash img{width:100%;aspect-ratio:1;object-fit:cover;background:#fff}.flash strong{display:block;margin-top:7px}.flash span{display:block;margin-top:3px;color:var(--muted);font-size:9px}.flash.off{opacity:.42}
 .price{margin-top:6px;color:var(--gold2);font-size:25px;font-weight:900}.meta{margin-top:5px;color:var(--muted);font-size:10px}.item button.secondary{width:100%;min-height:42px;margin-top:9px}
 .secondary{border:1px solid var(--line);background:transparent;color:#ddd0bd}
@@ -69,7 +69,7 @@ main{max-width:900px;margin:auto;padding:16px 12px 88px}.intro small,.head small
 </div></section>
 
 <section id="clientsView" hidden><div class="head"><div><small>Gestione</small><h2>Clienti</h2></div><button class="back" data-home>Home</button></div><div class="list" id="clients"></div></section>
-<section id="flashView" hidden><div class="head"><div><small>Catalogo</small><h2>Flash</h2></div><button class="back" data-home>Home</button></div><div class="toolbar"><select class="flash-filter" id="flashCategory"><option value="">Tutte le categorie</option></select><button class="gold" id="newFlash">+ Flash</button></div><div class="flashgrid" id="flashes"></div></section>
+<section id="flashView" hidden><div class="head"><div><small>Catalogo</small><h2>Flash</h2></div><button class="back" data-home>Home</button></div><div class="toolbar"><button class="gold" id="newFlash">+ Flash</button></div><div class="flashgrid" id="flashes"></div></section>
 <section id="packagesView" hidden><div class="head"><div><small>Configurazione</small><h2>Pacchetti</h2></div><button class="back" data-home>Home</button></div><div class="list" id="packages"></div></section>
 <section id="offersView" hidden><div class="head"><div><small>Promozioni</small><h2>Offerte</h2></div><button class="back" data-home>Home</button></div><div class="toolbar"><button class="gold" id="newOffer">+ Offerta</button></div><div class="list" id="offers"></div></section>
 </main></div>
@@ -82,7 +82,7 @@ main{max-width:900px;margin:auto;padding:16px 12px 88px}.intro small,.head small
 <div class="drawer" id="flashDrawer" hidden><div class="panel"><div class="drawerhead"><strong id="flashHead">Flash</strong><button class="close" data-close="flashDrawer">×</button></div><div class="body">
 <input id="imageInput" type="file" accept="image/*"><div class="editor"><canvas id="canvas" width="1000" height="1000"></canvas></div><div class="tools"><button id="left">↺</button><button id="fit">Adatta</button><button id="right">↻</button></div>
 <label class="field">Zoom<input id="zoom" type="range" min=".5" max="3" step=".01" value="1"></label><label class="field">Nome<input id="flashName"></label><label class="field">Categoria<input id="category"></label><label class="field">Stato<select id="active"><option value="true">Visibile</option><option value="false">Nascosto</option></select></label>
-<div class="save"><button class="secondary" data-close="flashDrawer">Annulla</button><button class="gold" id="saveFlash" style="margin:0">Salva</button></div><button class="danger" id="deleteFlash" style="width:100%;min-height:46px;margin-top:8px" hidden>Elimina Flash</button></div></div></div>
+<div class="save"><button class="secondary" data-close="flashDrawer">Annulla</button><button class="gold" id="saveFlash" style="margin:0">Salva</button></div></div></div></div>
 
 <div class="drawer" id="pkgDrawer" hidden><div class="panel"><div class="drawerhead"><strong id="pkgHead">Pacchetto</strong><button class="close" data-close="pkgDrawer">×</button></div><div class="body">
 <label class="field">Nome<input id="pkgName"></label><label class="field">Prezzo (€)<input id="pkgPrice" type="number"></label><label class="field">Durata (ore)<input id="pkgHours" type="number"></label><label class="field">Acconto (%)<input id="pkgDeposit" type="number"></label><label class="field">Descrizione<textarea id="pkgDesc"></textarea></label><label class="field">Servizi inclusi<textarea id="pkgFeatures" placeholder="Uno per riga"></textarea></label>
@@ -105,7 +105,7 @@ main{max-width:900px;margin:auto;padding:16px 12px 88px}.intro small,.head small
 <div class="toast" id="toast" hidden></div>
 <script>
 const API='https://wte-cloud-api.onrender.com',TK='wte_manager_token',$=id=>document.getElementById(id);
-let token=localStorage.getItem(TK)||'',appUser=null,practices=[],flashItems=[],pkgItems=[],offers=[],current=null,currentFlash=null,currentPkg=null,currentOffer=null;const flashBlobUrls=new Map();
+let token=localStorage.getItem(TK)||'',practices=[],flashItems=[],pkgItems=[],offers=[],current=null,currentFlash=null,currentPkg=null,currentOffer=null;
 function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')}
 function toast(m){const e=$('toast');e.textContent=m;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,1800)}
 async function api(path,opt={}){const r=await fetch(API+path,{cache:'no-store',...opt,headers:{...(opt.body?{'Content-Type':'application/json'}:{}),...(token?{Authorization:'Bearer '+token}:{}),...(opt.headers||{})}});const d=await r.json().catch(()=>({}));if(r.status===401){logout();throw Error('Sessione scaduta')}if(!r.ok)throw Error(d.error||'Errore '+r.status);return d}
@@ -119,33 +119,10 @@ async function loadClients(){practices=(await api('/api/practices')).practices||
 function openClient(id){current=practices.find(p=>String(p.id)===String(id));$('clientTitle').textContent=current.name||'Cliente';$('status').value=current.status||'Nuova';$('reminder').value=current.reminder||'';$('notes').value=current.notes||'';const p=phone(current).replace(/\\s+/g,''),m=current.email||'';$('call').href=p?'tel:'+p:'#';$('wa').href=p?'https://wa.me/'+p.replace(/^\\+/,''):'#';$('mail').href=m?'mailto:'+m:'#';$('clientDrawer').hidden=false}
 $('saveClient').onclick=async()=>{current.status=$('status').value;current.reminder=$('reminder').value.trim();current.notes=$('notes').value.trim();await api('/api/practices/sync',{method:'POST',body:JSON.stringify({practices})});$('clientDrawer').hidden=true;loadClients();toast('Cliente aggiornato')}
 function today(){const t=iso(),ev=practices.filter(p=>p.date===t&&!/annull/i.test(p.status||'')),up=practices.filter(p=>p.date&&p.date>=t&&!/annull/i.test(p.status||'')).sort((a,b)=>a.date.localeCompare(b.date));$('today').textContent=ev.length?`Oggi avete ${ev.length} ${ev.length===1?'evento':'eventi'}.`:up[0]?`Prossimo: ${up[0].name||'Cliente'} · ${fdate(up[0].date)}.`:'Nessun evento futuro.'}
-async function flashBlobUrl(x){
-  const key=String(x.id);
-  if(flashBlobUrls.has(key))return flashBlobUrls.get(key);
-  const r=await fetch(x.image,{cache:'no-store',headers:{Authorization:'Bearer '+token}});
-  if(r.status===401){logout();throw Error('Sessione scaduta')}
-  if(!r.ok)throw Error('Immagine non disponibile');
-  const u=URL.createObjectURL(await r.blob());flashBlobUrls.set(key,u);return u
-}
-function renderFlash(){
-  const cat=$('flashCategory').value;
-  const list=cat?flashItems.filter(x=>(x.category||'Altro')===cat):flashItems;
-  $('flashes').innerHTML=list.length?list.map(x=>`<button class="flash ${x.active?'':'off'}" data-flash="${x.id}"><img data-flash-img="${x.id}" alt="${esc(x.title||x.code||'Flash')}"><strong>${esc(x.title||x.code)}</strong><span>${esc(x.category||'Altro')} · ${x.active?'Visibile':'Nascosto'}</span></button>`).join(''):'<div class="item">Nessun flash in questa categoria.</div>';
-  document.querySelectorAll('[data-flash]').forEach(b=>b.onclick=()=>editFlash(b.dataset.flash));
-  list.forEach(async x=>{const el=document.querySelector(`[data-flash-img="${CSS.escape(String(x.id))}"]`);if(!el)return;try{el.src=await flashBlobUrl(x)}catch(e){el.alt='Immagine non disponibile'}})
-}
-async function loadFlash(){
-  flashItems=(await api('/api/flash-catalog')).items||[];
-  const keep=$('flashCategory').value;
-  const cats=[...new Set(flashItems.map(x=>(x.category||'Altro').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));
-  $('flashCategory').innerHTML='<option value="">Tutte le categorie</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
-  if(cats.includes(keep))$('flashCategory').value=keep;
-  renderFlash()
-}
-$('flashCategory').onchange=renderFlash;
+async function loadFlash(){flashItems=(await api('/api/flash-catalog')).items||[];$('flashes').innerHTML=flashItems.map(x=>`<button class="flash ${x.active?'':'off'}" data-flash="${x.id}"><img src="${x.image}" alt=""><strong>${esc(x.title||x.code)}</strong><span>${esc(x.category||'Altro')} · ${x.active?'Visibile':'Nascosto'}</span></button>`).join('');document.querySelectorAll('[data-flash]').forEach(b=>b.onclick=()=>editFlash(b.dataset.flash))}
 const c=$('canvas'),ctx=c.getContext('2d');let img=null,st={s:1,r:0,x:0,y:0},drag=false,last=null;function draw(){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);if(!img)return;ctx.save();ctx.translate(c.width/2+st.x,c.height/2+st.y);ctx.rotate(st.r*Math.PI/180);const b=Math.min(c.width/img.width,c.height/img.height),w=img.width*b*st.s,h=img.height*b*st.s;ctx.drawImage(img,-w/2,-h/2,w,h);ctx.restore()}
 $('imageInput').onchange=()=>{const f=$('imageInput').files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const i=new Image();i.onload=()=>{img=i;st={s:1,r:0,x:0,y:0};draw()};i.src=rd.result};rd.readAsDataURL(f)};$('left').onclick=()=>{st.r-=90;draw()};$('right').onclick=()=>{st.r+=90;draw()};$('fit').onclick=()=>{st={...st,s:1,x:0,y:0};draw()};$('zoom').oninput=()=>{st.s=+$('zoom').value;draw()};c.onpointerdown=e=>{drag=true;last={x:e.clientX,y:e.clientY}};c.onpointermove=e=>{if(!drag)return;const r=c.getBoundingClientRect();st.x+=(e.clientX-last.x)*c.width/r.width;st.y+=(e.clientY-last.y)*c.height/r.height;last={x:e.clientX,y:e.clientY};draw()};c.onpointerup=()=>drag=false;
-$('newFlash').onclick=()=>{currentFlash=null;img=null;st={s:1,r:0,x:0,y:0};$('zoom').value='1';draw();$('flashName').value='';$('category').value='';$('active').value='true';$('imageInput').value='';$('deleteFlash').hidden=true;$('flashDrawer').hidden=false};
+$('newFlash').onclick=()=>{currentFlash=null;img=null;st={s:1,r:0,x:0,y:0};$('zoom').value='1';draw();$('flashName').value='';$('category').value='';$('active').value='true';$('imageInput').value='';$('flashDrawer').hidden=false};
 function editFlash(id){
   currentFlash=flashItems.find(x=>String(x.id)===String(id));
   if(!currentFlash)return;
@@ -160,18 +137,25 @@ function editFlash(id){
   st={s:1,r:0,x:0,y:0};
   draw();
 
-  $('deleteFlash').hidden=!(appUser?.role==='admin');
   $('flashDrawer').hidden=false;
 
   if(currentFlash.image){
     const i=new Image();
-    i.onload=()=>{img=i;st={s:1,r:0,x:0,y:0};$('zoom').value='1';draw()};
-    i.onerror=()=>{img=null;draw();toast('Impossibile caricare l’immagine del Flash')};
-    flashBlobUrl(currentFlash).then(u=>i.src=u).catch(()=>i.onerror());
+    i.onload=()=>{
+      img=i;
+      st={s:1,r:0,x:0,y:0};
+      $('zoom').value='1';
+      draw();
+    };
+    i.onerror=()=>{
+      img=null;
+      draw();
+      toast('Impossibile caricare l’immagine del Flash');
+    };
+    i.src=currentFlash.image;
   }
 }
 $('saveFlash').onclick=async()=>{const title=$('flashName').value.trim(),category=$('category').value.trim()||'Altro',active=$('active').value==='true';if(currentFlash)await api('/api/flash-catalog/'+currentFlash.id,{method:'PATCH',body:JSON.stringify({title,category,active})});else{if(!img)return toast('Carica un’immagine');await api('/api/flash-catalog',{method:'POST',body:JSON.stringify({imageData:c.toDataURL('image/jpeg',.86),title,category,tags:[],prefix:'WTE',sortOrder:0})})}$('flashDrawer').hidden=true;loadFlash();toast('Flash salvato')}
-$('deleteFlash').onclick=async()=>{if(!currentFlash)return;if(!confirm('Eliminare definitivamente questo Flash?'))return;try{await api('/api/flash-catalog/'+currentFlash.id,{method:'DELETE'});const u=flashBlobUrls.get(String(currentFlash.id));if(u){URL.revokeObjectURL(u);flashBlobUrls.delete(String(currentFlash.id))}$('flashDrawer').hidden=true;await loadFlash();toast('Flash eliminato')}catch(e){toast(e.message)}}
 async function loadPackages(){pkgItems=(await api('/api/packages')).packages||[];$('packages').innerHTML=pkgItems.map(p=>`<article class="item"><h3>${esc(p.name||p.code)}</h3><div class="price">${new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format((+p.price_cents||0)/100)}</div><div class="meta">${+p.included_hours||0} ore · Acconto ${+p.deposit_percent||0}%</div><button class="secondary" data-pkg="${esc(p.code)}">Modifica</button></article>`).join('');document.querySelectorAll('[data-pkg]').forEach(b=>b.onclick=()=>openPkg(b.dataset.pkg))}
 function openPkg(code){currentPkg=pkgItems.find(p=>p.code===code);$('pkgHead').textContent=currentPkg.name||code;$('pkgName').value=currentPkg.name||'';$('pkgPrice').value=(+currentPkg.price_cents||0)/100;$('pkgHours').value=+currentPkg.included_hours||0;$('pkgDeposit').value=+currentPkg.deposit_percent||0;$('pkgDesc').value=currentPkg.description||'';$('pkgFeatures').value=(currentPkg.features||[]).join('\\n');$('pkgDrawer').hidden=false}
 $('savePkg').onclick=async()=>{try{await api('/api/packages/'+encodeURIComponent(currentPkg.code),{method:'PATCH',body:JSON.stringify({name:$('pkgName').value.trim(),priceCents:Math.round(+$('pkgPrice').value*100),includedHours:+$('pkgHours').value,depositPercent:+$('pkgDeposit').value,description:$('pkgDesc').value.trim(),features:$('pkgFeatures').value.split('\\n').map(x=>x.trim()).filter(Boolean)})});$('pkgDrawer').hidden=true;loadPackages();toast('Pacchetto aggiornato')}catch(e){$('pkgError').textContent=e.message}}
@@ -185,7 +169,7 @@ function offerPayload(){const type=$('offerType').value,clientId=$('offerScope')
 $('saveOffer').onclick=async()=>{const p=offerPayload();$('offerError').textContent='';if(!p.title)return $('offerError').textContent='Inserisci un titolo';if(p.startDate&&p.endDate&&p.endDate<p.startDate)return $('offerError').textContent='Date non valide';if(p.scope==='personal'&&!p.clientId)return $('offerError').textContent='Scegli il cliente';try{if(currentOffer)await api('/api/offers/'+currentOffer.id,{method:'PATCH',body:JSON.stringify(p)});else await api('/api/offers',{method:'POST',body:JSON.stringify(p)});$('offerDrawer').hidden=true;loadOffers();toast('Offerta salvata')}catch(e){$('offerError').textContent=e.message}}
 function wrap(ctx,text,x,y,max,line){let words=String(text||'').split(/\\s+/),cur='',ys=y;for(const w of words){const t=cur?cur+' '+w:w;if(ctx.measureText(t).width>max&&cur){ctx.fillText(cur,x,ys);ys+=line;cur=w}else cur=t}if(cur){ctx.fillText(cur,x,ys);ys+=line}return ys}
 $('posterBtn').onclick=()=>{const o=offerPayload(),cv=$('poster'),x=cv.getContext('2d'),w=cv.width,h=cv.height,g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#171008');g.addColorStop(.5,'#080604');g.addColorStop(1,'#020201');x.fillStyle=g;x.fillRect(0,0,w,h);x.strokeStyle='rgba(240,221,176,.3)';x.lineWidth=2;x.strokeRect(42,42,w-84,h-84);x.textAlign='center';x.fillStyle='#f0ddb0';x.font='700 26px Arial';x.fillText('WEDDING TATTOO EXPERIENCE',w/2,120);x.fillStyle='#f7f0e6';x.font='64px Georgia';let y=wrap(x,o.title||'Offerta speciale',w/2,330,850,76);x.fillStyle='#efc96d';x.font='900 92px Arial';x.fillText(offerValue(o),w/2,y+80);x.fillStyle='#d9cbb8';x.font='30px Arial';y=wrap(x,o.message||'Una condizione speciale per il vostro matrimonio.',w/2,y+170,820,42);x.fillStyle='#f0ddb0';x.font='24px Arial';x.fillText((o.startDate||'subito')+' → '+(o.endDate||'senza scadenza'),w/2,y+50);x.fillStyle='#8f816f';x.font='22px Arial';x.fillText('weddingtattooexperience.it',w/2,h-110);$('downloadPoster').href=cv.toDataURL('image/png');$('posterDrawer').hidden=false}
-async function start(){try{const me=await api('/api/auth/me');appUser=me.user||null;$('login').hidden=true;$('app').hidden=false;view('home');await loadClients()}catch(e){logout()}}
+async function start(){try{await api('/api/auth/me');$('login').hidden=true;$('app').hidden=false;view('home');await loadClients()}catch(e){logout()}}
 draw();if(token)start();
 </script>
 </body>
