@@ -1546,58 +1546,68 @@ body.flow-open .backdrop{
 </style>
 <script src="/wte-analytics.js" defer></script>
 
-<!-- WTE RELEASE 1.0 — HERO MOBILE FINAL FIX -->
+<!-- WTE RELEASE 1.0 — HERO MOBILE FINAL FIX V2 -->
 <style id="wte-release-1-0-hero-mobile-fix">
 @media (max-width: 520px){
 
-  /* Logo sempre interamente visibile e realmente centrato */
+  /* Header mobile: blocchi in colonna, nessuna sovrapposizione */
   .topbar{
+    position:absolute !important;
     top:0 !important;
     left:0 !important;
     right:0 !important;
     width:100% !important;
-    padding:
-      max(12px, env(safe-area-inset-top))
-      14px
-      0 !important;
-    align-items:flex-start !important;
-    justify-content:center !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    gap:0 !important;
+    padding:max(12px, env(safe-area-inset-top)) 14px 0 !important;
     box-sizing:border-box !important;
   }
 
   .gold-logo{
-    position:absolute !important;
-    top:max(12px, env(safe-area-inset-top)) !important;
-    left:50% !important;
-    right:auto !important;
-    width:min(92px, 24vw) !important;
-    max-width:92px !important;
-    margin:0 !important;
-    transform:translateX(-50%) !important;
-    transform-origin:top center !important;
+    position:static !important;
+    width:92px !important;
+    max-width:24vw !important;
+    margin:0 auto !important;
+    transform:none !important;
+    text-align:center !important;
+    flex:0 0 auto !important;
   }
 
-  /* Mantiene gli indicatori esistenti senza influire sul centraggio del logo */
   .topbar-right{
-    position:absolute !important;
-    top:max(14px, env(safe-area-inset-top)) !important;
-    right:14px !important;
-    width:auto !important;
-    max-width:42vw !important;
-    margin:0 !important;
-    align-items:flex-end !important;
+    position:static !important;
+    width:100% !important;
+    max-width:none !important;
+    margin:12px auto 0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:7px !important;
+    text-align:center !important;
   }
 
   .service-pill{
-    max-width:100% !important;
+    width:auto !important;
+    max-width:calc(100vw - 36px) !important;
+    margin:0 auto !important;
+    padding:7px 11px !important;
     white-space:nowrap !important;
+    font-size:7px !important;
   }
 
   .top-note{
-    max-width:42vw !important;
+    width:100% !important;
+    max-width:280px !important;
+    margin:0 auto !important;
+    text-align:center !important;
+    font-size:7px !important;
+    line-height:1.35 !important;
   }
 
-  /* Hero centrata nel viewport mobile */
+  /* Hero centrata nello spazio disponibile sotto il blocco logo/status */
   .hero{
     min-height:100svh !important;
     height:100svh !important;
@@ -1605,7 +1615,7 @@ body.flow-open .backdrop{
     align-items:center !important;
     justify-content:center !important;
     padding:
-      max(126px, calc(env(safe-area-inset-top) + 118px))
+      245px
       18px
       max(18px, env(safe-area-inset-bottom)) !important;
     box-sizing:border-box !important;
@@ -1618,7 +1628,7 @@ body.flow-open .backdrop{
     padding-top:0 !important;
     margin:0 auto !important;
     text-align:center !important;
-    transform:translateY(-2vh) !important;
+    transform:translateY(-3vh) !important;
   }
 
   .kicker{
@@ -1631,10 +1641,9 @@ body.flow-open .backdrop{
     max-width:430px !important;
     margin:0 auto !important;
     text-align:center !important;
-    font-size:clamp(36px, 10.2vw, 50px) !important;
+    font-size:clamp(36px,10.2vw,50px) !important;
     line-height:.94 !important;
     letter-spacing:-.04em !important;
-    text-wrap:balance !important;
   }
 
   .hero-copy{
@@ -1644,37 +1653,46 @@ body.flow-open .backdrop{
   }
 
   .primary{
-    width:min(100%, 420px) !important;
+    width:min(100%,420px) !important;
     margin:14px auto 0 !important;
   }
 
-  .resume-link{
+  .resume-link,
+  .micro{
     margin-left:auto !important;
     margin-right:auto !important;
     text-align:center !important;
   }
+
+  .hero-trust{
+    justify-content:center !important;
+    text-align:center !important;
+  }
 }
 
-/* Telefoni bassi/piccoli: niente più spinta artificiale verso il basso */
 @media (max-width:380px), (max-height:720px){
+  .gold-logo{
+    width:78px !important;
+  }
+
+  .topbar-right{
+    margin-top:8px !important;
+    gap:5px !important;
+  }
+
   .hero{
     padding:
-      max(112px, calc(env(safe-area-inset-top) + 104px))
+      205px
       14px
       max(12px, env(safe-area-inset-bottom)) !important;
   }
 
   .hero-inner{
-    padding-top:0 !important;
-    transform:translateY(-1vh) !important;
-  }
-
-  .gold-logo{
-    width:min(82px, 23vw) !important;
+    transform:translateY(-1.5vh) !important;
   }
 
   .hero h1{
-    font-size:clamp(33px, 9.7vw, 45px) !important;
+    font-size:clamp(32px,9.5vw,44px) !important;
   }
 
   .hero-copy{
