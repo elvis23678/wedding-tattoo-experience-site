@@ -1894,6 +1894,18 @@ body.flow-open .backdrop{
 }
 </style>
 
+
+<style id="wte-video-poster-fix">
+.shell{
+  background:
+    radial-gradient(circle at 50% 22%, rgba(112,72,28,.18), transparent 38%),
+    #050302 !important;
+}
+.video{
+  background:#050302 !important;
+}
+</style>
+
 </head>
 
 <body>
@@ -1905,20 +1917,32 @@ body.flow-open .backdrop{
   <button id="dismissAlert" type="button">Chiudi</button>
 </div>
 <div class="shell">
-  <video class="video" id="heroVideo" autoplay muted loop playsinline preload="none" poster="logo.png" aria-hidden="true">
+  <video class="video" id="heroVideo" autoplay muted loop playsinline preload="auto" aria-hidden="true">
     <source src="hero.mp4" type="video/mp4">
   </video>
   <div class="backdrop"></div>
 
   <header class="topbar">
     <div class="gold-logo" aria-label="Wedding Tattoo Experience">
-      <div class="gold-logo-mark">⌃</div>
+      <div class="gold-logo-mark" aria-hidden="true">
+        <svg class="logo-diamond" viewBox="0 0 100 100" role="presentation">
+          <path class="logo-diamond-line" d="M50 5 L95 50 L50 95 L5 50 Z"></path>
+          <circle class="logo-spark-core" r="3.2">
+            <animateMotion dur="4.8s" repeatCount="indefinite"
+              path="M50 5 L95 50 L50 95 L5 50 Z"></animateMotion>
+          </circle>
+          <circle class="logo-spark-halo" r="7">
+            <animateMotion dur="4.8s" repeatCount="indefinite"
+              path="M50 5 L95 50 L50 95 L5 50 Z"></animateMotion>
+          </circle>
+        </svg>
+      </div>
       <div class="gold-logo-main">WEDDING</div>
       <div class="gold-logo-sub">tattoo experience</div>
       <div class="gold-logo-by">by</div>
       <div class="gold-logo-tattoo">TATTOO</div>
       <div class="gold-logo-small">beauty saloon</div>
-      <div class="gold-logo-rings">∞∞</div>
+      <div class="gold-logo-rings">◯◯</div>
     </div>
     <div class="topbar-right">
       <div class="service-pill" id="servicePill">
