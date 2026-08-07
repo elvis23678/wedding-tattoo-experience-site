@@ -3222,6 +3222,46 @@ function deterministicRecommendation(data,packages) {
   };
 }
 
+
+function budgetCeiling(code) {
+  if(code==='under1000')return 100000;
+  if(code==='1000-1500')return 150000;
+  if(code==='1500-2200')return 220000;
+  if(code==='over2200')return Number.POSITIVE_INFINITY;
+  return null;
+}
+
+function budgetRecommendation(budget,packages,recommendedCode) {
+  const ceiling=budgetCeiling(budget);
+  if(ceiling===null)return null;
+
+  const priced=packages
+    .filter(item=>Number(item.price_cents||0)>0)
+    .sort((a,b)=>Number(a.price_cents)-Number(b.price_cents));
+
+  if(!priced.length)return null;
+
+  let selected;
+
+  if(!Number.isFinite(ceiling)){
+    selected=priced[priced.length-1];
+  }else{
+    const affordable=priced.filter(
+      item=>Number(item.price_cents)<=ceiling
+    );
+    selected=affordable.length
+      ?affordable[affordable.length-1]
+      :priced[0];
+  }
+
+  return {
+    budget,
+    packageCode:selected.code,
+    matchesRecommended:selected.code===recommendedCode,
+    package:selected
+  };
+}
+
 function outputTextFromResponse(payload) {
   if(typeof payload?.output_text==='string')return payload.output_text;
   for(const item of payload?.output||[]){
@@ -3942,6 +3982,7 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
         code:selected.code,
         name:selected.name,
         description:selected.description,
+        reason:selected.reason,
         priceCents:selected.price_cents,
         priceLabel:selected.price_cents?euroFromCents(selected.price_cents):'Su misura',
         depositPercent:selected.deposit_percent,
@@ -3949,6 +3990,44 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
         features:selected.features||[]
       }
     },
+    budgetRecommendation:(()=>{
+      const match=budgetRecommendation(
+        normalizedData.budget,
+        packages,
+        selected.code
+      );
+      if(!match)return null;
+      return {
+        budget:match.budget,
+        matchesRecommended:match.matchesRecommended,
+        package:{
+          code:match.package.code,
+          name:match.package.name,
+          description:match.package.description,
+          reason:match.package.reason,
+          priceCents:match.package.price_cents,
+          priceLabel:match.package.price_cents
+            ?euroFromCents(match.package.price_cents)
+            :'Su misura',
+          depositPercent:match.package.deposit_percent,
+          includedHours:Number(match.package.included_hours),
+          features:match.package.features||[]
+        }
+      };
+    })(),
+    packages:packages.map(item=>({
+      code:item.code,
+      name:item.name,
+      description:item.description,
+      reason:item.reason,
+      priceCents:item.price_cents,
+      priceLabel:item.price_cents?euroFromCents(item.price_cents):'Su misura',
+      depositPercent:item.deposit_percent,
+      includedHours:Number(item.included_hours),
+      minGuests:item.min_guests,
+      maxGuests:item.max_guests,
+      features:item.features||[]
+    })),
     ai:{
       enabled:Boolean(OPENAI_API_KEY),
       used:Boolean(recommendation.aiUsed),
@@ -3957,6 +4036,121 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
     }
   });
 });
+
+
+app.post('/api/public/advisor/:salesToken/select-package', publicRateLimit, async (req,res) => {
+  const parsed=z.object({
+    packageCode:z.string().min(1).max(80),
+    contractToken:z.string().min(10).max(200)
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({
+      error:'Selezione pacchetto non valida.'
+    });
+  }
+
+  const sessionResult=await pool.query(
+    `SELECT token,contract_token,status
+     FROM wte_sales_sessions
+     WHERE token=$1
+     LIMIT 1`,
+    [req.params.salesToken]
+  );
+
+  if(!sessionResult.rowCount){
+    return res.status(404).json({
+      error:'Sessione proposta non trovata.'
+    });
+  }
+
+  const session=sessionResult.rows[0];
+
+  if(session.contract_token!==parsed.data.contractToken){
+    return res.status(403).json({
+      error:'Contratto non associato alla sessione.'
+    });
+  }
+
+  const packages=await activePackages();
+  const selected=packages.find(
+    item=>item.code===parsed.data.packageCode
+  );
+
+  if(!selected){
+    return res.status(404).json({
+      error:'Pacchetto non disponibile.'
+    });
+  }
+
+  const selectionMeta={
+    selectedByCustomer:true,
+    selectedPackageCode:selected.code,
+    selectedAt:new Date().toISOString()
+  };
+
+  const client=await pool.connect();
+
+  try{
+    await client.query('BEGIN');
+
+    await client.query(
+      `UPDATE wte_sales_sessions
+       SET package_code=$2,
+           recommendation=
+             COALESCE(recommendation,'{}'::jsonb) ||
+             $3::jsonb
+       WHERE token=$1`,
+      [
+        req.params.salesToken,
+        selected.code,
+        JSON.stringify(selectionMeta)
+      ]
+    );
+
+    await client.query(
+      `UPDATE wte_contracts
+       SET package_code=$2,
+           package_snapshot=$3::jsonb,
+           updated_at=NOW()
+       WHERE token=$1`,
+      [
+        parsed.data.contractToken,
+        selected.code,
+        JSON.stringify(selected)
+      ]
+    );
+
+    await client.query('COMMIT');
+  }catch(error){
+    await client.query('ROLLBACK');
+    throw error;
+  }finally{
+    client.release();
+  }
+
+  res.json({
+    ok:true,
+    contractUrl:salesPublicUrl(parsed.data.contractToken),
+    draftPdf:absoluteApiUrl(
+      contractPdfUrl(parsed.data.contractToken)
+    ),
+    package:{
+      code:selected.code,
+      name:selected.name,
+      description:selected.description,
+      reason:selected.reason,
+      priceCents:selected.price_cents,
+      priceLabel:selected.price_cents
+        ?euroFromCents(selected.price_cents)
+        :'Su misura',
+      depositPercent:selected.deposit_percent,
+      includedHours:Number(selected.included_hours),
+      features:selected.features||[]
+    }
+  });
+});
+
 
 app.get('/api/public/contracts/:token', async (req,res) => {
   const bundle=await salesBundleByContractToken(req.params.token);
