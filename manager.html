@@ -63,7 +63,7 @@ main{max-width:900px;margin:auto;padding:16px 12px 88px}.intro small,.head small
 <section id="homeView"><div class="intro"><small>Area staff</small><h1>Gestione semplice.</h1><p id="today">Caricamento appuntamenti…</p></div>
 <div class="grid">
 <button class="home-btn" data-open="clients"><small>01</small><strong>Clienti</strong><span>Appuntamenti, avvisi, note, messaggi.</span></button>
-<button class="home-btn" data-open="flash"><small>02</small><strong>Flash</strong><span>Aggiungi, modifica, nascondi. Codice automatico.</span></button>
+<button class="home-btn" data-open="flash"><small>02</small><strong>Flash</strong><span>Aggiungi, modifica, nascondi.</span></button>
 <button class="home-btn" data-open="packages"><small>03</small><strong>Pacchetti</strong><span>Prezzi, durata, servizi.</span></button>
 <button class="home-btn" data-open="offers"><small>04</small><strong>Offerte</strong><span>Sconti, omaggi, date, popup e locandina.</span></button>
 </div></section>
@@ -119,20 +119,42 @@ async function loadClients(){practices=(await api('/api/practices')).practices||
 function openClient(id){current=practices.find(p=>String(p.id)===String(id));$('clientTitle').textContent=current.name||'Cliente';$('status').value=current.status||'Nuova';$('reminder').value=current.reminder||'';$('notes').value=current.notes||'';const p=phone(current).replace(/\\s+/g,''),m=current.email||'';$('call').href=p?'tel:'+p:'#';$('wa').href=p?'https://wa.me/'+p.replace(/^\\+/,''):'#';$('mail').href=m?'mailto:'+m:'#';$('clientDrawer').hidden=false}
 $('saveClient').onclick=async()=>{current.status=$('status').value;current.reminder=$('reminder').value.trim();current.notes=$('notes').value.trim();await api('/api/practices/sync',{method:'POST',body:JSON.stringify({practices})});$('clientDrawer').hidden=true;loadClients();toast('Cliente aggiornato')}
 function today(){const t=iso(),ev=practices.filter(p=>p.date===t&&!/annull/i.test(p.status||'')),up=practices.filter(p=>p.date&&p.date>=t&&!/annull/i.test(p.status||'')).sort((a,b)=>a.date.localeCompare(b.date));$('today').textContent=ev.length?`Oggi avete ${ev.length} ${ev.length===1?'evento':'eventi'}.`:up[0]?`Prossimo: ${up[0].name||'Cliente'} · ${fdate(up[0].date)}.`:'Nessun evento futuro.'}
-async function loadFlash(){
-  flashItems=(await api('/api/flash-catalog')).items||[];
-  await Promise.all(flashItems.map(async x=>{
-    try{
-      const r=await fetch(`${API}/api/flash-catalog/${x.id}/image`,{headers:{Authorization:'Bearer '+token},cache:'no-store'});
-      if(r.ok)x.managerImage=URL.createObjectURL(await r.blob());
-    }catch(_){}
-  }));
-  $('flashes').innerHTML=flashItems.map(x=>`<button class="flash ${x.active?'':'off'}" data-flash="${x.id}"><img src="${x.managerImage||x.image}" alt="${esc(x.title||x.code)}"><strong>${esc(x.title||x.code)}</strong><span>${esc(x.code||'Codice automatico')} · ${esc(x.category||'Altro')} · ${x.active?'Visibile':'Nascosto'}</span></button>`).join('');
-  document.querySelectorAll('[data-flash]').forEach(b=>b.onclick=()=>editFlash(b.dataset.flash))
-}
+async function loadFlash(){flashItems=(await api('/api/flash-catalog')).items||[];$('flashes').innerHTML=flashItems.map(x=>`<button class="flash ${x.active?'':'off'}" data-flash="${x.id}"><img src="${x.image}" alt=""><strong>${esc(x.title||x.code)}</strong><span>${esc(x.category||'Altro')} · ${x.active?'Visibile':'Nascosto'}</span></button>`).join('');document.querySelectorAll('[data-flash]').forEach(b=>b.onclick=()=>editFlash(b.dataset.flash))}
 const c=$('canvas'),ctx=c.getContext('2d');let img=null,st={s:1,r:0,x:0,y:0},drag=false,last=null;function draw(){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);if(!img)return;ctx.save();ctx.translate(c.width/2+st.x,c.height/2+st.y);ctx.rotate(st.r*Math.PI/180);const b=Math.min(c.width/img.width,c.height/img.height),w=img.width*b*st.s,h=img.height*b*st.s;ctx.drawImage(img,-w/2,-h/2,w,h);ctx.restore()}
 $('imageInput').onchange=()=>{const f=$('imageInput').files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const i=new Image();i.onload=()=>{img=i;st={s:1,r:0,x:0,y:0};draw()};i.src=rd.result};rd.readAsDataURL(f)};$('left').onclick=()=>{st.r-=90;draw()};$('right').onclick=()=>{st.r+=90;draw()};$('fit').onclick=()=>{st={...st,s:1,x:0,y:0};draw()};$('zoom').oninput=()=>{st.s=+$('zoom').value;draw()};c.onpointerdown=e=>{drag=true;last={x:e.clientX,y:e.clientY}};c.onpointermove=e=>{if(!drag)return;const r=c.getBoundingClientRect();st.x+=(e.clientX-last.x)*c.width/r.width;st.y+=(e.clientY-last.y)*c.height/r.height;last={x:e.clientX,y:e.clientY};draw()};c.onpointerup=()=>drag=false;
-$('newFlash').onclick=()=>{currentFlash=null;img=null;draw();$('flashName').value='';$('category').value='';$('active').value='true';$('flashDrawer').hidden=false};function editFlash(id){currentFlash=flashItems.find(x=>String(x.id)===String(id));$('flashName').value=currentFlash.title||'';$('category').value=currentFlash.category||'';$('active').value=String(!!currentFlash.active);$('flashDrawer').hidden=false}
+$('newFlash').onclick=()=>{currentFlash=null;img=null;st={s:1,r:0,x:0,y:0};$('zoom').value='1';draw();$('flashName').value='';$('category').value='';$('active').value='true';$('imageInput').value='';$('flashDrawer').hidden=false};
+function editFlash(id){
+  currentFlash=flashItems.find(x=>String(x.id)===String(id));
+  if(!currentFlash)return;
+
+  $('flashName').value=currentFlash.title||'';
+  $('category').value=currentFlash.category||'';
+  $('active').value=String(!!currentFlash.active);
+  $('imageInput').value='';
+  $('zoom').value='1';
+
+  img=null;
+  st={s:1,r:0,x:0,y:0};
+  draw();
+
+  $('flashDrawer').hidden=false;
+
+  if(currentFlash.image){
+    const i=new Image();
+    i.onload=()=>{
+      img=i;
+      st={s:1,r:0,x:0,y:0};
+      $('zoom').value='1';
+      draw();
+    };
+    i.onerror=()=>{
+      img=null;
+      draw();
+      toast('Impossibile caricare l’immagine del Flash');
+    };
+    i.src=currentFlash.image;
+  }
+}
 $('saveFlash').onclick=async()=>{const title=$('flashName').value.trim(),category=$('category').value.trim()||'Altro',active=$('active').value==='true';if(currentFlash)await api('/api/flash-catalog/'+currentFlash.id,{method:'PATCH',body:JSON.stringify({title,category,active})});else{if(!img)return toast('Carica un’immagine');await api('/api/flash-catalog',{method:'POST',body:JSON.stringify({imageData:c.toDataURL('image/jpeg',.86),title,category,tags:[],prefix:'WTE',sortOrder:0})})}$('flashDrawer').hidden=true;loadFlash();toast('Flash salvato')}
 async function loadPackages(){pkgItems=(await api('/api/packages')).packages||[];$('packages').innerHTML=pkgItems.map(p=>`<article class="item"><h3>${esc(p.name||p.code)}</h3><div class="price">${new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format((+p.price_cents||0)/100)}</div><div class="meta">${+p.included_hours||0} ore · Acconto ${+p.deposit_percent||0}%</div><button class="secondary" data-pkg="${esc(p.code)}">Modifica</button></article>`).join('');document.querySelectorAll('[data-pkg]').forEach(b=>b.onclick=()=>openPkg(b.dataset.pkg))}
 function openPkg(code){currentPkg=pkgItems.find(p=>p.code===code);$('pkgHead').textContent=currentPkg.name||code;$('pkgName').value=currentPkg.name||'';$('pkgPrice').value=(+currentPkg.price_cents||0)/100;$('pkgHours').value=+currentPkg.included_hours||0;$('pkgDeposit').value=+currentPkg.deposit_percent||0;$('pkgDesc').value=currentPkg.description||'';$('pkgFeatures').value=(currentPkg.features||[]).join('\\n');$('pkgDrawer').hidden=false}
