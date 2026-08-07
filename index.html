@@ -1542,23 +1542,158 @@ body.flow-open .backdrop{
 }
 
 
-.offer-popup{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:16px;background:rgba(2,1,1,.80);backdrop-filter:blur(14px)}
-.offer-popup-card{position:relative;width:min(520px,100%);padding:28px 22px 22px;border:1px solid rgba(240,221,176,.26);background:radial-gradient(circle at 50% 0,rgba(212,170,86,.17),transparent 36%),linear-gradient(180deg,#120d08,#070503);box-shadow:0 35px 100px rgba(0,0,0,.62);text-align:center}
-.offer-popup-close{position:absolute;top:8px;right:8px;width:38px;height:38px;border:0;background:transparent;color:rgba(255,255,255,.55);font-size:24px}
-.offer-popup-card small{color:var(--gold-bright);font-size:8px;letter-spacing:.18em;text-transform:uppercase}
-.offer-popup-card h2{margin:10px 0 0;font-family:var(--serif);font-size:38px!important;font-weight:400}
-.offer-popup-card>strong{display:block;margin-top:10px;color:var(--gold-bright);font-size:34px}
-.offer-popup-card p{margin:10px auto 0!important;max-width:420px;color:#c9baa5!important;font-size:13px!important;line-height:1.5!important}
-.offer-popup-card em{display:block;margin-top:10px;color:#a99b88;font-size:9px;font-style:normal}
-.offer-popup-card .primary{width:100%;margin-top:18px}
-
+.promo-modal{position:fixed;inset:0;z-index:220;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.76);backdrop-filter:blur(12px)}.promo-card{width:min(520px,100%);padding:24px;border:1px solid rgba(237,204,130,.35);background:linear-gradient(180deg,#160f09,#080604);box-shadow:0 35px 110px rgba(0,0,0,.62);text-align:center}.promo-eyebrow{color:var(--gold-bright);font-size:8px;letter-spacing:.18em;text-transform:uppercase}.promo-card h2{margin:9px 0 0;font-family:var(--serif);font-size:34px;font-weight:400}.promo-benefit{margin-top:12px;color:var(--gold-bright);font-family:var(--serif);font-size:52px}.promo-card p{margin:10px auto 0;max-width:420px;color:#c7baa7;font-size:13px;line-height:1.55}.promo-period{margin-top:11px;color:#867966;font-size:9px}.promo-actions{display:grid;gap:8px;margin-top:18px}.promo-actions .primary{width:100%;margin:0}.promo-close{min-height:44px;border:0;background:transparent;color:#8e816e;text-decoration:underline}@media(max-width:520px){.promo-card{padding:20px 16px}.promo-card h2{font-size:30px}.promo-benefit{font-size:46px}}
 </style>
 <script src="/wte-analytics.js" defer></script>
+
+<!-- WTE RELEASE 1.0 — HERO MOBILE FINAL FIX -->
+<style id="wte-release-1-0-hero-mobile-fix">
+@media (max-width: 520px){
+
+  /* Logo sempre interamente visibile e realmente centrato */
+  .topbar{
+    top:0 !important;
+    left:0 !important;
+    right:0 !important;
+    width:100% !important;
+    padding:
+      max(12px, env(safe-area-inset-top))
+      14px
+      0 !important;
+    align-items:flex-start !important;
+    justify-content:center !important;
+    box-sizing:border-box !important;
+  }
+
+  .gold-logo{
+    position:absolute !important;
+    top:max(12px, env(safe-area-inset-top)) !important;
+    left:50% !important;
+    right:auto !important;
+    width:min(92px, 24vw) !important;
+    max-width:92px !important;
+    margin:0 !important;
+    transform:translateX(-50%) !important;
+    transform-origin:top center !important;
+  }
+
+  /* Mantiene gli indicatori esistenti senza influire sul centraggio del logo */
+  .topbar-right{
+    position:absolute !important;
+    top:max(14px, env(safe-area-inset-top)) !important;
+    right:14px !important;
+    width:auto !important;
+    max-width:42vw !important;
+    margin:0 !important;
+    align-items:flex-end !important;
+  }
+
+  .service-pill{
+    max-width:100% !important;
+    white-space:nowrap !important;
+  }
+
+  .top-note{
+    max-width:42vw !important;
+  }
+
+  /* Hero centrata nel viewport mobile */
+  .hero{
+    min-height:100svh !important;
+    height:100svh !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:
+      max(126px, calc(env(safe-area-inset-top) + 118px))
+      18px
+      max(18px, env(safe-area-inset-bottom)) !important;
+    box-sizing:border-box !important;
+    overflow:hidden !important;
+  }
+
+  .hero-inner{
+    width:100% !important;
+    max-width:460px !important;
+    padding-top:0 !important;
+    margin:0 auto !important;
+    text-align:center !important;
+    transform:translateY(-2vh) !important;
+  }
+
+  .kicker{
+    margin:0 0 9px !important;
+    text-align:center !important;
+  }
+
+  .hero h1{
+    width:100% !important;
+    max-width:430px !important;
+    margin:0 auto !important;
+    text-align:center !important;
+    font-size:clamp(36px, 10.2vw, 50px) !important;
+    line-height:.94 !important;
+    letter-spacing:-.04em !important;
+    text-wrap:balance !important;
+  }
+
+  .hero-copy{
+    max-width:360px !important;
+    margin:11px auto 0 !important;
+    text-align:center !important;
+  }
+
+  .primary{
+    width:min(100%, 420px) !important;
+    margin:14px auto 0 !important;
+  }
+
+  .resume-link{
+    margin-left:auto !important;
+    margin-right:auto !important;
+    text-align:center !important;
+  }
+}
+
+/* Telefoni bassi/piccoli: niente più spinta artificiale verso il basso */
+@media (max-width:380px), (max-height:720px){
+  .hero{
+    padding:
+      max(112px, calc(env(safe-area-inset-top) + 104px))
+      14px
+      max(12px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .hero-inner{
+    padding-top:0 !important;
+    transform:translateY(-1vh) !important;
+  }
+
+  .gold-logo{
+    width:min(82px, 23vw) !important;
+  }
+
+  .hero h1{
+    font-size:clamp(33px, 9.7vw, 45px) !important;
+  }
+
+  .hero-copy{
+    margin-top:8px !important;
+  }
+
+  .primary{
+    min-height:52px !important;
+    margin-top:10px !important;
+  }
+}
+</style>
+
 </head>
 
 <body>
 <a class="skip-link" href="#startExperience">Vai al contenuto principale</a>
 <div class="sr-live" id="srLive" aria-live="polite" aria-atomic="true"></div>
+<div class="promo-modal" id="promoModal" hidden><div class="promo-card" role="dialog" aria-modal="true" aria-labelledby="promoTitle"><div class="promo-eyebrow">Offerta Wedding Tattoo Experience</div><h2 id="promoTitle"></h2><div class="promo-benefit" id="promoBenefit"></div><p id="promoText"></p><div class="promo-period" id="promoPeriod"></div><div class="promo-actions"><button class="primary" id="promoCta" type="button">Verifica disponibilità →</button><button class="promo-close" id="promoClose" type="button">Continua senza offerta</button></div></div></div>
 <div class="global-alert" id="globalAlert" hidden>
   <span id="globalAlertText"></span>
   <button id="dismissAlert" type="button">Chiudi</button>
@@ -1910,7 +2045,7 @@ body.flow-open .backdrop{
   <div class="footer-links">
     <a href="/contatti.html">Contatti</a>
     <a href="/privacy.html">Privacy</a>
-    <a href="https://www.instagram.com/tattoo.beautycondove/" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://www.instagram.com/weddingtattooexperience/" target="_blank" rel="noopener">Instagram</a>
   </div>
   <div>© Wedding Tattoo Experience</div>
 </footer>
@@ -3038,34 +3173,13 @@ const heroVideo=document.getElementById('heroVideo');
 if(heroVideo){
   heroVideo.playbackRate=.82;
 }
-
-function publicOfferValue(o){
-  if(o.type==='percent')return `-${Number(o.value||0)}%`;
-  if(o.type==='fixed')return `-${new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number(o.value||0))}`;
-  return o.gift||'Extra incluso';
-}
-async function loadActivePublicOffer(){
-  try{
-    const r=await fetch(`${API}/api/public/offers/active`,{cache:'no-store'});
-    if(!r.ok)return;
-    const {offer}=await r.json();
-    if(!offer)return;
-    const key=`wte_offer_seen_${offer.id}`;
-    if(sessionStorage.getItem(key))return;
-    const fmt=v=>v?new Intl.DateTimeFormat('it-IT',{day:'numeric',month:'long'}).format(new Date(`${v}T12:00:00`)):'';
-    document.getElementById('offerPopupTitle').textContent=offer.title;
-    document.getElementById('offerPopupValue').textContent=publicOfferValue(offer);
-    document.getElementById('offerPopupMessage').textContent=offer.message||'Una condizione speciale per il vostro matrimonio.';
-    document.getElementById('offerPopupDates').textContent=[offer.startDate?`dal ${fmt(offer.startDate)}`:'',offer.endDate?`al ${fmt(offer.endDate)}`:''].filter(Boolean).join(' ');
-    const p=document.getElementById('offerPopup');
-    p.hidden=false;
-    document.getElementById('offerPopupClose').onclick=()=>{sessionStorage.setItem(key,'1');p.hidden=true};
-    document.getElementById('offerPopupCta').onclick=()=>{sessionStorage.setItem(key,'1');p.hidden=true;if(typeof openExperience==='function')openExperience()};
-  }catch(e){console.warn('Offerta non disponibile',e)}
-}
-
 loadHeroVideo();
-loadActivePublicOffer();
+
+
+function promoBenefitLabel(offer){if(offer.type==='percent')return `-${Number(offer.value||0)}%`;if(offer.type==='fixed')return `-${new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number(offer.value||0))}`;return offer.extra||'OMAGGIO'}
+function promoDate(value){if(!value)return'';const d=new Date(value+'T12:00:00');return Number.isNaN(d.getTime())?value:d.toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})}
+async function loadActivePromotion(){try{const response=await fetch(`${API}/api/public/offers/active`,{cache:'no-store'});if(!response.ok)return;const data=await response.json();const offer=data.offer;if(!offer||!offer.showPopup)return;const seenKey=`wte_promo_seen_${offer.id}`;if(sessionStorage.getItem(seenKey))return;document.getElementById('promoTitle').textContent=offer.title||'Offerta speciale';document.getElementById('promoBenefit').textContent=promoBenefitLabel(offer);document.getElementById('promoText').textContent=offer.text||offer.extra||'Una condizione riservata per il vostro matrimonio.';document.getElementById('promoPeriod').textContent=offer.endDate?`Valida fino al ${promoDate(offer.endDate)}`:'';const modal=document.getElementById('promoModal');setTimeout(()=>{modal.hidden=false},700);document.getElementById('promoClose').onclick=()=>{sessionStorage.setItem(seenKey,'1');modal.hidden=true};document.getElementById('promoCta').onclick=()=>{sessionStorage.setItem(seenKey,'1');modal.hidden=true;document.getElementById('startExperience').click()}}catch(error){console.warn('Promo non disponibile',error)}}
+loadActivePromotion();
 
 window.addEventListener('unhandledrejection',event=>{
   console.error('WTE unhandled rejection',event.reason);
@@ -3075,18 +3189,5 @@ window.addEventListener('error',event=>{
   console.error('WTE frontend error',event.error||event.message);
 });
 </script>
-
-<div class="offer-popup" id="offerPopup" hidden>
-  <div class="offer-popup-card" role="dialog" aria-modal="true" aria-labelledby="offerPopupTitle">
-    <button class="offer-popup-close" id="offerPopupClose" type="button" aria-label="Chiudi">×</button>
-    <small>Wedding Tattoo Experience</small>
-    <h2 id="offerPopupTitle">Offerta speciale</h2>
-    <strong id="offerPopupValue"></strong>
-    <p id="offerPopupMessage"></p>
-    <em id="offerPopupDates"></em>
-    <button class="primary" id="offerPopupCta" type="button">Verifica disponibilità →</button>
-  </div>
-</div>
-
 </body>
 </html>
