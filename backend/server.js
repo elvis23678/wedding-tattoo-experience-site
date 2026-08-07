@@ -18,6 +18,7 @@ import { createDateAvailabilityEngine } from './date-availability-engine.js';
 import { createReleaseDiagnostics } from './release-diagnostics.js';
 import { createReleaseManager } from './release-manager.js';
 import { createReleaseBackup } from './release-backup.js';
+import { createConversionAnalytics } from './conversion-analytics.js';
 import Stripe from 'stripe';
 
 const { Pool } = pg;
@@ -82,6 +83,16 @@ const dateAvailability = createDateAvailabilityEngine({
   logger:console
 });
 
+const releaseDiagnostics = createReleaseDiagnostics({
+  pool,
+  workflow,
+  scheduler,
+  notifications,
+  pdfEngine,
+  dateAvailability,
+  stripe,
+  env:process.env
+});
 
 const releaseManager = createReleaseManager({
   pool,
@@ -92,6 +103,12 @@ const releaseManager = createReleaseManager({
 const releaseBackup = createReleaseBackup({
   pool,
   releaseManager
+});
+
+const conversionAnalytics = createConversionAnalytics({
+  pool,
+  secret:process.env.ANALYTICS_HASH_SECRET||JWT_SECRET,
+  logger:console
 });
 
 const scheduler = createSchedulerEngine({
@@ -124,17 +141,6 @@ const scheduler = createSchedulerEngine({
       metadata
     });
   }
-});
-
-const releaseDiagnostics = createReleaseDiagnostics({
-  pool,
-  workflow,
-  scheduler,
-  notifications,
-  pdfEngine,
-  dateAvailability,
-  stripe,
-  env:process.env
 });
 
 app.use(helmet());
@@ -337,7 +343,7 @@ async function createNotification(type,title,body,practiceId=null,recipientRole=
 
 app.get('/api/health', async (_req,res) => {
   const result = await pool.query('SELECT NOW() AS now');
-  res.json({ok:true, version:'4.9.0-release-management', dbTime:result.rows[0].now});
+  res.json({ok:true, version:'5.0.0-conversion-analytics', dbTime:result.rows[0].now});
 });
 
 app.post('/api/auth/login', async (req,res) => {
@@ -3675,6 +3681,51 @@ app.get('/api/release/diagnostics', auth, adminOnly, async (_req,res) => {
       ok:false,
       error:error.message||'Diagnostica non disponibile.'
     });
+  }
+});
+
+
+
+// ============================================================
+// WTE Release 2 - Fase 5: conversion analytics
+// ============================================================
+
+app.post('/api/public/analytics/event', publicRateLimit, async (req,res) => {
+  try{
+    const result=await conversionAnalytics.record({
+      eventName:String(req.body?.eventName||''),
+      sessionId:String(req.body?.sessionId||''),
+      visitorId:String(req.body?.visitorId||''),
+      path:String(req.body?.path||''),
+      referrerHost:String(req.body?.referrerHost||''),
+      metadata:
+        req.body?.metadata &&
+        typeof req.body.metadata==='object'
+          ? req.body.metadata
+          : {},
+      occurredAt:req.body?.occurredAt||null
+    });
+
+    res.status(result.recorded?201:200).json({
+      ok:true,
+      recorded:result.recorded
+    });
+  }catch(error){
+    res.status(error.statusCode||500).json({
+      error:error.message,
+      code:error.code||'ANALYTICS_ERROR'
+    });
+  }
+});
+
+app.get('/api/analytics/overview', auth, adminOnly, async (req,res) => {
+  try{
+    const data=await conversionAnalytics.overview(
+      Number(req.query.days||30)
+    );
+    res.json(data);
+  }catch(error){
+    res.status(500).json({error:error.message});
   }
 });
 
