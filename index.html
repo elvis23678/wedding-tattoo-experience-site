@@ -1311,13 +1311,7 @@ body.flow-open .topbar{display:none}
   }
 }
 
-@media(prefers-reduced-data:reduce){
-  .video{display:none}
-  .shell{background:#100b07}
-}
 @media(prefers-reduced-motion:reduce){
-  .video{display:none}
-  .shell{background:#100b07}
   *{animation:none!important;transition:none!important}
 }
 
@@ -2170,8 +2164,8 @@ body.flow-open .backdrop{
   <button id="dismissAlert" type="button">Chiudi</button>
 </div>
 <div class="shell">
-  <video class="video" id="heroVideo" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-    <source src="hero.mp4" type="video/mp4">
+  <video class="video" id="heroVideo" autoplay muted loop playsinline preload="auto" poster="hero-poster.jpg" aria-hidden="true">
+    <source src="hero.mp4?v=20260807-hero-fix" type="video/mp4">
   </video>
   <div class="backdrop"></div>
 
@@ -2675,44 +2669,32 @@ function pulseHaptic(pattern=12){
 }
 
 function shouldLoadVideo(){
-  const connection=
-    navigator.connection ||
-    navigator.mozConnection ||
-    navigator.webkitConnection;
-
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-    return false;
-  }
-
-  if(window.matchMedia('(prefers-reduced-data: reduce)').matches){
-    return false;
-  }
-
-  if(connection?.saveData){
-    return false;
-  }
-
-  if(['slow-2g','2g'].includes(connection?.effectiveType)){
-    return false;
-  }
-
   return true;
 }
 
 function loadHeroVideo(){
   const video=document.getElementById('heroVideo');
-  if(!video||!shouldLoadVideo())return;
+  if(!video)return;
 
-  video.preload='metadata';
-  video.load();
+  video.muted=true;
+  video.autoplay=true;
+  video.loop=true;
+  video.playsInline=true;
+  video.preload='auto';
 
-  const play=()=>video.play().catch(()=>{});
+  const tryPlay=()=>{
+    const p=video.play();
+    if(p&&typeof p.catch==='function')p.catch(()=>{});
+  };
 
-  if('requestIdleCallback' in window){
-    requestIdleCallback(play,{timeout:1800});
-  }else{
-    setTimeout(play,650);
-  }
+  // Primo tentativo immediato, poi retry quando il browser/mobile torna attivo.
+  if(video.readyState<2) video.load();
+  tryPlay();
+  video.addEventListener('loadeddata',tryPlay,{once:true});
+  video.addEventListener('canplay',tryPlay,{once:true});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)tryPlay()});
+  window.addEventListener('pageshow',tryPlay);
+  ['touchstart','pointerdown','click'].forEach(ev=>document.addEventListener(ev,tryPlay,{once:true,passive:true}));
 }
 
 function showGlobalAlert(message){
