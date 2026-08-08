@@ -998,7 +998,7 @@ app.patch('/api/flash-catalog/:id', auth, async (req,res) => {
   }
 });
 
-app.delete('/api/flash-catalog/:id', auth, adminOnly, async (req,res) => {
+app.delete('/api/flash-catalog/:id', auth, async (req,res) => {
   const result = await pool.query(
     'DELETE FROM wte_flash_catalog WHERE id=$1 RETURNING code',
     [req.params.id]
