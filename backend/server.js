@@ -2286,7 +2286,9 @@ function safeEventDate(value) {
 function calculateBalanceDueAt(eventDate) {
   const date=safeEventDate(eventDate);
   if(!date)return null;
-  return `${date}T00:00:00+02:00`;
+  const d=new Date(`${date}T00:00:00+02:00`);
+  d.setDate(d.getDate()-7);
+  return d.toISOString();
 }
 
 async function paymentPlanByPractice(practiceId) {
@@ -2505,17 +2507,23 @@ async function applyPaidPayment({
     const referenceColumn=type==='deposit'?'deposit_reference':'balance_reference';
     const receiptColumn=type==='deposit'?'deposit_receipt_url':'balance_receipt_url';
 
-    await client.query(
-      `UPDATE wte_payment_plans
-       SET ${statusColumn}='paid',
-           ${paidColumn}=$2,
-           ${providerColumn}=$3,
-           ${referenceColumn}=$4,
-           ${receiptColumn}=$5,
-           updated_at=NOW()
-       WHERE practice_id=$1`,
-      [practiceId,occurredAt,provider,reference,receiptUrl]
-    );
+    if(type==='deposit'){
+      await client.query(
+        `UPDATE wte_payment_plans SET deposit_status='paid',deposit_paid_at=$2,deposit_provider=$3,deposit_reference=$4,deposit_receipt_url=$5,updated_at=NOW() WHERE practice_id=$1`,
+        [practiceId,occurredAt,provider,reference,receiptUrl]
+      );
+    }else{
+      const paidResult=await client.query(
+        `SELECT COALESCE(SUM(amount_cents),0)::int AS paid FROM wte_payment_events WHERE practice_id=$1 AND payment_type='balance' AND status='paid'`,
+        [practiceId]
+      );
+      const totalPaid=Number(paidResult.rows[0]?.paid||0);
+      const completed=totalPaid>=Number(plan.balance_cents||0);
+      await client.query(
+        `UPDATE wte_payment_plans SET balance_status=$2,balance_paid_at=CASE WHEN $2='paid' THEN $3 ELSE balance_paid_at END,balance_provider=$4,balance_reference=$5,balance_receipt_url=$6,updated_at=NOW() WHERE practice_id=$1`,
+        [practiceId,completed?'paid':'pending',occurredAt,provider,reference,receiptUrl]
+      );
+    }
 
     await client.query('COMMIT');
   }catch(error){
@@ -2583,7 +2591,7 @@ async function applyPaidPayment({
           : 'La pratica è stata aggiornata.'),
       metadata:{paymentType:type,guestUrl}
     });
-  }else{
+  }else if(updated.balance_status==='paid'){
     const paidPlan=await paymentPlanByPractice(practiceId);
     await notifications.queueForPractice(
       practiceId,
@@ -2613,9 +2621,11 @@ async function applyPaidPayment({
     });
   }
 
+  const finalPlan=await paymentPlanByPractice(practiceId);
+  const partialBalance=type==='balance' && finalPlan?.balance_status!=='paid';
   await createNotification(
-    type==='deposit'?'deposit_paid':'balance_paid',
-    type==='deposit'?'Acconto ricevuto':'Saldo ricevuto',
+    type==='deposit'?'deposit_paid':(partialBalance?'balance_installment_paid':'balance_paid'),
+    type==='deposit'?'Acconto ricevuto':(partialBalance?'Rata ricevuta':'Saldo ricevuto'),
     `${euroFromCents(amountCents)} registrati per la pratica ${practiceId}.`,
     practiceId,
     null
@@ -2936,6 +2946,60 @@ function stripeCancelUrl(token) {
     `&cancelled=1`;
 }
 
+
+async function balancePaidCents(practiceId){
+  const result=await pool.query(
+    `SELECT COALESCE(SUM(amount_cents),0)::int AS paid
+     FROM wte_payment_events
+     WHERE practice_id=$1 AND payment_type='balance' AND status='paid'`,
+    [practiceId]
+  );
+  return Number(result.rows[0]?.paid||0);
+}
+
+function maxInstallmentsForDueDate(balanceDueAt){
+  if(!balanceDueAt)return 1;
+  const now=new Date();
+  const due=new Date(balanceDueAt);
+  const days=Math.floor((due-now)/86400000)+7; // mesi rispetto alla data matrimonio; saldo comunque chiuso 7 giorni prima
+  if(days<55)return 1;
+  return Math.max(1,Math.min(18,Math.floor(days/30)));
+}
+
+async function installmentSettings(practiceId,plan){
+  const result=await pool.query('SELECT data FROM wte_practices WHERE id=$1',[practiceId]);
+  const data=result.rows[0]?.data||{};
+  const requested=Number(data?.payments?.installmentCount||1);
+  const max=maxInstallmentsForDueDate(plan.balance_due_at);
+  const count=Math.max(1,Math.min(max,Number.isFinite(requested)?Math.floor(requested):1));
+  const paid=await balancePaidCents(practiceId);
+  const remaining=Math.max(0,Number(plan.balance_cents||0)-paid);
+  const paidCount=Number((await pool.query(
+    `SELECT COUNT(*)::int AS count FROM wte_payment_events
+     WHERE practice_id=$1 AND payment_type='balance' AND status='paid'`,[practiceId]
+  )).rows[0]?.count||0);
+  const remainingCount=Math.max(1,count-paidCount);
+  return {count,max,paid,remaining,paidCount,remainingCount};
+}
+
+app.post('/api/public/payment-plan/:token/installments', async (req,res)=>{
+  const plan=await paymentPlanByToken(req.params.token);
+  if(!plan)return res.status(404).json({error:'Link pagamento non valido.'});
+  if(plan.deposit_status!=='paid')return res.status(409).json({error:'Le rate si scelgono dopo il pagamento dell’acconto.'});
+  const max=maxInstallmentsForDueDate(plan.balance_due_at);
+  const parsed=z.object({count:z.number().int().min(1).max(18)}).safeParse(req.body);
+  if(!parsed.success || parsed.data.count>max){
+    return res.status(400).json({error:`Per questa data puoi scegliere da 1 a ${max} pagamenti.`});
+  }
+  const paid=await balancePaidCents(plan.practice_id);
+  if(paid>0)return res.status(409).json({error:'Il piano non può essere modificato dopo il primo pagamento del saldo.'});
+  await pool.query(
+    `UPDATE wte_practices SET data=jsonb_set(COALESCE(data,'{}'::jsonb),'{payments,installmentCount}',$2::jsonb,true),updated_at=NOW() WHERE id=$1`,
+    [plan.practice_id,JSON.stringify(parsed.data.count)]
+  );
+  return res.json({ok:true,count:parsed.data.count,max});
+});
+
 async function createStripeCheckoutSession(plan,paymentType) {
   if(!stripe){
     const error=new Error('Stripe non configurato.');
@@ -2944,12 +3008,17 @@ async function createStripeCheckoutSession(plan,paymentType) {
   }
 
   const type=paymentType==='balance'?'balance':'deposit';
+  let settings=null;
   const realAmount=type==='deposit'
     ?Number(plan.deposit_cents||0)
     :Number(plan.balance_cents||0);
+  if(type==='balance')settings=await installmentSettings(plan.practice_id,plan);
+  const balanceCharge=type==='balance'
+    ?Math.min(settings.remaining,Math.ceil(settings.remaining/settings.remainingCount))
+    :0;
   const amount=(STRIPE_ONE_EURO_TEST && type==='deposit')
     ?100
-    :realAmount;
+    :(type==='balance'?balanceCharge:realAmount);
 
   const status=type==='deposit'
     ?plan.deposit_status
@@ -2970,7 +3039,7 @@ async function createStripeCheckoutSession(plan,paymentType) {
   const contact=await practiceContact(plan.practice_id);
   const label=type==='deposit'
     ?(STRIPE_ONE_EURO_TEST?'TEST 1€ · Acconto Wedding Tattoo Experience':'Acconto Wedding Tattoo Experience')
-    :'Saldo Wedding Tattoo Experience';
+    :(settings && settings.count>1 ? `Rata ${settings.paidCount+1}/${settings.count} · Wedding Tattoo Experience` : 'Saldo Wedding Tattoo Experience');
 
   const session=await stripe.checkout.sessions.create({
     mode:'payment',
@@ -3169,12 +3238,19 @@ app.get('/api/public/payment-plan/:token', async (req,res) => {
   if(!plan)return res.status(404).json({error:'Link pagamento non valido.'});
 
   const contact=await practiceContact(plan.practice_id);
+  const installment=await installmentSettings(plan.practice_id,plan);
   res.json({
     plan:{
       currency:plan.currency,
       totalCents:plan.total_cents,
       depositCents:plan.deposit_cents,
       balanceCents:plan.balance_cents,
+      balancePaidCents:installment.paid,
+      balanceRemainingCents:installment.remaining,
+      installmentCount:installment.count,
+      installmentMax:installment.max,
+      installmentPaidCount:installment.paidCount,
+      installmentNextCents:installment.remaining?Math.min(installment.remaining,Math.ceil(installment.remaining/installment.remainingCount)):0,
       depositDueAt:plan.deposit_due_at,
       balanceDueAt:plan.balance_due_at,
       depositPaymentUrl:plan.deposit_payment_url,
@@ -5040,6 +5116,7 @@ app.get('/api/public/couple/:token', async (req,res) => {
     }
   ];
 
+  const installment=await installmentSettings(bundle.practice_id,bundle);
   res.setHeader('Cache-Control','no-store');
   res.json({
     booking:{
@@ -5053,6 +5130,12 @@ app.get('/api/public/couple/:token', async (req,res) => {
       totalCents:bundle.total_cents,
       depositCents:bundle.deposit_cents,
       balanceCents:bundle.balance_cents,
+      balancePaidCents:installment.paid,
+      balanceRemainingCents:installment.remaining,
+      installmentCount:installment.count,
+      installmentMax:installment.max,
+      installmentPaidCount:installment.paidCount,
+      installmentNextCents:installment.remaining?Math.min(installment.remaining,Math.ceil(installment.remaining/installment.remainingCount)):0,
       depositStatus:bundle.deposit_status,
       balanceStatus:bundle.balance_status,
       depositDueAt:bundle.deposit_due_at,
