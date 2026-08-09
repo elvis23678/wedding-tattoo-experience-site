@@ -3062,14 +3062,68 @@ app.get('/api/public/stripe-session/:sessionId', async (req,res) => {
       req.params.sessionId
     );
 
+    const practiceId=String(session.metadata?.practiceId||'');
+    const paymentType=
+      session.metadata?.paymentType==='balance'?'balance':'deposit';
+
+    // Fallback di riconciliazione:
+    // se Stripe conferma il pagamento ma il webhook è in ritardo o ha fallito,
+    // la pagina di successo registra comunque il pagamento in modo idempotente.
+    if(session.payment_status==='paid' && practiceId){
+      let receiptUrl='';
+      let providerReference=String(session.payment_intent||session.id);
+
+      if(session.payment_intent){
+        try{
+          const paymentIntent=await stripe.paymentIntents.retrieve(
+            String(session.payment_intent),
+            {expand:['latest_charge']}
+          );
+          const charge=paymentIntent.latest_charge;
+          if(charge && typeof charge!=='string'){
+            receiptUrl=String(charge.receipt_url||'');
+            providerReference=String(charge.id||paymentIntent.id);
+          }
+        }catch(error){
+          console.error('Stripe reconciliation receipt error',error.message);
+        }
+      }
+
+      await applyPaidPayment({
+        practiceId,
+        paymentType,
+        amountCents:Number(session.amount_total||0),
+        provider:'stripe',
+        reference:providerReference,
+        receiptUrl,
+        eventKey:`stripe-session-reconcile:${session.id}`,
+        occurredAt:new Date(),
+        payload:{
+          checkoutSessionId:session.id,
+          paymentIntentId:String(session.payment_intent||''),
+          reconciliation:true
+        }
+      });
+
+      if(paymentType==='deposit'){
+        await dateAvailability.confirmForPractice(practiceId,{
+          provider:'stripe',
+          checkoutSessionId:session.id,
+          reconciliation:true
+        });
+      }
+    }
+
     return res.json({
       id:session.id,
       status:session.status,
       paymentStatus:session.payment_status,
-      practiceId:session.metadata?.practiceId||'',
-      paymentType:session.metadata?.paymentType||''
+      practiceId,
+      paymentType,
+      reconciled:session.payment_status==='paid' && Boolean(practiceId)
     });
   }catch(error){
+    console.error('Stripe session reconciliation error',error);
     return res.status(404).json({error:'Sessione Stripe non trovata.'});
   }
 });
