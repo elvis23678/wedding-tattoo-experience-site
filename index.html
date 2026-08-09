@@ -2942,12 +2942,20 @@ function restoreFlowState(state){
 
     hero.hidden=true;
     flow.hidden=false;
+    document.body.classList.remove('hero-locked');
+    document.body.classList.add('flow-open');
+    flowHistoryActive=true;
 
     const target=Math.max(
       0,
       Math.min(Number(state.current)||0,7)
     );
 
+    history.replaceState(
+      {wteFlow:true,step:target},
+      '',
+      `#step-${target+1}`
+    );
     setStep(target);
 
     if(form.elements.date.value){
@@ -3235,6 +3243,27 @@ nextButton.onclick=async()=>{
   await createRecommendation();
 };
 
+form.addEventListener('submit',async event=>{
+  event.preventDefault();
+
+  if(current===8 || current===9 || submissionInProgress)return;
+  if(!validateCurrent())return;
+
+  if(current===1){
+    if(checkingDate)return;
+    const available=dateAvailable||await checkAvailability();
+    if(!available)return;
+    if(current!==1)return;
+  }
+
+  if(current<7){
+    setStep(current+1);
+    return;
+  }
+
+  await createRecommendation();
+});
+
 function markLoading(id,text){
   const element=document.getElementById(id);
   element.classList.add('done');
@@ -3437,7 +3466,7 @@ async function createRecommendation(){
   submissionInProgress=true;
   lastSubmissionPayload=submissionPayload();
 
-  setStep(7);
+  setStep(8);
   resetLoadingSteps();
 
   const errorBox=document.getElementById('submitError');
