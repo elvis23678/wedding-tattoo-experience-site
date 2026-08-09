@@ -3318,13 +3318,21 @@ async function aiRecommendation(data,packages,fallback) {
     required:['packageCode','title','explanation','considerations']
   };
 
-  const response=await fetch('https://api.openai.com/v1/responses',{
-    method:'POST',
-    headers:{
-      Authorization:`Bearer ${OPENAI_API_KEY}`,
-      'Content-Type':'application/json'
-    },
-    body:JSON.stringify({
+  // L'AI è un miglioramento, non deve mai bloccare la proposta.
+  // Se OpenAI non risponde rapidamente, il chiamante userà il fallback deterministico.
+  const aiController=new AbortController();
+  const aiTimeout=setTimeout(()=>aiController.abort(),6000);
+
+  let response;
+  try{
+    response=await fetch('https://api.openai.com/v1/responses',{
+      method:'POST',
+      headers:{
+        Authorization:`Bearer ${OPENAI_API_KEY}`,
+        'Content-Type':'application/json'
+      },
+      signal:aiController.signal,
+      body:JSON.stringify({
       model:OPENAI_MODEL,
       store:false,
       input:[
@@ -3354,9 +3362,17 @@ async function aiRecommendation(data,packages,fallback) {
           schema
         }
       },
-      max_output_tokens:500
-    })
-  });
+        max_output_tokens:500
+      })
+    });
+  }catch(error){
+    if(error?.name==='AbortError'){
+      throw new Error('OpenAI timeout: uso raccomandazione automatica.');
+    }
+    throw error;
+  }finally{
+    clearTimeout(aiTimeout);
+  }
 
   const payload=await response.json().catch(()=>({}));
   if(!response.ok){
