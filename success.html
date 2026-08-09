@@ -70,6 +70,9 @@ async function load(){
   message.textContent=`Grazie ${data.booking.customerName||''}. L’acconto è stato ricevuto e la pratica è attiva.`;
   message.classList.remove('wait');
   link.href=data.booking.coupleUrl;link.hidden=false;
+  if(data.booking.coupleUrl){
+    localStorage.setItem('wte_couple_url',data.booking.coupleUrl);
+  }
   document.getElementById('progressNote').textContent='Tutto aggiornato automaticamente.';
   clearInterval(timer);
  }else{

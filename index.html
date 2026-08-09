@@ -2869,6 +2869,37 @@ function saveFlowState(){
   }
 }
 
+function savedCoupleUrl(){
+  try{
+    const value=String(localStorage.getItem('wte_couple_url')||'').trim();
+    return /^https:\/\/www\.weddingtattooexperience\.it\/couple\.html\?token=/.test(value)
+      ? value
+      : '';
+  }catch{
+    return '';
+  }
+}
+
+function refreshResumeEntry(){
+  const button=document.getElementById('resumeExperience');
+  const coupleUrl=savedCoupleUrl();
+  const saved=readFlowState();
+
+  if(coupleUrl){
+    button.hidden=false;
+    button.textContent='Accedi alla vostra Area Sposi';
+    return;
+  }
+
+  if(saved){
+    button.hidden=false;
+    button.textContent='Riprendi il percorso salvato';
+    return;
+  }
+
+  button.hidden=true;
+}
+
 function readFlowState(){
   try{
     const state=JSON.parse(
@@ -2896,7 +2927,7 @@ function clearFlowState(){
   localStorage.removeItem('wte_date_hold_token');
   holdToken='';
   recommendationData=null;
-  document.getElementById('resumeExperience').hidden=true;
+  refreshResumeEntry();
 }
 
 function applyChoiceState(name,value){
@@ -3070,6 +3101,12 @@ document.getElementById('startExperience').onclick=()=>{
   openExperience();
 };
 document.getElementById('resumeExperience').onclick=()=>{
+  const coupleUrl=savedCoupleUrl();
+  if(coupleUrl){
+    location.href=coupleUrl;
+    return;
+  }
+
   const saved=readFlowState();
   if(saved){
     restoreFlowState(saved);
@@ -3622,6 +3659,7 @@ window.addEventListener('beforeunload',event=>{
   }
 });
 
+refreshResumeEntry();
 checkApiHealth();
 healthCheckTimer=setInterval(checkApiHealth,60000);
 

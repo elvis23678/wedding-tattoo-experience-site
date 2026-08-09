@@ -179,6 +179,9 @@ async function load(){
  if(!response.ok)throw new Error(data.error||'Pratica non disponibile.');
 
  const booking=data.booking;
+ if(booking.coupleUrl){
+  localStorage.setItem('wte_couple_url',booking.coupleUrl);
+ }
  $('customerName').textContent=booking.customerName||'Pratica Wedding';
  $('eventDate').textContent=[booking.eventDate,booking.eventTime].filter(Boolean).join(' · ')||'—';
  $('location').textContent=booking.location||'—';
