@@ -153,8 +153,13 @@ export function createPdfEngine({
       ['Luogo', practice.location || practice.city],
       ['Invitati', practice.guests],
       ['Pacchetto', pack.name || practice.package],
+      ['Prezzo base', pack.base_price_cents ? euroFromCents(pack.base_price_cents)+' + IVA' : 'Su misura'],
+      ['Trasferta inclusa', pack.pricing ? `${pack.pricing.includedKm} km complessivi A/R` : 'Secondo pacchetto'],
+      ['Km extra', pack.pricing && pack.pricing.extraKm ? `${pack.pricing.extraKm} km × 0,70 € + IVA` : 'Nessuno'],
+      ['Imponibile', pack.pricing ? euroFromCents(pack.pricing.netCents) : '—'],
+      ['IVA 22%', pack.pricing ? euroFromCents(pack.pricing.vatCents) : '—'],
       [
-        'Importo',
+        'Totale IVA inclusa',
         pack.price_cents
           ? euroFromCents(pack.price_cents)
           : bundle.total_cents

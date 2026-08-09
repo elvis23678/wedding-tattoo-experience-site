@@ -42,7 +42,7 @@ const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const STRIPE_CURRENCY = String(process.env.STRIPE_CURRENCY || 'eur').toLowerCase();
 // TEST TEMPORANEO: forza SOLO l'acconto Stripe a 1,00 €. Da rimuovere dopo il collaudo.
-const STRIPE_ONE_EURO_TEST = true;
+const STRIPE_ONE_EURO_TEST = false;
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 if (!JWT_SECRET || !ADMIN_PASSWORD || !DATABASE_URL) {
@@ -3331,6 +3331,54 @@ async function activePackages() {
   return result.rows;
 }
 
+const WTE_VAT_RATE=0.22;
+const WTE_EXTRA_KM_NET_CENTS=70;
+const WTE_INCLUDED_KM={BRONZE:50,SILVER:100,GOLD:200};
+
+function packagePricing(pack,data={}) {
+  const baseNetCents=Number(pack?.price_cents||0);
+  if(!baseNetCents)return {
+    baseNetCents:0,includedKm:5000,roundTripKm:Math.max(0,Number(data.distance||0)*2),
+    extraKm:0,travelNetCents:0,netCents:0,vatCents:0,totalCents:0
+  };
+  const includedKm=WTE_INCLUDED_KM[String(pack.code||'').toUpperCase()] ?? Number(pack.max_distance_km||0);
+  const roundTripKm=Math.max(0,Number(data.distance||0)*2);
+  const extraKm=Math.max(0,Math.ceil(roundTripKm-includedKm));
+  const travelNetCents=extraKm*WTE_EXTRA_KM_NET_CENTS;
+  const netCents=baseNetCents+travelNetCents;
+  const vatCents=Math.round(netCents*WTE_VAT_RATE);
+  return {baseNetCents,includedKm,roundTripKm,extraKm,travelNetCents,netCents,vatCents,totalCents:netCents+vatCents};
+}
+
+function pricedPackage(pack,data={}) {
+  const pricing=packagePricing(pack,data);
+  return {
+    ...pack,
+    base_price_cents:Number(pack.price_cents||0),
+    price_cents:pricing.totalCents,
+    pricing,
+    vat_rate:22,
+    extra_km_net_cents:WTE_EXTRA_KM_NET_CENTS,
+    max_distance_km:pricing.includedKm
+  };
+}
+
+function packageRecommendationExplanation(selected,data,packages){
+  const priced=packages.filter(p=>Number(p.price_cents||0)>0).map(p=>pricedPackage(p,data));
+  const chosen=priced.find(p=>p.code===selected.code)||pricedPackage(selected,data);
+  const cheapest=priced.slice().sort((a,b)=>a.price_cents-b.price_cents)[0];
+  const facts=`${Number(data.guests||0)} invitati, ${Number(data.hours||0)} ore richieste e ${Number(data.distance||0)} km dalla location (${Math.round(Number(data.distance||0)*2)} km A/R)`;
+  let why=`La proposta considera ${facts}. ${chosen.name} include ${chosen.pricing.includedKm} km complessivi A/R`;
+  if(chosen.pricing.extraKm>0) why+=` e prevede ${chosen.pricing.extraKm} km eccedenti a 0,70 €/km + IVA`;
+  else why+=': per questa distanza non sono previsti supplementi chilometrici';
+  why+='.';
+  if(cheapest && cheapest.code!==chosen.code){
+    const diff=chosen.price_cents-cheapest.price_cents;
+    why+=` La scelta consigliata privilegia copertura di ore/invitati e servizi inclusi; rispetto alla soluzione economicamente più bassa la differenza finale è ${euroFromCents(diff)} IVA inclusa.`;
+  }
+  return why;
+}
+
 function rulePackageCode(data) {
   const guests=Number(data.guests||0);
   const hours=Number(data.hours||0);
@@ -3361,8 +3409,7 @@ function deterministicRecommendation(data,packages) {
     packageCode:selected.code,
     packageName:selected.name,
     title:`Pacchetto ${selected.name} consigliato`,
-    explanation:
-      `${selected.reason} La valutazione considera ${facts.join(', ')}.`,
+    explanation:packageRecommendationExplanation(selected,data,packages),
     considerations:[
       Number(data.guests||0)>110?'Affluenza elevata':'Affluenza gestibile',
       Number(data.hours||0)>=6?'Durata estesa':'Durata standard',
@@ -3512,6 +3559,21 @@ function defaultContractClauses() {
       text:
         'Il saldo deve risultare registrato entro sette giorni prima dell’evento, '+
         'salvo diverso accordo scritto.'
+    },
+    {
+      title:'Documentazione fiscale',
+      text:
+        'Il documento fiscale finale a saldo sarà emesso al completamento del pagamento. '+
+        'Gli eventuali documenti fiscali relativi ad acconti e pagamenti parziali saranno '+
+        'emessi nei termini previsti dalla normativa vigente.'
+    },
+    {
+      title:'Trasferta e IVA',
+      text:
+        'I prezzi dei pacchetti sono espressi al netto IVA. Si applica IVA al 22%. '+
+        'La distanza indicata è di sola andata e viene conteggiata andata/ritorno. '+
+        'Sono inclusi 50 km A/R nel Bronze, 100 km A/R nel Silver e 200 km A/R nel Gold. '+
+        'I km eccedenti sono addebitati a 0,70 euro/km + IVA; eventuali pedaggi sono esclusi.'
     },
     {
       title:'Catalogo flash e invitati',
@@ -4156,8 +4218,10 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
     recommendation={...fallback,aiUsed:false};
   }
 
-  const selected=packages.find(item=>item.code===recommendation.packageCode)
+  const selectedRaw=packages.find(item=>item.code===recommendation.packageCode)
     || packages[0];
+  const selected=pricedPackage(selectedRaw,normalizedData);
+  recommendation.explanation=packageRecommendationExplanation(selectedRaw,normalizedData,packages);
   const salesToken=crypto.randomBytes(24).toString('hex');
   const contractToken=crypto.randomBytes(24).toString('hex');
   const number=contractNumber();
@@ -4249,8 +4313,12 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
         description:selected.description,
         priceCents:selected.price_cents,
         priceLabel:selected.price_cents?euroFromCents(selected.price_cents):'Su misura',
+        basePriceCents:selected.base_price_cents,
+        pricing:selected.pricing,
+        vatRate:22,
         depositPercent:selected.deposit_percent,
         includedHours:Number(selected.included_hours),
+        maxDistanceKm:selected.max_distance_km,
         features:selected.features||[]
       }
     },
@@ -4258,17 +4326,16 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
     // Il pacchetto raccomandato resta nella card principale e qui mostriamo gli altri.
     packages:packages
       .filter(item=>item.code!==selected.code)
-      .map(item=>({
-        code:item.code,
-        name:item.name,
-        description:item.description,
-        reason:item.reason,
-        priceCents:item.price_cents,
-        priceLabel:item.price_cents?euroFromCents(item.price_cents):'Su misura',
-        depositPercent:item.deposit_percent,
-        includedHours:Number(item.included_hours),
-        features:item.features||[]
-      })),
+      .map(item=>{
+        const priced=pricedPackage(item,normalizedData);
+        return {
+          code:priced.code,name:priced.name,description:priced.description,reason:priced.reason,
+          priceCents:priced.price_cents,priceLabel:priced.price_cents?euroFromCents(priced.price_cents):'Su misura',
+          basePriceCents:priced.base_price_cents,pricing:priced.pricing,vatRate:22,
+          depositPercent:priced.deposit_percent,includedHours:Number(priced.included_hours),
+          maxDistanceKm:priced.max_distance_km,features:priced.features||[]
+        };
+      }),
     ai:{
       enabled:Boolean(OPENAI_API_KEY),
       used:Boolean(recommendation.aiUsed),
@@ -4298,7 +4365,7 @@ app.post('/api/public/advisor/:salesToken/select-package', publicRateLimit, asyn
     await client.query('BEGIN');
 
     const sessionResult=await client.query(
-      `SELECT token,status,contract_token
+      `SELECT token,status,contract_token,customer_data
        FROM wte_sales_sessions
        WHERE token=$1
        FOR UPDATE`,
@@ -4339,7 +4406,8 @@ app.post('/api/public/advisor/:salesToken/select-package', publicRateLimit, asyn
       return res.status(404).json({error:'Pacchetto non disponibile.'});
     }
 
-    const selected=packageResult.rows[0];
+    const selectedRaw=packageResult.rows[0];
+    const selected=pricedPackage(selectedRaw,session.customer_data||{});
 
     const contractResult=await client.query(
       `SELECT token,status

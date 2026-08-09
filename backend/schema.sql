@@ -267,21 +267,21 @@ VALUES
  'BRONZE','Bronze',
  'Formula essenziale per matrimoni intimi.',
  'Adatta a eventi raccolti, durata contenuta e numero ridotto di invitati.',
- 79000,30,3,0,65,100,10,
+ 79000,30,3,0,65,50,10,
  '["Servizio Wedding Tattoo Experience","Catalogo flash","Gestione pratica digitale"]'::jsonb
 ),
 (
  'SILVER','Silver',
  'Formula equilibrata per la maggior parte dei matrimoni.',
  'Offre un buon equilibrio tra durata, invitati e possibilità di coinvolgimento.',
- 109000,30,5,40,110,160,20,
+ 109000,30,5,40,110,100,20,
  '["Servizio Wedding Tattoo Experience","Catalogo flash","Gestione pratica digitale","QR invitati"]'::jsonb
 ),
 (
  'GOLD','Gold',
  'Formula estesa per eventi più grandi.',
  'Pensata per maggiore affluenza, durata più lunga e organizzazione completa.',
- 169000,30,7,80,150,220,30,
+ 169000,30,7,80,150,200,30,
  '["Servizio Wedding Tattoo Experience","Catalogo flash","Gestione pratica digitale","QR invitati","Presenza estesa"]'::jsonb
 ),
 (
