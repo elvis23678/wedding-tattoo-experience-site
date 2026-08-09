@@ -183,15 +183,24 @@ async function load(){
  const balanceRemaining=Number((b.balanceRemainingCents ?? b.balanceCents) || 0);
 
  let installmentChooser='';
+ const installmentRecovery=
+   installmentPaidCount>0 &&
+   installmentCount<=1 &&
+   installmentMax>installmentPaidCount;
+
  if(
    b.depositStatus==='paid' &&
    b.balanceStatus!=='paid' &&
-   installmentPaidCount===0 &&
+   (installmentPaidCount===0 || installmentRecovery) &&
    installmentMax>1
  ){
    const options=[];
-   for(let count=1;count<=installmentMax;count++){
-     const amount=count===1?balanceRemaining:Math.ceil(balanceRemaining/count);
+   const firstAllowed=installmentRecovery?installmentPaidCount+1:1;
+   for(let count=firstAllowed;count<=installmentMax;count++){
+     const remainingPayments=Math.max(1,count-installmentPaidCount);
+     const amount=count===1
+       ?balanceRemaining
+       :Math.ceil(balanceRemaining/remainingPayments);
      options.push(
        `<option value="${count}" ${count===installmentCount?'selected':''}>`+
        `${count===1?'Pagamento unico':count+' rate'} · circa ${euro(amount)}${count>1?' ciascuna':''}`+
@@ -200,8 +209,10 @@ async function load(){
    }
    installmentChooser=`
      <div class="installments">
-       <h3>Come preferite pagare il residuo?</h3>
-       <p>Potete scegliere liberamente il numero di pagamenti disponibili in base al tempo che manca al matrimonio.</p>
+       <h3>${installmentRecovery?'Ripristina il piano rateale':'Come preferite pagare il residuo?'}</h3>
+       <p>${installmentRecovery
+         ?`La prima rata è già stata registrata. Selezionate nuovamente il numero totale di rate scelto in precedenza.`
+         :`Potete scegliere liberamente il numero di pagamenti disponibili in base al tempo che manca al matrimonio.`}</p>
        <select id="installmentSelect" aria-label="Numero di pagamenti">${options.join('')}</select>
        <div class="installment-preview" id="installmentPreview"></div>
      </div>`;
@@ -235,12 +246,18 @@ async function load(){
  if(installmentSelect){
    const refreshPreview=()=>{
      const count=Number(installmentSelect.value||1);
-     const approx=count===1?balanceRemaining:Math.ceil(balanceRemaining/count);
+     const remainingPayments=Math.max(1,count-installmentPaidCount);
+     const approx=count===1
+       ?balanceRemaining
+       :Math.ceil(balanceRemaining/remainingPayments);
      $('installmentPreview').innerHTML=
        count===1
          ?`Pagamento unico del residuo: <strong>${euro(balanceRemaining)}</strong>.`
-         :`Piano scelto: <strong>${count} rate</strong> da circa <strong>${euro(approx)}</strong>. `+
-          `Il saldo completo dovrà risultare versato entro la scadenza prevista.`;
+         :installmentRecovery
+           ?`Piano ripristinato: <strong>${installmentPaidCount}/${count}</strong> rate già pagate. `+
+            `Restano <strong>${remainingPayments}</strong> rate da circa <strong>${euro(approx)}</strong>.`
+           :`Piano scelto: <strong>${count} rate</strong> da circa <strong>${euro(approx)}</strong>. `+
+            `Il saldo completo dovrà risultare versato entro la scadenza prevista.`;
    };
    refreshPreview();
    installmentSelect.onchange=async()=>{
