@@ -164,7 +164,7 @@ app.use(cors({
 
 // Stripe richiede il body RAW per verificare la firma del webhook.
 app.post(
-  '/api/stripe/webhook',
+  ['/api/stripe/webhook','/api/payments/webhook'],
   express.raw({type:'application/json'}),
   async (req,res) => {
     if(!stripe || !STRIPE_WEBHOOK_SECRET){
@@ -4163,6 +4163,133 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
       error:aiError
     }
   });
+});
+
+
+app.post('/api/public/advisor/:salesToken/select-package', publicRateLimit, async (req,res) => {
+  const parsed=z.object({
+    packageCode:z.string().min(1).max(40),
+    contractToken:z.string().min(1).max(160)
+  }).safeParse(req.body);
+
+  if(!parsed.success){
+    return res.status(400).json({error:'Selezione pacchetto non valida.'});
+  }
+
+  const salesToken=String(req.params.salesToken||'');
+  const packageCode=String(parsed.data.packageCode||'').toUpperCase();
+  const contractToken=String(parsed.data.contractToken||'');
+
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+
+    const sessionResult=await client.query(
+      `SELECT token,status,contract_token
+       FROM wte_sales_sessions
+       WHERE token=$1
+       FOR UPDATE`,
+      [salesToken]
+    );
+
+    if(!sessionResult.rowCount){
+      await client.query('ROLLBACK');
+      return res.status(404).json({error:'Proposta non trovata o scaduta.'});
+    }
+
+    const session=sessionResult.rows[0];
+    if(session.contract_token!==contractToken){
+      await client.query('ROLLBACK');
+      return res.status(409).json({error:'Il contratto non corrisponde alla proposta.'});
+    }
+
+    if(session.status==='accepted' || session.status==='expired'){
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        error:session.status==='accepted'
+          ?'La proposta è già stata accettata.'
+          :'La proposta è scaduta.'
+      });
+    }
+
+    const packageResult=await client.query(
+      `SELECT code,name,description,reason,price_cents,deposit_percent,
+              included_hours,min_guests,max_guests,max_distance_km,
+              features,sort_order
+       FROM wte_service_packages
+       WHERE code=$1 AND active=TRUE`,
+      [packageCode]
+    );
+
+    if(!packageResult.rowCount){
+      await client.query('ROLLBACK');
+      return res.status(404).json({error:'Pacchetto non disponibile.'});
+    }
+
+    const selected=packageResult.rows[0];
+
+    const contractResult=await client.query(
+      `SELECT token,status
+       FROM wte_contracts
+       WHERE token=$1 AND sales_token=$2
+       FOR UPDATE`,
+      [contractToken,salesToken]
+    );
+
+    if(!contractResult.rowCount){
+      await client.query('ROLLBACK');
+      return res.status(404).json({error:'Contratto della proposta non trovato.'});
+    }
+
+    if(contractResult.rows[0].status!=='draft'){
+      await client.query('ROLLBACK');
+      return res.status(409).json({error:'Il contratto non è più modificabile.'});
+    }
+
+    await client.query(
+      `UPDATE wte_sales_sessions
+       SET package_code=$2,status='contract_ready',updated_at=NOW()
+       WHERE token=$1`,
+      [salesToken,selected.code]
+    );
+
+    await client.query(
+      `UPDATE wte_contracts
+       SET package_code=$2,package_snapshot=$3::jsonb,updated_at=NOW()
+       WHERE token=$1`,
+      [contractToken,selected.code,JSON.stringify(selected)]
+    );
+
+    await client.query('COMMIT');
+
+    return res.json({
+      ok:true,
+      salesToken,
+      contractToken,
+      contractUrl:salesPublicUrl(contractToken),
+      draftPdf:absoluteApiUrl(contractPdfUrl(contractToken)),
+      package:{
+        code:selected.code,
+        name:selected.name,
+        description:selected.description,
+        reason:selected.reason,
+        priceCents:selected.price_cents,
+        priceLabel:selected.price_cents?euroFromCents(selected.price_cents):'Su misura',
+        depositPercent:selected.deposit_percent,
+        includedHours:Number(selected.included_hours),
+        minGuests:selected.min_guests,
+        maxGuests:selected.max_guests,
+        maxDistanceKm:selected.max_distance_km,
+        features:selected.features||[]
+      }
+    });
+  }catch(error){
+    try{ await client.query('ROLLBACK'); }catch{}
+    console.error('Select package error',error);
+    return res.status(500).json({error:'Non è stato possibile selezionare il pacchetto.'});
+  }finally{
+    client.release();
+  }
 });
 
 app.get('/api/public/contracts/:token', async (req,res) => {
