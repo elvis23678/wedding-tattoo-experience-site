@@ -2093,6 +2093,21 @@ app.get('/api/guest-events/:token/pdf', auth, async (req,res) => {
   );
 });
 
+// PDF finale invitati accessibile agli sposi tramite token pubblico non indovinabile.
+app.get('/api/public/guest-event/:token/pdf', async (req,res) => {
+  await finalizeGuestEventIfDue(req.params.token);
+  const result=await pool.query(
+    `SELECT practice_id,status FROM wte_guest_events WHERE token=$1`,
+    [req.params.token]
+  );
+  if(!result.rowCount)return res.status(404).json({error:'Evento invitati non trovato.'});
+  if(result.rows[0].status!=='finalized' && !STRIPE_ONE_EURO_TEST){
+    return res.status(409).json({error:'La votazione non è ancora chiusa.'});
+  }
+  return pdfEngine.render('flash_selection',result.rows[0].practice_id,{res});
+});
+
+
 app.get('/api/public/guest-event/:token', async (req,res) => {
   // Durante il collaudo da 1 € lasciamo aperta anche una votazione già scaduta,
   // così possiamo provare realmente la scelta flash senza alterare la regola
@@ -2298,7 +2313,7 @@ async function paymentPlanByToken(token) {
             deposit_receipt_url,balance_receipt_url,
             stripe_deposit_session_id,stripe_balance_session_id,stripe_customer_id,
             reminder_30_sent_at,reminder_7_sent_at,created_at,updated_at
-     FROM wte_payment_plans WHERE token=$1`,
+     FROM wte_payment_plans WHERE token=$1 OR couple_token=$1`,
     [token]
   );
   return result.rows[0] || null;
@@ -4911,6 +4926,14 @@ app.get('/api/public/couple/:token', async (req,res) => {
   const contract=practice.contract || {};
   const guestOpen=bundle.deposit_status==='paid' && Boolean(bundle.guest_token);
   const finalCodes=Array.isArray(bundle.final_codes)?bundle.final_codes:[];
+  let guestQrDataUrl='';
+  if(guestOpen && bundle.guest_token){
+    try{
+      guestQrDataUrl=await QRCode.toDataURL(guestPublicUrl(bundle.guest_token),{width:640,margin:2});
+    }catch(error){
+      console.error('Area Sposi QR generation error',error.message);
+    }
+  }
 
   const steps=[
     {
@@ -4970,7 +4993,7 @@ app.get('/api/public/couple/:token', async (req,res) => {
       balancePaidAt:bundle.balance_paid_at,
       depositPaymentUrl:bundle.deposit_payment_url,
       balancePaymentUrl:bundle.balance_payment_url,
-      contractPdf:contract.pdfUrl || '',
+      contractPdf:contract.token ? absoluteApiUrl(contractPdfUrl(contract.token)) : (contract.pdfUrl || ''),
       depositReceiptUrl:bundle.deposit_receipt_url || '',
       balanceReceiptUrl:bundle.balance_receipt_url || '',
       coupleUrl:couplePublicUrl(bundle.couple_token || bundle.token),
@@ -4984,12 +5007,12 @@ app.get('/api/public/couple/:token', async (req,res) => {
       finalCount:finalCodes.length,
       closesAt:bundle.closes_at,
       catalogUrl:guestOpen?guestPublicUrl(bundle.guest_token):'',
-      qrUrl:guestOpen
-        ?`https://wte-cloud-api.onrender.com/api/public/guest-event/${bundle.guest_token}/qr.svg`
-        :'',
+      qrUrl:guestQrDataUrl || (guestOpen
+        ?`${PUBLIC_API_URL}/api/public/guest-event/${bundle.guest_token}/qr.svg`
+        :''),
       finalPdf:
         bundle.guest_status==='finalized'
-          ?`https://wte-cloud-api.onrender.com/api/guest-events/${bundle.guest_token}/pdf`
+          ?`${PUBLIC_API_URL}/api/public/guest-event/${bundle.guest_token}/pdf`
           :''
     },
     steps
