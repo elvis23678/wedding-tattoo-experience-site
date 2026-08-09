@@ -4763,6 +4763,7 @@ async function coupleBundleByToken(token) {
             pp.total_cents,pp.deposit_cents,pp.balance_cents,
             pp.deposit_due_at,pp.balance_due_at,
             pp.deposit_payment_url,pp.balance_payment_url,
+            pp.stripe_deposit_session_id,pp.stripe_balance_session_id,
             pp.deposit_status,pp.balance_status,
             pp.deposit_paid_at,pp.balance_paid_at,
             pp.deposit_receipt_url,pp.balance_receipt_url,
@@ -4816,6 +4817,71 @@ app.get('/api/public/couple/:token', async (req,res) => {
   let bundle=await coupleBundleByToken(req.params.token);
   if(!bundle){
     return res.status(404).json({error:'Area Sposi non trovata.'});
+  }
+
+  // Riconciliazione automatica anche entrando direttamente nell'Area Sposi:
+  // serve se il cliente ha chiuso la pagina di successo o il webhook Stripe
+  // è arrivato in ritardo. Non richiede un secondo pagamento.
+  if(
+    stripe &&
+    bundle.deposit_status!=='paid' &&
+    bundle.stripe_deposit_session_id
+  ){
+    try{
+      const session=await stripe.checkout.sessions.retrieve(
+        String(bundle.stripe_deposit_session_id)
+      );
+
+      if(session.payment_status==='paid'){
+        let receiptUrl='';
+        let providerReference=String(session.payment_intent||session.id);
+
+        if(session.payment_intent){
+          try{
+            const paymentIntent=await stripe.paymentIntents.retrieve(
+              String(session.payment_intent),
+              {expand:['latest_charge']}
+            );
+            const charge=paymentIntent.latest_charge;
+            if(charge && typeof charge!=='string'){
+              receiptUrl=String(charge.receipt_url||'');
+              providerReference=String(charge.id||paymentIntent.id);
+            }
+          }catch(error){
+            console.error('Area Sposi Stripe receipt reconciliation error',error.message);
+          }
+        }
+
+        await applyPaidPayment({
+          practiceId:bundle.practice_id,
+          paymentType:'deposit',
+          amountCents:Number(session.amount_total||0),
+          provider:'stripe',
+          reference:providerReference,
+          receiptUrl,
+          eventKey:`stripe-session-reconcile:${session.id}`,
+          occurredAt:new Date(),
+          payload:{
+            checkoutSessionId:session.id,
+            paymentIntentId:String(session.payment_intent||''),
+            reconciliation:true,
+            source:'couple-area'
+          }
+        });
+
+        await dateAvailability.confirmForPractice(bundle.practice_id,{
+          provider:'stripe',
+          checkoutSessionId:session.id,
+          reconciliation:true,
+          source:'couple-area'
+        });
+
+        bundle=await coupleBundleByToken(req.params.token);
+      }
+    }catch(error){
+      // L'Area Sposi deve comunque aprirsi anche se Stripe è momentaneamente irraggiungibile.
+      console.error('Area Sposi Stripe reconciliation error',error.message);
+    }
   }
 
   await syncBookingStatus(bundle.practice_id);
