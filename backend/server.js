@@ -4156,6 +4156,21 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
         features:selected.features||[]
       }
     },
+    // Alternative disponibili per la scelta libera del cliente.
+    // Il pacchetto raccomandato resta nella card principale e qui mostriamo gli altri.
+    packages:packages
+      .filter(item=>item.code!==selected.code)
+      .map(item=>({
+        code:item.code,
+        name:item.name,
+        description:item.description,
+        reason:item.reason,
+        priceCents:item.price_cents,
+        priceLabel:item.price_cents?euroFromCents(item.price_cents):'Su misura',
+        depositPercent:item.deposit_percent,
+        includedHours:Number(item.included_hours),
+        features:item.features||[]
+      })),
     ai:{
       enabled:Boolean(OPENAI_API_KEY),
       used:Boolean(recommendation.aiUsed),
