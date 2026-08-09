@@ -117,6 +117,9 @@ async function startCheckout(type){
   method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type})
  });
  const data=await response.json().catch(()=>({}));
+ if(data.testMode){
+  $('testModeBanner').hidden=false;
+ }
  if(!response.ok)throw new Error(data.error||'Impossibile avviare il pagamento.');
  if(!data.checkoutUrl)throw new Error('Link di pagamento non disponibile.');
  location.href=data.checkoutUrl;

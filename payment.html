@@ -84,6 +84,9 @@ h1{margin:9px 0 6px;font-family:var(--serif);font-size:clamp(40px,10vw,62px);fon
 <body>
 <main>
 <div class="brand">Wedding Tattoo Experience</div>
+<div id="testModeBanner" hidden style="margin:0 0 14px;padding:10px 12px;border:1px solid rgba(221,181,96,.45);background:rgba(221,181,96,.08);color:#f0d79c;font-size:12px;line-height:1.45;text-align:center">
+<strong>MODALITÀ COLLAUDO</strong><br>Stripe addebiterà 1,00 € per ogni pagamento. Il gestionale simulerà gli importi reali.
+</div>
 <h1>Riservate la vostra data</h1>
 <p class="intro">Un ultimo passaggio per riservare definitivamente la data del vostro matrimonio.</p>
 <div class="journey">
@@ -164,6 +167,9 @@ async function startCheckout(type,button){
    }
   );
   const data=await response.json().catch(()=>({}));
+ if(data.testMode){
+  $('testModeBanner').hidden=false;
+ }
   if(!response.ok){
    if(data.code==='DATE_NOT_AVAILABLE'||data.code==='DATE_HOLD_MISSING'||data.code==='DATE_HOLD_EXPIRED'){
     throw new Error('La data non è più disponibile. Nessun pagamento è stato effettuato.');
