@@ -41,6 +41,8 @@ const PUBLIC_API_URL = (process.env.PUBLIC_API_URL || 'https://wte-cloud-api.onr
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const STRIPE_CURRENCY = String(process.env.STRIPE_CURRENCY || 'eur').toLowerCase();
+// TEST TEMPORANEO: forza SOLO l'acconto Stripe a 1,00 €. Da rimuovere dopo il collaudo.
+const STRIPE_ONE_EURO_TEST = true;
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 if (!JWT_SECRET || !ADMIN_PASSWORD || !DATABASE_URL) {
@@ -2907,9 +2909,12 @@ async function createStripeCheckoutSession(plan,paymentType) {
   }
 
   const type=paymentType==='balance'?'balance':'deposit';
-  const amount=type==='deposit'
+  const realAmount=type==='deposit'
     ?Number(plan.deposit_cents||0)
     :Number(plan.balance_cents||0);
+  const amount=(STRIPE_ONE_EURO_TEST && type==='deposit')
+    ?100
+    :realAmount;
 
   const status=type==='deposit'
     ?plan.deposit_status
@@ -2929,7 +2934,7 @@ async function createStripeCheckoutSession(plan,paymentType) {
 
   const contact=await practiceContact(plan.practice_id);
   const label=type==='deposit'
-    ?'Acconto Wedding Tattoo Experience'
+    ?(STRIPE_ONE_EURO_TEST?'TEST 1€ · Acconto Wedding Tattoo Experience':'Acconto Wedding Tattoo Experience')
     :'Saldo Wedding Tattoo Experience';
 
   const session=await stripe.checkout.sessions.create({
@@ -2957,13 +2962,17 @@ async function createStripeCheckoutSession(plan,paymentType) {
     metadata:{
       practiceId:plan.practice_id,
       paymentType:type,
-      paymentToken:plan.token
+      paymentToken:plan.token,
+      testOneEuro:STRIPE_ONE_EURO_TEST && type==='deposit' ? 'true' : 'false',
+      realAmountCents:String(realAmount)
     },
     payment_intent_data:{
       metadata:{
         practiceId:plan.practice_id,
         paymentType:type,
-        paymentToken:plan.token
+        paymentToken:plan.token,
+        testOneEuro:STRIPE_ONE_EURO_TEST && type==='deposit' ? 'true' : 'false',
+        realAmountCents:String(realAmount)
       }
     }
   });
