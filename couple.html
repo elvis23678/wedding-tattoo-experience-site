@@ -111,6 +111,16 @@ function daysUntil(value){
  return Math.ceil((target-Date.now())/86400000);
 }
 function link(url,label,gold=false){return url?`<a ${gold?'class="gold"':''} href="${url}" target="_blank" rel="noopener">${label}</a>`:''}
+function actionButton(id,label,gold=false){return `<a href="#" id="${id}" ${gold?'class="gold"':''}>${label}</a>`}
+async function startCheckout(type){
+ const response=await fetch(`${API}/api/public/payment-plan/${encodeURIComponent(token||'')}/checkout`,{
+  method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type})
+ });
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||'Impossibile avviare il pagamento.');
+ if(!data.checkoutUrl)throw new Error('Link di pagamento non disponibile.');
+ location.href=data.checkoutUrl;
+}
 async function load(){
  removeDuplicateDocumentPanels();
  WTEAnalytics?.track('couple_area_opened');
@@ -133,11 +143,15 @@ async function load(){
  $('timeline').innerHTML=data.steps.map(s=>`<article class="${s.status}"><span>${s.status==='done'?'✓':s.status==='current'?'●':'○'}</span><strong>${s.label}</strong></article>`).join('');
  $('payments').innerHTML=`<p>Acconto: <strong>${euro(b.depositCents)}</strong> · ${b.depositStatus==='paid'?'ricevuto':'in attesa'}</p><p>Saldo: <strong>${euro(b.balanceCents)}</strong> · ${b.balanceStatus==='paid'?'ricevuto':'in attesa'}</p>`;
  $('paymentActions').innerHTML=
-   (b.depositStatus!=='paid'?link(b.depositPaymentUrl,'Paga l’acconto',true):'')+
-   (b.depositStatus==='paid'&&b.balanceStatus!=='paid'?link(b.balancePaymentUrl,'Paga il saldo',true):'');
+   (b.depositStatus!=='paid'?actionButton('payDeposit','Paga l’acconto',true):'')+
+   (b.depositStatus==='paid'&&b.balanceStatus!=='paid'?actionButton('payBalance','Paga il saldo',true):'');
+ const payDeposit=$('payDeposit');
+ if(payDeposit)payDeposit.onclick=async e=>{e.preventDefault();payDeposit.textContent='Apertura pagamento…';try{await startCheckout('deposit')}catch(err){alert(err.message);payDeposit.textContent='Paga l’acconto'}};
+ const payBalance=$('payBalance');
+ if(payBalance)payBalance.onclick=async e=>{e.preventDefault();payBalance.textContent='Apertura pagamento…';try{await startCheckout('balance')}catch(err){alert(err.message);payBalance.textContent='Paga il saldo'}};
  $('flashMetric').textContent=g.status==='finalized'?`${g.finalCount} flash`:`${g.uniqueFlash} preferenze`;
  $('flashText').textContent=g.enabled?`Catalogo aperto${g.closesAt?' fino al '+new Date(g.closesAt).toLocaleDateString('it-IT'):''}. Condividete il QR con gli invitati.`:'La selezione sarà disponibile dopo la registrazione dell’acconto.';
- if(g.qrUrl){$('qr').src=g.qrUrl;$('qr').hidden=false}
+ if(g.qrUrl){$('qr').src=g.qrUrl;$('qr').hidden=false;$('qr').onerror=()=>{$('qr').hidden=true;$('flashText').textContent+=' Il QR non è visualizzabile, ma il link invitati qui sotto resta attivo.'}}
  $('guestActions').innerHTML=
    link(g.catalogUrl,'Apri catalogo invitati',true)+
    (g.catalogUrl?'<a href="#" id="copyGuestLink">Copia link per gli invitati</a>':'')+
