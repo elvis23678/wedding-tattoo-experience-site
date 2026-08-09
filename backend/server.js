@@ -243,6 +243,24 @@ app.post(
             ?Number(session.metadata?.logicalAmountCents||session.amount_total||0)
             :Number(session.amount_total||0);
 
+        if(paymentType==='balance'){
+          const metadataInstallmentCount=Number(session.metadata?.installmentCount||1);
+          if(metadataInstallmentCount>1){
+            await pool.query(
+              `UPDATE wte_practices
+               SET data=jsonb_set(
+                 COALESCE(data,'{}'::jsonb),
+                 '{payments,installmentCount}',
+                 $2::jsonb,
+                 true
+               ),
+               updated_at=NOW()
+               WHERE id=$1`,
+              [practiceId,JSON.stringify(metadataInstallmentCount)]
+            );
+          }
+        }
+
         await applyPaidPayment({
           practiceId,
           paymentType,
@@ -2449,7 +2467,7 @@ async function updatePracticePaymentSummary(practiceId,plan) {
      SET data=jsonb_set(
        COALESCE(data,'{}'::jsonb),
        '{payments}',
-       $2::jsonb,
+       COALESCE(data->'payments','{}'::jsonb) || $2::jsonb,
        TRUE
      ),
      updated_at=NOW()
@@ -3007,12 +3025,59 @@ app.post('/api/public/payment-plan/:token/installments', async (req,res)=>{
     return res.status(400).json({error:`Per questa data puoi scegliere da 1 a ${max} pagamenti.`});
   }
   const paid=await balancePaidCents(plan.practice_id);
-  if(paid>0)return res.status(409).json({error:'Il piano non può essere modificato dopo il primo pagamento del saldo.'});
+  const practiceResult=await pool.query(
+    'SELECT data FROM wte_practices WHERE id=$1',
+    [plan.practice_id]
+  );
+  const currentCount=Number(
+    practiceResult.rows[0]?.data?.payments?.installmentCount||1
+  );
+
+  // Regola normale: dopo la prima rata il piano non si cambia.
+  // Eccezione di recupero: nelle pratiche colpite dal vecchio bug,
+  // installmentCount è tornato a 1 pur avendo già una rata registrata.
+  // In quel caso consentiamo di ripristinare il numero totale di rate.
+  const recoveryMode=paid>0 && currentCount<=1;
+
+  if(paid>0 && !recoveryMode){
+    return res.status(409).json({
+      error:'Il piano non può essere modificato dopo il primo pagamento del saldo.'
+    });
+  }
+
+  const paidCount=Number((await pool.query(
+    `SELECT COUNT(*)::int AS count
+     FROM wte_payment_events
+     WHERE practice_id=$1
+       AND payment_type='balance'
+       AND status='paid'`,
+    [plan.practice_id]
+  )).rows[0]?.count||0);
+
+  if(parsed.data.count<=paidCount){
+    return res.status(400).json({
+      error:`Hai già effettuato ${paidCount} pagamento${paidCount===1?'':'i'}: scegli un numero totale di rate superiore.`
+    });
+  }
+
   await pool.query(
-    `UPDATE wte_practices SET data=jsonb_set(COALESCE(data,'{}'::jsonb),'{payments,installmentCount}',$2::jsonb,true),updated_at=NOW() WHERE id=$1`,
+    `UPDATE wte_practices
+     SET data=jsonb_set(
+       COALESCE(data,'{}'::jsonb),
+       '{payments,installmentCount}',
+       $2::jsonb,
+       true
+     ),
+     updated_at=NOW()
+     WHERE id=$1`,
     [plan.practice_id,JSON.stringify(parsed.data.count)]
   );
-  return res.json({ok:true,count:parsed.data.count,max});
+  return res.json({
+    ok:true,
+    count:parsed.data.count,
+    max,
+    recovered:recoveryMode
+  });
 });
 
 async function createStripeCheckoutSession(plan,paymentType) {
@@ -3088,7 +3153,9 @@ async function createStripeCheckoutSession(plan,paymentType) {
       protectedTest:protectedTest ? 'true' : 'false',
       chargedAmountCents:String(amount),
       logicalAmountCents:String(logicalAmount),
-      realAmountCents:String(realAmount)
+      realAmountCents:String(realAmount),
+      installmentCount:String(settings?.count||1),
+      installmentNumber:String(type==='balance' ? ((settings?.paidCount||0)+1) : 0)
     },
     payment_intent_data:{
       metadata:{
@@ -3099,7 +3166,9 @@ async function createStripeCheckoutSession(plan,paymentType) {
         protectedTest:protectedTest ? 'true' : 'false',
         chargedAmountCents:String(amount),
         logicalAmountCents:String(logicalAmount),
-        realAmountCents:String(realAmount)
+        realAmountCents:String(realAmount),
+        installmentCount:String(settings?.count||1),
+        installmentNumber:String(type==='balance' ? ((settings?.paidCount||0)+1) : 0)
       }
     }
   });
@@ -3220,6 +3289,24 @@ app.get('/api/public/stripe-session/:sessionId', async (req,res) => {
         session.metadata?.protectedTest==='true'
           ?Number(session.metadata?.logicalAmountCents||session.amount_total||0)
           :Number(session.amount_total||0);
+
+      if(paymentType==='balance'){
+        const metadataInstallmentCount=Number(session.metadata?.installmentCount||1);
+        if(metadataInstallmentCount>1){
+          await pool.query(
+            `UPDATE wte_practices
+             SET data=jsonb_set(
+               COALESCE(data,'{}'::jsonb),
+               '{payments,installmentCount}',
+               $2::jsonb,
+               true
+             ),
+             updated_at=NOW()
+             WHERE id=$1`,
+            [practiceId,JSON.stringify(metadataInstallmentCount)]
+          );
+        }
+      }
 
       await applyPaidPayment({
         practiceId,
