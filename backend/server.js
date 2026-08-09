@@ -3015,6 +3015,86 @@ async function installmentSettings(practiceId,plan){
   return {count,max,paid,remaining,paidCount,remainingCount};
 }
 
+
+app.post('/api/admin/test-payments/:practiceId/prepare-final-installment', auth, adminOnly, async (req,res)=>{
+  const practiceId=String(req.params.practiceId||'').trim();
+  const plan=await paymentPlanByPractice(practiceId);
+  if(!plan)return res.status(404).json({error:'Piano pagamenti non trovato.'});
+
+  const contact=await practiceContact(practiceId);
+  if(String(contact?.email||'').trim().toLowerCase()!==WTE_TEST_PAYMENT_EMAIL){
+    return res.status(403).json({error:'Funzione disponibile esclusivamente per la pratica di collaudo.'});
+  }
+  if(plan.deposit_status!=='paid')return res.status(409).json({error:'Prima deve risultare pagato l’acconto di collaudo.'});
+  if(plan.balance_status==='paid')return res.status(409).json({error:'Il saldo risulta già completato.'});
+
+  const settings=await installmentSettings(practiceId,plan);
+  if(settings.count<2)return res.status(409).json({error:'Prima seleziona un piano rateale nell’Area Sposi.'});
+  if(settings.paidCount<1)return res.status(409).json({error:'Paga prima almeno una rata di collaudo da 1 €.'});
+  if(settings.paidCount>=settings.count-1){
+    return res.json({ok:true,alreadyReady:true,installmentCount:settings.count,paidCount:settings.paidCount,remainingCents:settings.remaining,message:'La pratica è già pronta per l’ultima rata.'});
+  }
+
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    let paidCount=settings.paidCount;
+    let paidCents=settings.paid;
+    const balanceCents=Number(plan.balance_cents||0);
+
+    while(paidCount<settings.count-1){
+      const remaining=Math.max(0,balanceCents-paidCents);
+      const remainingPayments=Math.max(1,settings.count-paidCount);
+      const logicalAmount=Math.min(remaining,Math.ceil(remaining/remainingPayments));
+      const installmentNumber=paidCount+1;
+      const eventKey=`admin-final-test:${practiceId}:${settings.count}:${installmentNumber}`;
+      const existing=await client.query('SELECT id FROM wte_payment_events WHERE event_key=$1',[eventKey]);
+
+      if(!existing.rowCount){
+        await client.query(
+          `INSERT INTO wte_payment_events
+           (event_key,practice_id,payment_type,status,amount_cents,currency,
+            provider,provider_reference,receipt_url,payload,occurred_at)
+           VALUES ($1,$2,'balance','paid',$3,$4,'test-simulation',$5,'',$6::jsonb,NOW())`,
+          [
+            eventKey,practiceId,logicalAmount,plan.currency||'EUR',
+            `SIMULATED_${installmentNumber}_OF_${settings.count}`,
+            JSON.stringify({protectedTest:true,simulated:true,installmentNumber,installmentCount:settings.count,reason:'prepare_final_installment'})
+          ]
+        );
+      }
+      paidCents+=logicalAmount;
+      paidCount++;
+    }
+
+    await client.query(
+      `UPDATE wte_payment_plans
+       SET balance_status='pending',balance_paid_at=NULL,updated_at=NOW()
+       WHERE practice_id=$1`,
+      [practiceId]
+    );
+    await client.query('COMMIT');
+  }catch(error){
+    await client.query('ROLLBACK');
+    throw error;
+  }finally{client.release()}
+
+  const updated=await paymentPlanByPractice(practiceId);
+  await updatePracticePaymentSummary(practiceId,updated);
+  const finalSettings=await installmentSettings(practiceId,updated);
+  await logActivity(req,'Collaudo preparato per ultima rata',practiceId,{
+    installmentCount:finalSettings.count,paidCount:finalSettings.paidCount,remainingCents:finalSettings.remaining
+  });
+
+  res.json({
+    ok:true,
+    installmentCount:finalSettings.count,
+    paidCount:finalSettings.paidCount,
+    remainingCents:finalSettings.remaining,
+    message:`Pratica pronta: ${finalSettings.paidCount}/${finalSettings.count}. Ora paga solo l’ultima rata di collaudo.`
+  });
+});
+
 app.post('/api/public/payment-plan/:token/installments', async (req,res)=>{
   const plan=await paymentPlanByToken(req.params.token);
   if(!plan)return res.status(404).json({error:'Link pagamento non valido.'});
