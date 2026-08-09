@@ -2094,12 +2094,24 @@ app.get('/api/guest-events/:token/pdf', auth, async (req,res) => {
 });
 
 app.get('/api/public/guest-event/:token', async (req,res) => {
-  await finalizeGuestEventIfDue(req.params.token);
+  // Durante il collaudo da 1 € lasciamo aperta anche una votazione già scaduta,
+  // così possiamo provare realmente la scelta flash senza alterare la regola
+  // definitiva dei 15 giorni. Tornando STRIPE_ONE_EURO_TEST=false,
+  // il comportamento normale viene ripristinato automaticamente.
+  if(!STRIPE_ONE_EURO_TEST){
+    await finalizeGuestEventIfDue(req.params.token);
+  }
 
   const result=await pool.query(
-    `SELECT token,practice_id,event_date,closes_at,max_flash,status,final_codes,
-            finalized_at
-     FROM wte_guest_events WHERE token=$1`,
+    `SELECT ge.token,ge.practice_id,ge.event_date,ge.closes_at,ge.max_flash,
+            ge.status,ge.final_codes,ge.finalized_at,
+            COALESCE(p.data->>'name','') AS customer_name,
+            COALESCE(p.data->>'partner1','') AS partner1,
+            COALESCE(p.data->>'partner2','') AS partner2,
+            COALESCE(p.data->>'location','') AS location
+     FROM wte_guest_events ge
+     LEFT JOIN wte_practices p ON p.id=ge.practice_id
+     WHERE ge.token=$1`,
     [req.params.token]
   );
   if(!result.rowCount){
@@ -2114,9 +2126,14 @@ app.get('/api/public/guest-event/:token', async (req,res) => {
       eventDate:event.event_date,
       closesAt:event.closes_at,
       maxFlash:event.max_flash,
-      status:event.status,
+      status:STRIPE_ONE_EURO_TEST?'open':event.status,
       finalizedAt:event.finalized_at,
-      finalCount:Array.isArray(event.final_codes)?event.final_codes.length:0
+      finalCount:Array.isArray(event.final_codes)?event.final_codes.length:0,
+      customerName:event.customer_name||'',
+      partner1:event.partner1||'',
+      partner2:event.partner2||'',
+      location:event.location||'',
+      testMode:Boolean(STRIPE_ONE_EURO_TEST)
     },
     stats
   });
@@ -2173,15 +2190,18 @@ app.post('/api/public/guest-event/:token/vote', publicRateLimit, async (req,res)
   }
 
   let event=eventResult.rows[0];
-  if(event.status==='open' && new Date(event.closes_at)<=new Date()){
-    await finalizeGuestEvent(req.params.token,'vote-deadline');
-    event.status='finalized';
-  }
 
-  if(event.status!=='open'){
-    return res.status(409).json({
-      error:'La selezione degli invitati è chiusa.'
-    });
+  if(!STRIPE_ONE_EURO_TEST){
+    if(event.status==='open' && new Date(event.closes_at)<=new Date()){
+      await finalizeGuestEvent(req.params.token,'vote-deadline');
+      event.status='finalized';
+    }
+
+    if(event.status!=='open'){
+      return res.status(409).json({
+        error:'La selezione degli invitati è chiusa.'
+      });
+    }
   }
 
   const flashResult=await pool.query(
