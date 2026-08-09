@@ -97,6 +97,13 @@ h1{margin:9px 0 6px;font-family:var(--serif);font-size:clamp(40px,10vw,62px);fon
 const API='https://wte-cloud-api.onrender.com';
 const token=new URLSearchParams(location.search).get('token');
 const $=id=>document.getElementById(id);
+
+function removeDuplicateDocumentPanels(){
+ const panels=[...document.querySelectorAll('.panel')].filter(panel=>
+  panel.querySelector('h2')?.textContent.trim().toLowerCase()==='documenti'
+ );
+ panels.slice(1).forEach(panel=>panel.remove());
+}
 const euro=v=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(v||0)/100);
 function daysUntil(value){
  const target=value?new Date(`${value}T12:00:00`):null;
@@ -105,6 +112,7 @@ function daysUntil(value){
 }
 function link(url,label,gold=false){return url?`<a ${gold?'class="gold"':''} href="${url}" target="_blank" rel="noopener">${label}</a>`:''}
 async function load(){
+ removeDuplicateDocumentPanels();
  WTEAnalytics?.track('couple_area_opened');
  const response=await fetch(`${API}/api/public/couple/${encodeURIComponent(token||'')}`,{cache:'no-store'});
  const data=await response.json().catch(()=>({}));
