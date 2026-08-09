@@ -12,7 +12,7 @@ header{position:sticky;top:0;z-index:10;padding:12px 14px;background:rgba(7,5,3,
 header small{color:var(--gold);font-size:9px;letter-spacing:.16em;text-transform:uppercase}
 header h1{margin:5px 0 2px;font-family:Georgia,serif;font-size:25px;font-weight:400}
 header p{margin:0;color:var(--muted);font-size:11px}.chosen{color:var(--ok)!important}
-main{max-width:1120px;margin:auto;padding:12px}.notice{padding:12px;border:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.5}
+main{max-width:1120px;margin:auto;padding:12px}.event-intro{position:relative;overflow:hidden;margin-bottom:12px;padding:34px 18px 28px;border:1px solid rgba(211,166,79,.42);background:radial-gradient(circle at 50% 10%,rgba(211,166,79,.16),transparent 38%),linear-gradient(145deg,#171008,#090604 72%);text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.28)}.event-intro:before,.event-intro:after{content:"";position:absolute;width:90px;height:90px;border:1px solid rgba(211,166,79,.22);transform:rotate(45deg)}.event-intro:before{top:-55px;left:-55px}.event-intro:after{right:-55px;bottom:-55px}.event-intro small{display:block;color:var(--gold);font-size:9px;letter-spacing:.24em;text-transform:uppercase}.rings{position:relative;width:70px;height:42px;margin:18px auto 14px}.ring{position:absolute;top:2px;width:38px;height:38px;border:1.5px solid #d8b76d;border-radius:50%;box-shadow:0 0 18px rgba(211,166,79,.08)}.ring:first-child{left:8px}.ring:last-child{right:8px}.monogram{margin:0 0 5px;color:#ead29b;font-family:Georgia,serif;font-size:14px;letter-spacing:.28em}.event-intro h2{margin:8px 0 4px;font-family:Georgia,serif;font-size:36px;font-weight:400;line-height:1.05}.event-date{margin:10px 0 3px!important;color:#e7c77e!important;font-family:Georgia,serif;font-size:19px!important;line-height:1.3!important}.event-place{margin:0 0 18px!important;color:var(--muted)!important;font-size:11px!important;letter-spacing:.16em;text-transform:uppercase}.ornament{display:flex;align-items:center;gap:10px;max-width:250px;margin:18px auto}.ornament:before,.ornament:after{content:"";height:1px;flex:1;background:linear-gradient(90deg,transparent,var(--gold))}.ornament:after{background:linear-gradient(90deg,var(--gold),transparent)}.ornament span{color:var(--gold);font-size:12px}.event-intro .memory-title{margin:0 0 8px;color:var(--text);font-family:Georgia,serif;font-size:20px}.event-intro .memory-copy{max-width:620px;margin:0 auto;color:var(--muted);font-size:13px;line-height:1.65}.motto{margin-top:22px;color:#d4b46c;font-size:9px;letter-spacing:.28em;text-transform:uppercase}.notice{padding:12px;border:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.5}
 .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.toolbar input,.toolbar select{min-height:45px;padding:0 10px;border:1px solid var(--line);background:#0d0906;color:#fff}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:11px}.card{padding:7px;border:1px solid var(--line);background:var(--card)}.card.selected{outline:2px solid var(--gold)}
 .card img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff}.card strong{display:block;margin-top:7px;font-size:13px}.card span{display:block;min-height:28px;margin-top:3px;color:var(--muted);font-size:11px}
@@ -30,7 +30,19 @@ main{max-width:1120px;margin:auto;padding:12px}.notice{padding:12px;border:1px s
 <p id="headerStatus">Caricamento del catalogo…</p>
 </header>
 <main>
-<div class="notice" id="notice">Apri un flash e seleziona la tua preferenza. Potrai cambiarla fino alla chiusura della votazione.</div>
+<section class="event-intro" id="eventIntro" hidden>
+  <small>Wedding Tattoo Experience</small>
+  <div class="rings" aria-hidden="true"><i class="ring"></i><i class="ring"></i></div>
+  <div class="monogram" id="eventMonogram"></div>
+  <h2 id="eventTitle"></h2>
+  <p class="event-date" id="eventDate"></p>
+  <p class="event-place" id="eventPlace"></p>
+  <div class="ornament" aria-hidden="true"><span>✦</span></div>
+  <div class="memory-title">Lasciate un segno nel nostro giorno.</div>
+  <p class="memory-copy" id="eventMessage"></p>
+  <div class="motto">Love. Marked. Forever.</div>
+</section>
+<div class="notice" id="notice">Scegli il flash che preferisci. Dopo averlo selezionato, conferma la tua scelta in fondo allo schermo.</div>
 <div class="toolbar">
 <input id="search" type="search" placeholder="Cerca codice o soggetto">
 <select id="category"><option value="">Tutte le categorie</option></select>
@@ -64,6 +76,32 @@ async function json(url,options={}){
  if(!response.ok)throw new Error(data.error||`Errore ${response.status}`);
  return data;
 }
+function formatEventDate(value){
+ const date=new Date(value);
+ if(Number.isNaN(date.getTime()))return '';
+ return new Intl.DateTimeFormat('it-IT',{
+  day:'numeric',month:'long',year:'numeric'
+ }).format(date);
+}
+function renderEventIntro(){
+ const partner1=String(eventData?.partner1||'').trim();
+ const partner2=String(eventData?.partner2||'').trim();
+ const fallback=String(eventData?.customerName||'').trim();
+ const names=partner1&&partner2 ? `${partner1} & ${partner2}` : (fallback||'Il nostro matrimonio');
+ const date=formatEventDate(eventData?.eventDate);
+ const location=String(eventData?.location||'').trim();
+ const initials=[partner1,partner2].filter(Boolean).map(v=>v.charAt(0).toUpperCase()).join(' · ');
+
+ $('eventIntro').hidden=false;
+ $('eventMonogram').textContent=initials;
+ $('eventTitle').textContent=names;
+ $('eventDate').textContent=date ? `si sposano il ${date}` : 'si sposano';
+ $('eventPlace').textContent=location;
+ $('eventMessage').textContent=
+  'Scegliete il tatuaggio che più vi rappresenta e che vorreste portare con voi come ricordo di questa giornata. '+
+  'La vostra preferenza contribuirà a creare la collezione di flash dedicata al nostro matrimonio.';
+}
+
 function categories(){
  const values=[...new Set(catalog.map(x=>x.category).filter(Boolean))].sort();
  $('category').innerHTML='<option value="">Tutte le categorie</option>'+
@@ -112,10 +150,14 @@ async function init(){
  catalog=catalogResponse.items||[];
  savedCode=voteResponse.vote?.flash_code||'';
  selectedCode=savedCode;
+ renderEventIntro();
  categories();render();
 
  const closeDate=new Date(eventData.closesAt).toLocaleDateString('it-IT');
- if(eventData.status==='finalized'){
+ if(eventData.testMode){
+  $('headerStatus').textContent='Selezione aperta · modalità collaudo';
+  $('notice').textContent='Scegli un flash e conferma la preferenza. In modalità collaudo la selezione resta aperta anche oltre la scadenza.';
+ }else if(eventData.status==='finalized'){
   $('headerStatus').textContent=`Votazione chiusa il ${closeDate}`;
   $('notice').textContent='La selezione dei flash per questo matrimonio è conclusa.';
  }else if(savedCode){

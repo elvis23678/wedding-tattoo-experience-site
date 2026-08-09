@@ -2253,10 +2253,14 @@ body.flow-open .backdrop{
       <section class="step active" data-step="0">
         <small>Iniziamo</small>
         <h2>Iniziamo da voi.</h2>
-        <p>Ci servirà soltanto un nome per personalizzare la proposta.</p>
+        <p>Inserite i vostri nomi: li useremo per personalizzare la proposta e la pagina ricordo dedicata agli invitati.</p>
         <label class="field">
-          Nome e cognome
-          <input name="name" required minlength="2" maxlength="180" autocomplete="name">
+          Nome sposo/a 1
+          <input name="partner1" required minlength="2" maxlength="80" autocomplete="given-name" placeholder="Es. Anna">
+        </label>
+        <label class="field">
+          Nome sposo/a 2
+          <input name="partner2" required minlength="2" maxlength="80" autocomplete="given-name" placeholder="Es. Mario">
         </label>
         <div class="smart-hint">Premi Invio per continuare</div>
       </section>
@@ -2541,7 +2545,7 @@ let holdToken=localStorage.getItem('wte_date_hold_token')||'';
 let recommendationData=null;
 let holdCountdownTimer=null;
 const FLOW_STORAGE_KEY='wte_release2_flow';
-const FLOW_STORAGE_VERSION=1;
+const FLOW_STORAGE_VERSION=2;
 let restoringFlow=false;
 let submissionInProgress=false;
 let lastSubmissionPayload=null;
@@ -2785,8 +2789,13 @@ function setLoadingFailed(id,text){
 function submissionPayload(){
   const raw=Object.fromEntries(new FormData(form));
 
+  const partner1=String(raw.partner1||'').trim();
+  const partner2=String(raw.partner2||'').trim();
+
   return {
-    name:raw.name,
+    name:[partner1,partner2].filter(Boolean).join(' & '),
+    partner1,
+    partner2,
     email:raw.email,
     phone:raw.phone,
     date:raw.date,
