@@ -141,14 +141,14 @@ async function load(){
         ?'Prossimo passo: completare il saldo entro la scadenza.'
         :'Tutto pronto per l’evento.';
  $('timeline').innerHTML=data.steps.map(s=>`<article class="${s.status}"><span>${s.status==='done'?'✓':s.status==='current'?'●':'○'}</span><strong>${s.label}</strong></article>`).join('');
- $('payments').innerHTML=`<p>Acconto: <strong>${euro(b.depositCents)}</strong> · ${b.depositStatus==='paid'?'ricevuto':'in attesa'}</p><p>Saldo: <strong>${euro(b.balanceCents)}</strong> · ${b.balanceStatus==='paid'?'ricevuto':'in attesa'}</p>`;
+ $('payments').innerHTML=`<p>Acconto: <strong>${euro(b.depositCents)}</strong> · ${b.depositStatus==='paid'?'ricevuto':'in attesa'}</p><p>Saldo residuo: <strong>${euro(b.balanceRemainingCents??b.balanceCents)}</strong> · ${b.balanceStatus==='paid'?'ricevuto':(Number(b.installmentCount||1)>1?`${b.installmentPaidCount||0}/${b.installmentCount} pagamenti effettuati`:'in attesa')}</p>${Number(b.installmentCount||1)>1&&b.balanceStatus!=='paid'?`<p>Prossima rata: <strong>${euro(b.installmentNextCents)}</strong></p>`:''}`;
  $('paymentActions').innerHTML=
    (b.depositStatus!=='paid'?actionButton('payDeposit','Paga l’acconto',true):'')+
-   (b.depositStatus==='paid'&&b.balanceStatus!=='paid'?actionButton('payBalance','Paga il saldo',true):'');
+   (b.depositStatus==='paid'&&b.balanceStatus!=='paid'?actionButton('payBalance',Number(b.installmentCount||1)>1?`Paga rata ${Number(b.installmentPaidCount||0)+1} · ${euro(b.installmentNextCents)}`:'Paga il saldo',true):'');
  const payDeposit=$('payDeposit');
  if(payDeposit)payDeposit.onclick=async e=>{e.preventDefault();payDeposit.textContent='Apertura pagamento…';try{await startCheckout('deposit')}catch(err){alert(err.message);payDeposit.textContent='Paga l’acconto'}};
  const payBalance=$('payBalance');
- if(payBalance)payBalance.onclick=async e=>{e.preventDefault();payBalance.textContent='Apertura pagamento…';try{await startCheckout('balance')}catch(err){alert(err.message);payBalance.textContent='Paga il saldo'}};
+ if(payBalance)payBalance.onclick=async e=>{e.preventDefault();payBalance.textContent='Apertura pagamento…';try{await startCheckout('balance')}catch(err){alert(err.message);payBalance.textContent=Number(b.installmentCount||1)>1?'Paga la prossima rata':'Paga il saldo'}};
  $('flashMetric').textContent=g.status==='finalized'?`${g.finalCount} flash`:`${g.uniqueFlash} preferenze`;
  $('flashText').textContent=g.enabled?`Catalogo aperto${g.closesAt?' fino al '+new Date(g.closesAt).toLocaleDateString('it-IT'):''}. Condividete il QR con gli invitati.`:'La selezione sarà disponibile dopo la registrazione dell’acconto.';
  if(g.qrUrl){$('qr').src=g.qrUrl;$('qr').hidden=false;$('qr').onerror=()=>{$('qr').hidden=true;$('flashText').textContent+=' Il QR non è visualizzabile, ma il link invitati qui sotto resta attivo.'}}

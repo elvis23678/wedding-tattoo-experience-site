@@ -115,6 +115,14 @@ h1{margin:9px 0 6px;font-family:var(--serif);font-size:clamp(40px,10vw,62px);fon
 <div class="amount" id="balanceAmount">—</div>
 <div class="status" id="balanceStatus">In attesa</div>
 <div class="rows"><div class="row"><span>Scadenza</span><strong id="balanceDue">—</strong></div></div>
+<div id="installmentBox" hidden style="margin-top:14px;padding:14px;border:1px solid rgba(221,181,96,.18)">
+<strong style="color:var(--gold2)">Pagamento programmato senza interessi</strong>
+<p class="note">Potete dividere il saldo in pagamenti mensili. L’intero importo deve essere completato entro 7 giorni dal matrimonio.</p>
+<label class="note" for="installmentCount">Numero di pagamenti</label>
+<select id="installmentCount" style="width:100%;margin-top:7px;padding:13px;background:#090604;color:#f7f0e5;border:1px solid var(--line)"></select>
+<a class="action" id="saveInstallments" style="min-height:48px">Conferma piano</a>
+<div class="note" id="installmentSummary"></div>
+</div>
 <a class="action disabled" id="balanceAction">Paga il saldo</a>
 </section>
 
@@ -172,6 +180,17 @@ async function startCheckout(type,button){
  }
 }
 
+
+async function saveInstallments(){
+ const count=Number($('installmentCount').value||1);
+ const response=await fetch(`${API}/api/public/payment-plan/${encodeURIComponent(token)}/installments`,{
+  method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({count})
+ });
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||'Impossibile salvare il piano.');
+ await load();
+}
+
 async function load(){
  if(!token)throw new Error('Link pagamento non valido.');
  const response=await fetch(`${API}/api/public/couple/${encodeURIComponent(token)}`,{cache:'no-store'});
@@ -186,9 +205,23 @@ async function load(){
  $('eventDate').textContent=[booking.eventDate,booking.eventTime].filter(Boolean).join(' · ')||'—';
  $('location').textContent=booking.location||'—';
  $('depositAmount').textContent=euro(booking.depositCents);
- $('balanceAmount').textContent=euro(booking.balanceCents);
+ $('balanceAmount').textContent=euro(booking.balanceRemainingCents??booking.balanceCents);
  $('depositDue').textContent=date(booking.depositDueAt);
  $('balanceDue').textContent=date(booking.balanceDueAt);
+ const ib=$('installmentBox');
+ if(booking.depositStatus==='paid' && booking.balanceStatus!=='paid'){
+  ib.hidden=false;
+  const sel=$('installmentCount');
+  sel.innerHTML='';
+  for(let i=1;i<=Number(booking.installmentMax||1);i++){
+   const o=document.createElement('option');o.value=i;o.textContent=i===1?'Pagamento unico':`${i} pagamenti mensili`;if(i===Number(booking.installmentCount||1))o.selected=true;sel.appendChild(o);
+  }
+  const next=euro(booking.installmentNextCents||booking.balanceRemainingCents||booking.balanceCents);
+  $('installmentSummary').textContent=Number(booking.installmentCount||1)>1
+   ?`Piano scelto: ${booking.installmentCount} pagamenti. ${booking.installmentPaidCount||0} già effettuati. Prossimo importo: ${next}. Residuo: ${euro(booking.balanceRemainingCents)}.`
+   :`Pagamento unico del saldo: ${euro(booking.balanceRemainingCents||booking.balanceCents)}.`;
+  $('saveInstallments').onclick=async e=>{e.preventDefault();try{await saveInstallments()}catch(err){alert(err.message)}};
+ }else ib.hidden=true;
 
  if(booking.depositStatus==='paid'){
   $('depositStatus').textContent='Acconto ricevuto. Prenotazione confermata.';
@@ -217,7 +250,7 @@ async function load(){
  }else if(booking.depositStatus==='paid'){
   $('balanceAction').href='#';
   $('balanceAction').classList.remove('disabled');
-  $('balanceAction').textContent='Completa il saldo';
+  $('balanceAction').textContent=Number(booking.installmentCount||1)>1?`Paga rata ${Number(booking.installmentPaidCount||0)+1} · ${euro(booking.installmentNextCents)}`:'Completa il saldo';
   $('balanceAction').onclick=event=>{
     event.preventDefault();
     startCheckout('balance',$('balanceAction'));
