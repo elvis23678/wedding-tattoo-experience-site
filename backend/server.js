@@ -5174,6 +5174,16 @@ async function syncBookingStatus(practiceId) {
   let status='deposit_pending';
   if(plan.deposit_status==='paid' && plan.balance_status==='paid'){
     status='ready';
+    // Chiusura automatica della pratica dal giorno successivo al matrimonio.
+    // La data viene letta dalla pratica: nessun intervento manuale e nessun nuovo pagamento.
+    const practiceResult=await pool.query('SELECT data FROM wte_practices WHERE id=$1',[practiceId]);
+    const eventDate=safeEventDate(practiceResult.rows[0]?.data?.date);
+    if(eventDate){
+      const romeToday=new Intl.DateTimeFormat('en-CA',{
+        timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'
+      }).format(new Date());
+      if(eventDate < romeToday)status='completed';
+    }
   }else if(plan.deposit_status==='paid'){
     status='balance_pending';
   }
@@ -5308,9 +5318,11 @@ app.get('/api/public/couple/:token', async (req,res) => {
       code:'event',
       label:'Matrimonio',
       status:
-        bundle.deposit_status==='paid' && bundle.balance_status==='paid'
-          ?'current'
-          :'locked'
+        bundle.booking_status==='completed'
+          ?'done'
+          :(bundle.deposit_status==='paid' && bundle.balance_status==='paid'
+            ?'current'
+            :'locked')
     }
   ];
 
