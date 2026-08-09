@@ -3341,15 +3341,24 @@ function packageMoney(pack){
     }).format(Number(pack?.priceCents||0)/100);
 }
 
+function pricingDetail(pack){
+  const p=pack?.pricing;
+  if(!p||!Number(pack?.priceCents||0))return 'Prezzo su misura';
+  const money=c=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(c||0)/100);
+  const travel=p.extraKm>0?` · Trasferta extra ${p.extraKm} km: ${money(p.travelNetCents)} + IVA`:` · Trasferta inclusa (${p.includedKm} km A/R)`;
+  return `Base ${money(p.baseNetCents)} + IVA 22%${travel} · Totale IVA inclusa ${money(p.totalCents)}`;
+}
+
 function renderPackageChoice(data,raw){
   const recommended=data.recommendation.package;
   const budgetPack=data.budgetRecommendation?.package||null;
 
   document.getElementById('recommendedName').textContent=recommended.name;
-  document.getElementById('recommendedPrice').textContent=packageMoney(recommended);
+  document.getElementById('recommendedPrice').textContent=packageMoney(recommended)+' IVA inclusa';
   document.getElementById('recommendedReason').textContent=
-    data.recommendation.explanation ||
-    'È la soluzione che riteniamo più adatta alle caratteristiche del vostro evento.';
+    (data.recommendation.explanation ||
+    'È la soluzione che riteniamo più adatta alle caratteristiche del vostro evento.')+
+    ' '+pricingDetail(recommended);
   renderFeatures(
     document.getElementById('recommendedFeatures'),
     recommended.features
@@ -3385,9 +3394,9 @@ function renderPackageChoice(data,raw){
     <button class="package-option" type="button" data-package="${pack.code}">
       <div>
         <h4>${pack.name}</h4>
-        <p>${pack.description||pack.reason||''}</p>
+        <p>${pack.description||pack.reason||''}<br><small>${pricingDetail(pack)}</small></p>
       </div>
-      <div class="package-option-price">${packageMoney(pack)}</div>
+      <div class="package-option-price">${packageMoney(pack)}<small style="display:block;font-size:8px">IVA inclusa</small></div>
     </button>
   `).join('');
 
@@ -3461,7 +3470,7 @@ async function selectPackage(pack,data,raw){
     document.getElementById('chosenTotal').textContent=
       new Intl.NumberFormat('it-IT',{
         style:'currency',currency:'EUR'
-      }).format(total/100);
+      }).format(total/100)+' IVA inclusa';
     document.getElementById('chosenDeposit').textContent=
       new Intl.NumberFormat('it-IT',{
         style:'currency',currency:'EUR'
