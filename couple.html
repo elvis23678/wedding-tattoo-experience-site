@@ -54,6 +54,26 @@ h1{margin:9px 0 6px;font-family:var(--serif);font-size:clamp(40px,10vw,62px);fon
   background:linear-gradient(135deg,#fff0bd,#d8aa4d 56%,#9c681f);
   color:#171006;font-weight:900
 }
+.installments{
+  margin-top:14px;padding:14px;border:1px solid rgba(221,181,96,.28);
+  background:rgba(212,170,86,.055)
+}
+.installments h3{margin:0 0 8px;font-family:var(--serif);font-size:20px;font-weight:400;color:var(--gold2)}
+.installments p{margin:6px 0;font-size:12px}
+.installments select{
+  width:100%;min-height:48px;margin-top:9px;padding:0 12px;
+  border:1px solid rgba(221,181,96,.38);background:#0a0705;color:var(--text);
+  font-size:15px
+}
+.installment-preview{
+  margin-top:10px;padding:10px;border-top:1px solid rgba(221,181,96,.18);
+  color:var(--muted);font-size:12px;line-height:1.55
+}
+.installment-preview strong{color:var(--gold2)}
+.test-banner{
+  margin:12px 0 0;padding:10px 12px;border:1px solid rgba(221,181,96,.42);
+  background:rgba(221,181,96,.08);color:#f0d79c;font-size:11px;line-height:1.5
+}
 .qr{display:block;width:min(230px,100%);margin:12px auto;padding:8px;background:#fff}
 .empty{color:var(--muted)}
 @media(max-width:700px){.timeline{grid-template-columns:1fr}.timeline article{text-align:left;display:flex;gap:9px;align-items:center}.grid{grid-template-columns:1fr}}
@@ -79,6 +99,7 @@ h1{margin:9px 0 6px;font-family:var(--serif);font-size:clamp(40px,10vw,62px);fon
 </head>
 <body><main>
 <div class="brand">Wedding Tattoo Experience</div><h1>Area Sposi</h1><p class="intro">Qui trovate solo ciò che serve, nel momento giusto.</p>
+<div id="testModeBanner" class="test-banner" hidden><strong>MODALITÀ COLLAUDO PAGAMENTI</strong><br>Ogni passaggio Stripe addebita 1,00 €, mentre il gestionale aggiorna acconto, rate e residuo con gli importi reali simulati.</div>
 <section class="hero">
 <strong id="name">Caricamento…</strong>
 <span id="event"></span>
@@ -112,6 +133,17 @@ function daysUntil(value){
 }
 function link(url,label,gold=false){return url?`<a ${gold?'class="gold"':''} href="${url}" target="_blank" rel="noopener">${label}</a>`:''}
 function actionButton(id,label,gold=false){return `<a href="#" id="${id}" ${gold?'class="gold"':''}>${label}</a>`}
+async function saveInstallmentPlan(count){
+ const response=await fetch(`${API}/api/public/payment-plan/${encodeURIComponent(token||'')}/installments`,{
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({count:Number(count)})
+ });
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||'Impossibile salvare il piano di pagamento.');
+ return data;
+}
+
 async function startCheckout(type){
  const response=await fetch(`${API}/api/public/payment-plan/${encodeURIComponent(token||'')}/checkout`,{
   method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type})
@@ -131,6 +163,7 @@ async function load(){
  const data=await response.json().catch(()=>({}));
  if(!response.ok)throw new Error(data.error||'Area Sposi non disponibile.');
  const b=data.booking,g=data.guest;
+ if(data.testMode)$('testModeBanner').hidden=false;
  $('name').textContent=b.customerName||'La vostra pratica';
  $('event').textContent=[b.eventDate,b.eventTime,b.location].filter(Boolean).join(' · ');
  const days=daysUntil(b.eventDate);
@@ -144,14 +177,91 @@ async function load(){
         ?'Prossimo passo: completare il saldo entro la scadenza.'
         :'Tutto pronto per l’evento.';
  $('timeline').innerHTML=data.steps.map(s=>`<article class="${s.status}"><span>${s.status==='done'?'✓':s.status==='current'?'●':'○'}</span><strong>${s.label}</strong></article>`).join('');
- $('payments').innerHTML=`<p>Acconto: <strong>${euro(b.depositCents)}</strong> · ${b.depositStatus==='paid'?'ricevuto':'in attesa'}</p><p>Saldo residuo: <strong>${euro(b.balanceRemainingCents??b.balanceCents)}</strong> · ${b.balanceStatus==='paid'?'ricevuto':(Number(b.installmentCount||1)>1?`${b.installmentPaidCount||0}/${b.installmentCount} pagamenti effettuati`:'in attesa')}</p>${Number(b.installmentCount||1)>1&&b.balanceStatus!=='paid'?`<p>Prossima rata: <strong>${euro(b.installmentNextCents)}</strong></p>`:''}`;
+ const installmentCount=Number(b.installmentCount||1);
+ const installmentMax=Math.max(1,Number(b.installmentMax||1));
+ const installmentPaidCount=Number(b.installmentPaidCount||0);
+ const balanceRemaining=Number((b.balanceRemainingCents ?? b.balanceCents) || 0);
+
+ let installmentChooser='';
+ if(
+   b.depositStatus==='paid' &&
+   b.balanceStatus!=='paid' &&
+   installmentPaidCount===0 &&
+   installmentMax>1
+ ){
+   const options=[];
+   for(let count=1;count<=installmentMax;count++){
+     const amount=count===1?balanceRemaining:Math.ceil(balanceRemaining/count);
+     options.push(
+       `<option value="${count}" ${count===installmentCount?'selected':''}>`+
+       `${count===1?'Pagamento unico':count+' rate'} · circa ${euro(amount)}${count>1?' ciascuna':''}`+
+       `</option>`
+     );
+   }
+   installmentChooser=`
+     <div class="installments">
+       <h3>Come preferite pagare il residuo?</h3>
+       <p>Potete scegliere liberamente il numero di pagamenti disponibili in base al tempo che manca al matrimonio.</p>
+       <select id="installmentSelect" aria-label="Numero di pagamenti">${options.join('')}</select>
+       <div class="installment-preview" id="installmentPreview"></div>
+     </div>`;
+ }
+
+ $('payments').innerHTML=`
+   <p>Acconto: <strong>${euro(b.depositCents)}</strong> · ${b.depositStatus==='paid'?'ricevuto':'in attesa'}</p>
+   <p>Saldo residuo: <strong>${euro(balanceRemaining)}</strong> · ${
+     b.balanceStatus==='paid'
+       ?'ricevuto'
+       :(installmentCount>1?`${installmentPaidCount}/${installmentCount} rate pagate`:'in attesa')
+   }</p>
+   ${installmentCount>1&&b.balanceStatus!=='paid'&&installmentPaidCount>0
+     ?`<p>Prossima rata: <strong>${euro(b.installmentNextCents)}</strong></p>`
+     :''}
+   ${installmentChooser}`;
+
  $('paymentActions').innerHTML=
    (b.depositStatus!=='paid'?actionButton('payDeposit','Paga l’acconto',true):'')+
-   (b.depositStatus==='paid'&&b.balanceStatus!=='paid'?actionButton('payBalance',Number(b.installmentCount||1)>1?`Paga rata ${Number(b.installmentPaidCount||0)+1} · ${euro(b.installmentNextCents)}`:'Paga il saldo',true):'');
+   (b.depositStatus==='paid'&&b.balanceStatus!=='paid'
+     ?actionButton(
+        'payBalance',
+        installmentCount>1
+          ?`Paga rata ${installmentPaidCount+1} di ${installmentCount} · ${euro(b.installmentNextCents)}`
+          :`Paga il saldo · ${euro(balanceRemaining)}`,
+        true
+      )
+     :'');
+
+ const installmentSelect=$('installmentSelect');
+ if(installmentSelect){
+   const refreshPreview=()=>{
+     const count=Number(installmentSelect.value||1);
+     const approx=count===1?balanceRemaining:Math.ceil(balanceRemaining/count);
+     $('installmentPreview').innerHTML=
+       count===1
+         ?`Pagamento unico del residuo: <strong>${euro(balanceRemaining)}</strong>.`
+         :`Piano scelto: <strong>${count} rate</strong> da circa <strong>${euro(approx)}</strong>. `+
+          `Il saldo completo dovrà risultare versato entro la scadenza prevista.`;
+   };
+   refreshPreview();
+   installmentSelect.onchange=async()=>{
+     const previous=installmentCount;
+     installmentSelect.disabled=true;
+     try{
+       await saveInstallmentPlan(Number(installmentSelect.value));
+       await load();
+     }catch(err){
+       alert(err.message);
+       installmentSelect.value=String(previous);
+       installmentSelect.disabled=false;
+       refreshPreview();
+     }
+   };
+ }
+
  const payDeposit=$('payDeposit');
  if(payDeposit)payDeposit.onclick=async e=>{e.preventDefault();payDeposit.textContent='Apertura pagamento…';try{await startCheckout('deposit')}catch(err){alert(err.message);payDeposit.textContent='Paga l’acconto'}};
  const payBalance=$('payBalance');
- if(payBalance)payBalance.onclick=async e=>{e.preventDefault();payBalance.textContent='Apertura pagamento…';try{await startCheckout('balance')}catch(err){alert(err.message);payBalance.textContent=Number(b.installmentCount||1)>1?'Paga la prossima rata':'Paga il saldo'}};
+ if(payBalance)payBalance.onclick=async e=>{e.preventDefault();payBalance.textContent='Apertura pagamento…';try{await startCheckout('balance')}catch(err){alert(err.message);payBalance.textContent=installmentCount>1?'Paga la prossima rata':'Paga il saldo'}};
  $('flashMetric').textContent=g.status==='finalized'?`${g.finalCount} flash`:`${g.uniqueFlash} preferenze`;
  $('flashText').textContent=g.enabled?`Catalogo aperto${g.closesAt?' fino al '+new Date(g.closesAt).toLocaleDateString('it-IT'):''}. Condividete il QR con gli invitati.`:'La selezione sarà disponibile dopo la registrazione dell’acconto.';
  if(g.qrUrl){$('qr').src=g.qrUrl;$('qr').hidden=false;$('qr').onerror=()=>{$('qr').hidden=true;$('flashText').textContent+=' Il QR non è visualizzabile, ma il link invitati qui sotto resta attivo.'}}
