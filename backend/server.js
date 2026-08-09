@@ -159,7 +159,7 @@ app.use(cors({
     return callback(new Error(`Origin non autorizzata: ${origin}`));
   },
   methods:['GET','POST','PATCH','DELETE','OPTIONS'],
-  allowedHeaders:['Content-Type','Authorization','X-WTE-Device']
+  allowedHeaders:['Content-Type','Authorization','X-WTE-Device','X-WTE-Request-Id']
 }));
 
 // Stripe richiede il body RAW per verificare la firma del webhook.
