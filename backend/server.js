@@ -43,6 +43,7 @@ const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const STRIPE_CURRENCY = String(process.env.STRIPE_CURRENCY || 'eur').toLowerCase();
 // TEST TEMPORANEO: forza SOLO l'acconto Stripe a 1,00 €. Da rimuovere dopo il collaudo.
 const STRIPE_ONE_EURO_TEST = false;
+const WTE_TEST_PAYMENT_EMAIL='collaudo@weddingtattooexperience.it';
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 if (!JWT_SECRET || !ADMIN_PASSWORD || !DATABASE_URL) {
@@ -237,10 +238,15 @@ app.post(
           }
         }
 
+        const logicalAmountCents=
+          session.metadata?.protectedTest==='true'
+            ?Number(session.metadata?.logicalAmountCents||session.amount_total||0)
+            :Number(session.amount_total||0);
+
         await applyPaidPayment({
           practiceId,
           paymentType,
-          amountCents:Number(session.amount_total||0),
+          amountCents:logicalAmountCents,
           provider:'stripe',
           reference:providerReference,
           receiptUrl,
@@ -2358,6 +2364,15 @@ async function queueMessage({
   return result.rows[0];
 }
 
+async function isProtectedPaymentTest(practiceId){
+  try{
+    const contact=await practiceContact(practiceId);
+    return String(contact?.email||'').trim().toLowerCase()===WTE_TEST_PAYMENT_EMAIL;
+  }catch{
+    return false;
+  }
+}
+
 async function ensureGuestVotingAfterDeposit(practiceId) {
   const practiceResult=await pool.query(
     'SELECT data FROM wte_practices WHERE id=$1',
@@ -3008,6 +3023,7 @@ async function createStripeCheckoutSession(plan,paymentType) {
   }
 
   const type=paymentType==='balance'?'balance':'deposit';
+  const protectedTest=await isProtectedPaymentTest(plan.practice_id);
   let settings=null;
   const realAmount=type==='deposit'
     ?Number(plan.deposit_cents||0)
@@ -3016,9 +3032,8 @@ async function createStripeCheckoutSession(plan,paymentType) {
   const balanceCharge=type==='balance'
     ?Math.min(settings.remaining,Math.ceil(settings.remaining/settings.remainingCount))
     :0;
-  const amount=(STRIPE_ONE_EURO_TEST && type==='deposit')
-    ?100
-    :(type==='balance'?balanceCharge:realAmount);
+  const logicalAmount=type==='balance'?balanceCharge:realAmount;
+  const amount=protectedTest?100:logicalAmount;
 
   const status=type==='deposit'
     ?plan.deposit_status
@@ -3038,8 +3053,10 @@ async function createStripeCheckoutSession(plan,paymentType) {
 
   const contact=await practiceContact(plan.practice_id);
   const label=type==='deposit'
-    ?(STRIPE_ONE_EURO_TEST?'TEST 1€ · Acconto Wedding Tattoo Experience':'Acconto Wedding Tattoo Experience')
-    :(settings && settings.count>1 ? `Rata ${settings.paidCount+1}/${settings.count} · Wedding Tattoo Experience` : 'Saldo Wedding Tattoo Experience');
+    ?(protectedTest?'COLLAUDO 1€ · Acconto Wedding Tattoo Experience':'Acconto Wedding Tattoo Experience')
+    :(settings && settings.count>1
+      ? `${protectedTest?'COLLAUDO 1€ · ':''}Rata ${settings.paidCount+1}/${settings.count} · Wedding Tattoo Experience`
+      : `${protectedTest?'COLLAUDO 1€ · ':''}Saldo Wedding Tattoo Experience`);
 
   const session=await stripe.checkout.sessions.create({
     mode:'payment',
@@ -3067,7 +3084,10 @@ async function createStripeCheckoutSession(plan,paymentType) {
       practiceId:plan.practice_id,
       paymentType:type,
       paymentToken:plan.token,
-      testOneEuro:STRIPE_ONE_EURO_TEST && type==='deposit' ? 'true' : 'false',
+      testOneEuro:protectedTest ? 'true' : 'false',
+      protectedTest:protectedTest ? 'true' : 'false',
+      chargedAmountCents:String(amount),
+      logicalAmountCents:String(logicalAmount),
       realAmountCents:String(realAmount)
     },
     payment_intent_data:{
@@ -3075,7 +3095,10 @@ async function createStripeCheckoutSession(plan,paymentType) {
         practiceId:plan.practice_id,
         paymentType:type,
         paymentToken:plan.token,
-        testOneEuro:STRIPE_ONE_EURO_TEST && type==='deposit' ? 'true' : 'false',
+        testOneEuro:protectedTest ? 'true' : 'false',
+        protectedTest:protectedTest ? 'true' : 'false',
+        chargedAmountCents:String(amount),
+        logicalAmountCents:String(logicalAmount),
         realAmountCents:String(realAmount)
       }
     }
@@ -3193,10 +3216,15 @@ app.get('/api/public/stripe-session/:sessionId', async (req,res) => {
         }
       }
 
+      const logicalAmountCents=
+        session.metadata?.protectedTest==='true'
+          ?Number(session.metadata?.logicalAmountCents||session.amount_total||0)
+          :Number(session.amount_total||0);
+
       await applyPaidPayment({
         practiceId,
         paymentType,
-        amountCents:Number(session.amount_total||0),
+        amountCents:logicalAmountCents,
         provider:'stripe',
         reference:providerReference,
         receiptUrl,
@@ -3239,7 +3267,10 @@ app.get('/api/public/payment-plan/:token', async (req,res) => {
 
   const contact=await practiceContact(plan.practice_id);
   const installment=await installmentSettings(plan.practice_id,plan);
+  const protectedTest=await isProtectedPaymentTest(plan.practice_id);
   res.json({
+    testMode:protectedTest,
+    testChargeCents:protectedTest?100:null,
     plan:{
       currency:plan.currency,
       totalCents:plan.total_cents,
@@ -5119,6 +5150,7 @@ app.get('/api/public/couple/:token', async (req,res) => {
   const installment=await installmentSettings(bundle.practice_id,bundle);
   res.setHeader('Cache-Control','no-store');
   res.json({
+    testMode:await isProtectedPaymentTest(bundle.practice_id),
     booking:{
       status:bundle.booking_status,
       practiceId:bundle.practice_id,
