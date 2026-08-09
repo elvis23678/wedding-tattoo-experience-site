@@ -175,7 +175,7 @@ async function load(){
       ?'Prossimo passo: condividere il QR con gli invitati.'
       :b.balanceStatus!=='paid'
         ?'Prossimo passo: completare il saldo entro la scadenza.'
-        :b.status==='completed'?'Matrimonio concluso · pratica completata.':'Tutto pronto per l’evento.';
+        :b.status==='completed'?'Matrimonio concluso · pratica completata e archiviata.':'Pagamenti completati · tutto pronto per il matrimonio.';
  $('timeline').innerHTML=data.steps.map(s=>`<article class="${s.status}"><span>${s.status==='done'?'✓':s.status==='current'?'●':'○'}</span><strong>${s.label}</strong></article>`).join('');
  const installmentCount=Number(b.installmentCount||1);
  const installmentMax=Math.max(1,Number(b.installmentMax||1));
@@ -295,7 +295,7 @@ async function load(){
   };
  }
  $('documents').innerHTML=link(b.contractPdf,'Contratto PDF')+link(b.depositReceiptUrl,'Ricevuta acconto')+link(b.balanceReceiptUrl,'Ricevuta saldo')+link(g.finalPdf,'PDF flash definitivo');
- $('statusText').textContent=b.status==='completed'?'Matrimonio concluso. Pratica completata e archiviata automaticamente.':b.status==='ready'?'Pratica completa: tutto pronto per l’evento.':b.depositStatus==='paid'?'Prenotazione confermata. Il sistema gestirà automaticamente flash e saldo.':'Contratto accettato. La prenotazione sarà confermata dopo l’acconto.';
+ $('statusText').textContent=b.status==='completed'?'Matrimonio concluso · pratica completata e archiviata.':b.status==='ready'?'Pratica confermata · Pagamenti completati. Tutto pronto per il matrimonio.':b.depositStatus==='paid'?'Prenotazione confermata. Il sistema gestirà automaticamente flash e saldo.':'Contratto accettato. La prenotazione sarà confermata dopo l’acconto.';
 }
 load().catch(error=>{$('name').textContent='Errore';$('event').textContent=error.message});
 setInterval(()=>load().catch(()=>{}),30000);
