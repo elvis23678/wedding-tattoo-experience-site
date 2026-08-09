@@ -77,7 +77,12 @@ main{max-width:900px;margin:auto;padding:16px 12px 88px}.intro small,.head small
 <div class="drawer" id="clientDrawer" hidden><div class="panel"><div class="drawerhead"><strong id="clientTitle">Cliente</strong><button class="close" data-close="clientDrawer">×</button></div><div class="body">
 <label class="field">Stato<select id="status"><option>Nuova</option><option>Da contattare</option><option>In attesa</option><option>Confermata</option><option>Completata</option><option>Annullata</option></select></label>
 <label class="field">Avviso<input id="reminder" placeholder="Es. richiamare lunedì"></label><label class="field">Note interne<textarea id="notes"></textarea></label>
-<div class="actions"><a id="call">Chiama</a><a id="wa" target="_blank">WhatsApp</a><a id="mail">Email</a></div><div class="save"><button class="secondary" data-close="clientDrawer">Chiudi</button><button class="gold" id="saveClient" style="margin:0">Salva</button></div></div></div></div>
+<div class="actions"><a id="call">Chiama</a><a id="wa" target="_blank">WhatsApp</a><a id="mail">Email</a></div>
+<div id="paymentTestBox" hidden style="margin:12px 0;padding:12px;border:1px solid rgba(221,181,96,.35);background:rgba(221,181,96,.06)">
+<strong style="display:block;color:#e6c978;margin-bottom:6px">Collaudo pagamenti</strong>
+<p style="margin:0 0 10px;font-size:11px;line-height:1.5;color:#b9aa91">Solo pratica test: simula le rate intermedie senza addebiti.</p>
+<button class="secondary" id="prepareFinalInstallment" type="button" style="width:100%;min-height:44px">Prepara test ultima rata</button>
+</div><div class="save"><button class="secondary" data-close="clientDrawer">Chiudi</button><button class="gold" id="saveClient" style="margin:0">Salva</button></div></div></div></div>
 
 <div class="drawer" id="flashDrawer" hidden><div class="panel"><div class="drawerhead"><strong id="flashHead">Flash</strong><button class="close" data-close="flashDrawer">×</button></div><div class="body">
 <input id="imageInput" type="file" accept="image/*"><div class="editor"><canvas id="canvas" width="1000" height="1000"></canvas></div><div class="tools"><button id="left">↺</button><button id="fit">Adatta</button><button id="right">↻</button></div>
@@ -116,8 +121,22 @@ async function load(n){if(n==='clients')return loadClients();if(n==='flash')retu
 const iso=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};function fdate(v){if(!v)return'Data da definire';const d=new Date(v+'T12:00:00');return d.toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'})}
 function phone(p){return String(p.phone||p.telephone||p.mobile||'').trim()}function pack(p){return p.packageName||p.package||p.package_code||'—'}function loc(p){return p.location||p.city||p.venue||'—'}
 async function loadClients(){practices=(await api('/api/practices')).practices||[];$('clients').innerHTML=practices.length?practices.sort((a,b)=>String(a.date||'9999').localeCompare(String(b.date||'9999'))).map(p=>`<button class="item client" data-id="${esc(p.id)}"><div><strong>${esc(p.name||'Cliente')}</strong><p>${fdate(p.date)} · ${esc(loc(p))}<br>${esc(pack(p))}${p.reminder?' · ⚑ '+esc(p.reminder):''}</p></div><span class="badge ${/conferm|complet/i.test(p.status||'')?'ok':'warn'}">${esc(p.status||'Nuova')}</span></button>`).join(''):'<div class="item">Nessun cliente.</div>';document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>openClient(b.dataset.id));today()}
-function openClient(id){current=practices.find(p=>String(p.id)===String(id));$('clientTitle').textContent=current.name||'Cliente';$('status').value=current.status||'Nuova';$('reminder').value=current.reminder||'';$('notes').value=current.notes||'';const p=phone(current).replace(/\\s+/g,''),m=current.email||'';$('call').href=p?'tel:'+p:'#';$('wa').href=p?'https://wa.me/'+p.replace(/^\\+/,''):'#';$('mail').href=m?'mailto:'+m:'#';$('clientDrawer').hidden=false}
+function openClient(id){current=practices.find(p=>String(p.id)===String(id));$('clientTitle').textContent=current.name||'Cliente';$('status').value=current.status||'Nuova';$('reminder').value=current.reminder||'';$('notes').value=current.notes||'';const p=phone(current).replace(/\s+/g,''),m=current.email||'';$('call').href=p?'tel:'+p:'#';$('wa').href=p?'https://wa.me/'+p.replace(/^\+/,''):'#';$('mail').href=m?'mailto:'+m:'#';$('paymentTestBox').hidden=!(appUser?.role==='admin'&&String(m).trim().toLowerCase()==='collaudo@weddingtattooexperience.it');$('clientDrawer').hidden=false}
 $('saveClient').onclick=async()=>{current.status=$('status').value;current.reminder=$('reminder').value.trim();current.notes=$('notes').value.trim();await api('/api/practices/sync',{method:'POST',body:JSON.stringify({practices})});$('clientDrawer').hidden=true;loadClients();toast('Cliente aggiornato')}
+
+$('prepareFinalInstallment').onclick=async()=>{
+ if(!current)return;
+ if(!confirm('Portare questa pratica di COLLAUDO direttamente alla penultima rata? Non verrà effettuato alcun addebito Stripe.'))return;
+ const btn=$('prepareFinalInstallment'),old=btn.textContent;
+ btn.disabled=true;btn.textContent='Preparazione…';
+ try{
+   const d=await api('/api/admin/test-payments/'+encodeURIComponent(current.id)+'/prepare-final-installment',{method:'POST'});
+   alert(d.message||'Test ultima rata pronto.');
+   $('clientDrawer').hidden=true;
+   await loadClients();
+ }catch(e){alert(e.message)}
+ finally{btn.disabled=false;btn.textContent=old}
+}
 function today(){const t=iso(),ev=practices.filter(p=>p.date===t&&!/annull/i.test(p.status||'')),up=practices.filter(p=>p.date&&p.date>=t&&!/annull/i.test(p.status||'')).sort((a,b)=>a.date.localeCompare(b.date));$('today').textContent=ev.length?`Oggi avete ${ev.length} ${ev.length===1?'evento':'eventi'}.`:up[0]?`Prossimo: ${up[0].name||'Cliente'} · ${fdate(up[0].date)}.`:'Nessun evento futuro.'}
 async function flashBlobUrl(x){
   const key=String(x.id);
