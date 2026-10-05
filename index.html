@@ -2754,7 +2754,7 @@ async function checkApiHealth(){
     return false;
   }catch{
     apiOnline=false;
-    setServiceState('offline','Servizio in riattivazione');
+    setServiceState('offline','Prenotazione online temporaneamente non disponibile');
     return false;
   }
 }
@@ -3203,7 +3203,10 @@ document.querySelectorAll('[data-choice-group]').forEach(group=>{
   });
 });
 
+let availabilityRequestId=0;
+
 async function checkAvailability(){
+  const requestId=++availabilityRequestId;
   const value=form.elements.date.value;
   dateAvailable=false;
 
@@ -3219,11 +3222,12 @@ async function checkAvailability(){
 
   try{
     const query=holdToken?`?holdToken=${encodeURIComponent(holdToken)}`:'';
-    const response=await fetch(
+    const response=await fetchWithRetry(
       `${API}/api/public/availability/${encodeURIComponent(value)}${query}`,
       {cache:'no-store'}
     );
     const data=await response.json().catch(()=>({}));
+    if(requestId!==availabilityRequestId||value!==form.elements.date.value)return false;
 
     if(!response.ok){
       throw new Error(data.error||'Verifica non disponibile.');
@@ -3251,11 +3255,12 @@ async function checkAvailability(){
     saveFlowState();
     return dateAvailable;
   }catch(error){
+    if(requestId!==availabilityRequestId)return false;
     availabilityStatus.className='availability unavailable';
-    availabilityStatus.textContent=error.message;
+    availabilityStatus.textContent='Non è stato possibile verificare la data. Premi Avanti per riprovare oppure contatta lo studio: 011 232456.';
     return false;
   }finally{
-    checkingDate=false;
+    if(requestId===availabilityRequestId)checkingDate=false;
   }
 }
 
