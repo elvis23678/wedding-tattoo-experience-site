@@ -4682,6 +4682,10 @@ app.post('/api/public/advisor/:salesToken/select-package', publicRateLimit, asyn
 
     const selectedRaw=packageResult.rows[0];
     const selected=pricedPackage(selectedRaw,session.customer_data||{});
+    if(!Number.isFinite(selected.price_cents) || selected.price_cents<=0){
+      await client.query('ROLLBACK');
+      return res.status(422).json({error:'Luxury richiede un preventivo personalizzato. Contatta lo studio al 011 232456 per definire prezzo e acconto.',code:'CUSTOM_QUOTE_REQUIRED'});
+    }
 
     const contractResult=await client.query(
       `SELECT token,status
@@ -4808,6 +4812,9 @@ app.post('/api/public/contracts/:token/accept', publicRateLimit, async (req,res)
 
   const customer=bundle.customer_data||{};
   const pack=bundle.package_snapshot||{};
+  if(!Number.isFinite(Number(pack.price_cents)) || Number(pack.price_cents)<=0){
+    return res.status(422).json({error:'Il prezzo deve essere definito dallo studio prima di firmare il contratto. Contatta 011 232456.',code:'CUSTOM_QUOTE_REQUIRED'});
+  }
   const practiceId=`WTE-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
 
   const practice={
