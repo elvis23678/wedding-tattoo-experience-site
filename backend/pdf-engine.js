@@ -153,9 +153,26 @@ export function createPdfEngine({
       ['Luogo', practice.location || practice.city],
       ['Invitati', practice.guests],
       ['Pacchetto', pack.name || practice.package],
+      ['Ore di servizio',pack.included_hours||practice.hours],
+      ...(pack.pricing?.model==='event-cost-v1'?[
+        ['Tatuaggi stimati',pack.pricing.expectedTattoos],
+        ['Assistenti',pack.pricing.assistants],
+        ['Percorso stradale A/R',`${Number(pack.pricing.roundTripKm).toFixed(1)} km`],
+        ['Viaggio stimato A/R',`${(pack.pricing.route.roundTripSeconds/3600).toFixed(2)} ore`],
+        ['Montaggio/smontaggio','90 minuti'],
+        ['Servizio Elvis',euroFromCents(pack.pricing.serviceCents)],
+        ['Viaggio e allestimento',euroFromCents(pack.pricing.travelAndSetupCents)],
+        ['Costo assistenti',euroFromCents(pack.pricing.assistantsCents)],
+        ['Materiali',euroFromCents(pack.pricing.materialsCents)],
+        ['Auto',euroFromCents(pack.pricing.vehicleCents)],
+        ['Maggiorazione 15%',euroFromCents(pack.pricing.extraCents)]
+      ]:[
       ['Prezzo base', pack.base_price_cents ? euroFromCents(pack.base_price_cents)+' + IVA' : 'Su misura'],
       ['Trasferta inclusa', pack.pricing ? `${pack.pricing.includedKm} km complessivi A/R` : 'Secondo pacchetto'],
       ['Km extra', pack.pricing && pack.pricing.extraKm ? `${pack.pricing.extraKm} km × 0,70 € + IVA` : 'Nessuno'],
+      ]),
+      ['Acconto',euroFromCents(Math.round(Number(pack.price_cents||bundle.total_cents||0)*Number(pack.deposit_percent||30)/100))],
+      ['Saldo',euroFromCents(Number(pack.price_cents||bundle.total_cents||0)-Math.round(Number(pack.price_cents||bundle.total_cents||0)*Number(pack.deposit_percent||30)/100))],
       ['Imponibile', pack.pricing ? euroFromCents(pack.pricing.netCents) : '—'],
       ['IVA 22%', pack.pricing ? euroFromCents(pack.pricing.vatCents) : '—'],
       [

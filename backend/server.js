@@ -3639,6 +3639,7 @@ function pricedPackage(pack,data={}) {
     included_hours:pricing.model==='event-cost-v1'?Number(data.hours):pack.included_hours,
     base_price_cents:Number(pack.price_cents||0),
     price_cents:pricing.totalCents,
+    ...(pricing.model==='event-cost-v1'?{deposit_percent:30}:{}),
     pricing,
     vat_rate:22,
     extra_km_net_cents:WTE_EXTRA_KM_NET_CENTS,
@@ -3862,7 +3863,13 @@ function defaultContractClauses() {
         'I prezzi dei pacchetti sono espressi al netto IVA. Si applica IVA al 22%. '+
         'La distanza indicata è di sola andata e viene conteggiata andata/ritorno. '+
         'Sono inclusi 50 km A/R nel Bronze, 100 km A/R nel Silver e 200 km A/R nel Gold. '+
-        'I km eccedenti sono addebitati a 0,70 euro/km + IVA; eventuali pedaggi sono esclusi.'
+        'I km eccedenti sono addebitati a 0,70 euro/km + IVA; eventuali pedaggi sono esclusi. '+
+        'Per Luxury il riepilogo riporta il calcolo su invitati, ore di servizio e percorso stradale A/R: '+
+        '20% di tatuaggi stimati arrotondati per eccesso, Elvis e 3 assistenti (4 oltre 20 tatuaggi), '+
+        '100 euro per ora di servizio di Elvis, 80 euro per ora di viaggio e allestimento, '+
+        '90 minuti complessivi di montaggio/smontaggio, auto a 0,70 euro/km A/R e materiali a 15 euro per tatuaggio stimato. '+
+        'Ogni assistente costa 150 euro fino a 8 ore totali di servizio, viaggio e allestimento, 200 euro oltre. '+
+        'Alla somma si applicano maggiorazione 15% e IVA 22%; acconto Luxury 30%.'
     },
     {
       title:'Catalogo flash e invitati',
@@ -3949,7 +3956,19 @@ function writeContractPdf(res,bundle) {
     ['Luogo',customer.location||'-'],
     ['Invitati',customer.guests||'-'],
     ['Pacchetto',pack.name||bundle.package_code],
-    ['Importo',pack.price_cents?euroFromCents(pack.price_cents):'Su misura']
+    ['Ore di servizio',pack.included_hours||customer.hours||'-'],
+    ...(pack.pricing?.model==='event-cost-v1'?[
+      ['Tatuaggi stimati',pack.pricing.expectedTattoos],
+      ['Assistenti',pack.pricing.assistants],
+      ['Percorso A/R',`${(pack.pricing.roundTripKm).toFixed(1)} km`],
+      ['Viaggio stimato A/R',`${(pack.pricing.route.roundTripSeconds/3600).toFixed(2)} ore`],
+      ['Montaggio/smontaggio','90 minuti'],
+      ['Imponibile',euroFromCents(pack.pricing.netCents)],
+      ['IVA 22%',euroFromCents(pack.pricing.vatCents)]
+    ]:[]),
+    ['Totale IVA inclusa',pack.price_cents?euroFromCents(pack.price_cents):'Su misura'],
+    ['Acconto',euroFromCents(Math.round(pack.price_cents*Number(pack.deposit_percent||30)/100))],
+    ['Saldo',euroFromCents(pack.price_cents-Math.round(pack.price_cents*Number(pack.deposit_percent||30)/100))]
   ];
 
   rows.forEach(([label,value])=>{

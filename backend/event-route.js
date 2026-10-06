@@ -1,6 +1,8 @@
 const ORIGIN = 'Via Torino 1A, 10055 Condove, Italia';
 export function createEventRouter({apiKey, fetchImpl=fetch}={}) {
   const cache = new Map();
+  const normalize=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const cityName=v=>({turin:'torino',milan:'milano',rome:'roma',florence:'firenze',naples:'napoli',venice:'venezia',genoa:'genova'}[normalize(v)]||normalize(v));
   async function request(path, params) {
     if(!apiKey) throw new Error('Calcolo trasferta non configurato. Contatta lo studio.');
     const url=new URL(`https://api.geoapify.com/v1/${path}`);
@@ -21,9 +23,21 @@ export function createEventRouter({apiKey, fetchImpl=fetch}={}) {
     const structured=street && city && !/^(italia|italy)$/i.test(city);
     const address=structured ? {street:street[1],housenumber:street[2].replace(/\s/g,''),city,
       ...(postcode?{postcode:postcode[1]}:{})} : {text};
-    const json=await request('geocode/search',{...address,format:'json',limit:3,lang:'it',filter:'countrycode:it'});
-    const normalize=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-    const results=(json.results||[]).filter(r=>!structured || normalize(r.city||r.town||r.village||r.municipality)===normalize(city));
+    let filter='countrycode:it';
+    if(structured){
+      const cityKey=`city:${cityName(city)}`;
+      let place=cache.get(cityKey)?.route;
+      if(!place){
+        const cities=await request('geocode/search',{text:`${city}, Italia`,type:'city',format:'json',limit:5,lang:'it',filter});
+        const matches=(cities.results||[]).filter(r=>cityName(r.city||r.town||r.village||r.name)===cityName(city) && r.place_id);
+        if(matches.length!==1)throw new Error('Comune non riconosciuto univocamente. Specifica città, provincia e CAP.');
+        place=matches[0].place_id;
+        cache.set(cityKey,{route:place,expires:Infinity});
+      }
+      filter=`place:${place}`;
+    }
+    const json=await request('geocode/search',{...address,format:'json',limit:3,lang:'it',filter});
+    const results=(json.results||[]).filter(r=>!structured || cityName(r.city||r.town||r.village||r.municipality)===cityName(city));
     const result=results[0];
     const hint=(json.results||[]).slice(0,2).map(r=>r.formatted).filter(Boolean).join(' / ');
     if(!result || !Number.isFinite(result.lat) || !Number.isFinite(result.lon) ||

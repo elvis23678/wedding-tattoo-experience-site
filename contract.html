@@ -162,10 +162,21 @@ async function init(){
  $('pdfLink').href=data.pdf;
  $('status').textContent=`Contratto ${contract.contractNumber}`;
  const customer=contract.customer||{},pack=contract.package||{};
+ const money=c=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(c||0)/100);
+ const deposit=Math.round(Number(pack.price_cents||0)*Number(pack.deposit_percent||30)/100);
  const fields=[
   ['Cliente',customer.name],['Data evento',customer.date],['Ora',customer.time],
   ['Luogo',customer.location],['Invitati',customer.guests],
-  ['Pacchetto',pack.name],['Importo',pack.price_cents?new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(pack.price_cents/100):'Su misura']
+  ['Pacchetto',pack.name],['Ore di servizio',pack.included_hours||customer.hours],
+  ...(pack.pricing?.model==='event-cost-v1'?[
+   ['Tatuaggi stimati',pack.pricing.expectedTattoos],['Assistenti',pack.pricing.assistants],
+   ['Percorso A/R',`${Number(pack.pricing.roundTripKm).toFixed(1)} km`],
+   ['Viaggio stimato A/R',`${(pack.pricing.route.roundTripSeconds/3600).toFixed(2)} ore`],
+   ['Montaggio/smontaggio','90 minuti'],
+   ['Imponibile',money(pack.pricing.netCents)],['IVA 22%',money(pack.pricing.vatCents)]
+  ]:[]),
+  ['Totale IVA inclusa',pack.price_cents?money(pack.price_cents):'Su misura'],
+  ['Acconto',money(deposit)],['Saldo',money(Number(pack.price_cents||0)-deposit)]
  ];
  $('summary').innerHTML=fields.map(([label,value])=>`<div><span>${label}</span><strong>${value||'—'}</strong></div>`).join('');
  $('terms').innerHTML=(contract.clauses||[]).map((clause,index)=>`<article class="clause"><h3>${index+1}. ${clause.title}</h3><p>${clause.text}</p></article>`).join('');
