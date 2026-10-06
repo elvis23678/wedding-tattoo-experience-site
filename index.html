@@ -3338,7 +3338,12 @@ function renderFeatures(target,features=[]){
     .join('');
 }
 
+function needsCustomQuote(pack){
+  return !Number.isFinite(Number(pack?.priceCents)) || Number(pack.priceCents)<=0;
+}
+
 function packageMoney(pack){
+  if(needsCustomQuote(pack))return 'Preventivo personalizzato';
   return pack?.priceLabel ||
     new Intl.NumberFormat('it-IT',{
       style:'currency',
@@ -3359,9 +3364,9 @@ function renderPackageChoice(data,raw){
   const budgetPack=data.budgetRecommendation?.package||null;
 
   document.getElementById('recommendedName').textContent=recommended.name;
-  document.getElementById('recommendedPrice').textContent=packageMoney(recommended)+' IVA inclusa';
+  document.getElementById('recommendedPrice').textContent=packageMoney(recommended)+(needsCustomQuote(recommended)?'':' IVA inclusa');
   document.getElementById('recommendedReason').textContent=
-    (data.recommendation.explanation ||
+    (needsCustomQuote(recommended)?'Per le esigenze del vostro evento prepariamo una proposta personalizzata. Prezzo e acconto saranno definiti con lo studio.':data.recommendation.explanation ||
     'È la soluzione che riteniamo più adatta alle caratteristiche del vostro evento.')+
     ' '+pricingDetail(recommended);
   renderFeatures(
@@ -3401,7 +3406,7 @@ function renderPackageChoice(data,raw){
         <h4>${pack.name}</h4>
         <p>${pack.description||pack.reason||''}<br><small>${pricingDetail(pack)}</small></p>
       </div>
-      <div class="package-option-price">${packageMoney(pack)}<small style="display:block;font-size:8px">IVA inclusa</small></div>
+      <div class="package-option-price">${packageMoney(pack)}${needsCustomQuote(pack)?'':'<small style="display:block;font-size:8px">IVA inclusa</small>'}</div>
     </button>
   `).join('');
 
@@ -3414,6 +3419,7 @@ function renderPackageChoice(data,raw){
     };
   });
 
+  document.getElementById('chooseRecommended').textContent=needsCustomQuote(recommended)?'Richiedi preventivo':'Scegli questa soluzione';
   document.getElementById('chooseRecommended').onclick=()=>{
     selectPackage(recommended,data,raw);
   };
@@ -3432,6 +3438,10 @@ function renderPackageChoice(data,raw){
 }
 
 async function selectPackage(pack,data,raw){
+  if(needsCustomQuote(pack)){
+    location.href='https://wa.me/393477050250?text='+encodeURIComponent('Buongiorno, vorrei un preventivo personalizzato Wedding Tattoo Experience per il '+formatDate(raw.date)+' presso '+raw.location+'.');
+    return;
+  }
   const buttonCandidates=[
     document.getElementById('chooseRecommended'),
     document.getElementById('chooseBudget')
