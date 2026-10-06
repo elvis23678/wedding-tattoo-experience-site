@@ -3355,6 +3355,7 @@ function pricingDetail(pack){
   const p=pack?.pricing;
   if(!p||!Number(pack?.priceCents||0))return 'Prezzo su misura';
   const money=c=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(c||0)/100);
+  if(p.model==='event-cost-v1')return `Servizio ${money(p.serviceCents)} · Viaggio e allestimento ${money(p.travelAndSetupCents)} · Assistenti ${money(p.assistantsCents)} · Materiali ${money(p.materialsCents)} · Auto ${money(p.vehicleCents)} · Extra 15% ${money(p.extraCents)} · IVA 22% ${money(p.vatCents)}`;
   const travel=p.extraKm>0?` · Trasferta extra ${p.extraKm} km: ${money(p.travelNetCents)} + IVA`:` · Trasferta inclusa (${p.includedKm} km A/R)`;
   return `Base ${money(p.baseNetCents)} + IVA 22%${travel} · Totale IVA inclusa ${money(p.totalCents)}`;
 }
@@ -3369,6 +3370,10 @@ function renderPackageChoice(data,raw){
     (needsCustomQuote(recommended)?'Per le esigenze del vostro evento prepariamo una proposta personalizzata. Prezzo e acconto saranno definiti con lo studio.':data.recommendation.explanation ||
     'È la soluzione che riteniamo più adatta alle caratteristiche del vostro evento.')+
     ' '+pricingDetail(recommended);
+  let attribution=document.getElementById('routeAttribution');
+  if(!attribution){attribution=document.createElement('p');attribution.id='routeAttribution';
+    attribution.innerHTML='Percorso e tempi stimati: <a href="https://www.geoapify.com/" target="_blank" rel="noopener">Geoapify</a> · Dati <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
+    document.getElementById('recommendedReason').after(attribution);}
   renderFeatures(
     document.getElementById('recommendedFeatures'),
     recommended.features
@@ -3480,7 +3485,7 @@ async function selectPackage(pack,data,raw){
     document.getElementById('finalDate').textContent=formatDate(raw.date);
     document.getElementById('finalLocation').textContent=raw.location;
     document.getElementById('finalGuests').textContent=guestLabel(raw.guests);
-    document.getElementById('finalHours').textContent=hourLabel(raw.hours);
+    document.getElementById('finalHours').textContent=`${Number(raw.hours)} ore di servizio`;
     document.getElementById('chosenPackageName').textContent=selected.name;
     document.getElementById('chosenTotal').textContent=
       new Intl.NumberFormat('it-IT',{

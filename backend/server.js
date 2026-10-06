@@ -20,6 +20,9 @@ import { createReleaseManager } from './release-manager.js';
 import { createReleaseBackup } from './release-backup.js';
 import { createConversionAnalytics } from './conversion-analytics.js';
 import Stripe from 'stripe';
+import { calculateEventPrice } from './event-pricing.js';
+import { createEventRouter } from './event-route.js';
+const eventRoute = createEventRouter({apiKey:process.env.GEOAPIFY_API_KEY});
 
 const { Pool } = pg;
 
@@ -3610,6 +3613,11 @@ const WTE_EXTRA_KM_NET_CENTS=70;
 const WTE_INCLUDED_KM={BRONZE:50,SILVER:100,GOLD:200};
 
 function packagePricing(pack,data={}) {
+  if(String(pack?.code).toUpperCase()==='LUXURY' && data.route){
+    const cost=calculateEventPrice({guests:Number(data.guests),serviceHours:Number(data.hours),route:data.route});
+    return {...cost,model:'event-cost-v1',baseNetCents:cost.netCents,includedKm:cost.route.roundTripMeters/1000,
+      roundTripKm:cost.route.roundTripMeters/1000,extraKm:0,travelNetCents:cost.vehicleCents};
+  }
   const baseNetCents=Number(pack?.price_cents||0);
   if(!baseNetCents)return {
     baseNetCents:0,includedKm:5000,roundTripKm:Math.max(0,Number(data.distance||0)*2),
@@ -3628,6 +3636,7 @@ function pricedPackage(pack,data={}) {
   const pricing=packagePricing(pack,data);
   return {
     ...pack,
+    included_hours:pricing.model==='event-cost-v1'?Number(data.hours):pack.included_hours,
     base_price_cents:Number(pack.price_cents||0),
     price_cents:pricing.totalCents,
     pricing,
@@ -3638,6 +3647,11 @@ function pricedPackage(pack,data={}) {
 }
 
 function packageRecommendationExplanation(selected,data,packages){
+  if(String(selected.code).toUpperCase()==='LUXURY' && data.route){
+    const p=packagePricing(selected,data);
+    return `Il calcolo considera ${data.guests} invitati, ${p.expectedTattoos} tatuaggi stimati (20%), ${data.hours} ore di servizio, ${p.assistants} assistenti, ${(data.route.roundTripMeters/1000).toFixed(1)} km A/R e ${(data.route.roundTripSeconds/3600).toFixed(2)} ore di viaggio stimate. Include 90 minuti di montaggio/smontaggio, materiali e maggiorazione del 15%, più IVA 22%.`;
+  }
+
   if(!Number(selected.price_cents))return 'Per le esigenze del vostro evento prepariamo un preventivo personalizzato. Prezzo, durata, trasferta e acconto saranno definiti con lo studio.';
   const priced=packages.filter(p=>Number(p.price_cents||0)>0).map(p=>pricedPackage(p,data));
   const chosen=priced.find(p=>p.code===selected.code)||pricedPackage(selected,data);
@@ -4421,6 +4435,15 @@ app.post('/api/date-reservations/:practiceId/release', auth, adminOnly, async (r
 });
 
 
+app.post('/api/public/advisor/price-preview', publicRateLimit, async (req,res) => {
+  const input=z.object({location:z.string().min(5).max(240),guests:z.number().int().min(1).max(5000),hours:z.number().min(1).max(24)}).safeParse(req.body);
+  if(!input.success)return res.status(400).json({error:'Indirizzo, invitati e ore richiesti.'});
+  try{
+    const route=await eventRoute(input.data.location);
+    return res.json(calculateEventPrice({guests:input.data.guests,serviceHours:input.data.hours,route}));
+  }catch(error){return res.status(422).json({error:error.message,code:'ROUTE_REQUIRED'});}
+});
+
 app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
   try{
     await releaseManager.assertBookingAllowed();
@@ -4474,12 +4497,16 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
     parsed.data.guests>110 ? 6 :
     parsed.data.guests>65 ? 5 : 3
   );
-  const inferredDistance=parsed.data.distance ?? 50;
+  let route;
+  try { route=await eventRoute(parsed.data.location); }
+  catch(error){ return res.status(422).json({error:error.message,code:'ROUTE_REQUIRED'}); }
+  const inferredDistance=route.roundTripMeters/2000;
   const normalizedData={
     ...parsed.data,
     style:inferredStyle,
     hours:inferredHours,
-    distance:inferredDistance
+    distance:inferredDistance,
+    route
   };
 
   const fallback=deterministicRecommendation(normalizedData,packages);
@@ -4493,8 +4520,12 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
     recommendation={...fallback,aiUsed:false};
   }
 
-  const selectedRaw=packages.find(item=>item.code===recommendation.packageCode)
-    || packages[0];
+  let selectedRaw=packages.find(item=>item.code===recommendation.packageCode) || packages[0];
+  if(selectedRaw.code!=='LUXURY' && Number(selectedRaw.included_hours)<normalizedData.hours){
+    selectedRaw=packages.find(item=>item.code==='LUXURY') || selectedRaw;
+    recommendation.packageCode=selectedRaw.code;
+    recommendation.packageName=selectedRaw.name;
+  }
   const selected=pricedPackage(selectedRaw,normalizedData);
   recommendation.explanation=packageRecommendationExplanation(selectedRaw,normalizedData,packages);
   const salesToken=crypto.randomBytes(24).toString('hex');
@@ -4600,7 +4631,7 @@ app.post('/api/public/advisor/recommend', publicRateLimit, async (req,res) => {
     // Alternative disponibili per la scelta libera del cliente.
     // Il pacchetto raccomandato resta nella card principale e qui mostriamo gli altri.
     packages:packages
-      .filter(item=>item.code!==selected.code)
+      .filter(item=>item.code!==selected.code && (item.code==='LUXURY' || Number(item.included_hours)>=normalizedData.hours))
       .map(item=>{
         const priced=pricedPackage(item,normalizedData);
         return {
@@ -4682,6 +4713,10 @@ app.post('/api/public/advisor/:salesToken/select-package', publicRateLimit, asyn
     }
 
     const selectedRaw=packageResult.rows[0];
+    if(selectedRaw.code!=='LUXURY' && Number(selectedRaw.included_hours)<Number(session.customer_data?.hours)){
+      await client.query('ROLLBACK');
+      return res.status(422).json({error:'Questo pacchetto non copre le ore richieste. Scegli una durata compatibile o Luxury.'});
+    }
     const selected=pricedPackage(selectedRaw,session.customer_data||{});
     if(!Number.isFinite(selected.price_cents) || selected.price_cents<=0){
       await client.query('ROLLBACK');
