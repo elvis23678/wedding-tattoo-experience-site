@@ -23,7 +23,7 @@ export function createEventRouter({apiKey, fetchImpl=fetch}={}) {
     const structured=street && city && !/^(italia|italy)$/i.test(city);
     const address=structured ? {street:street[1],housenumber:street[2].replace(/\s/g,''),city,
       ...(postcode?{postcode:postcode[1]}:{})} : {text};
-    let filter='countrycode:it';
+    let filter='countrycode:it',bias;
     if(structured){
       const cityKey=`city:${cityName(city)}`;
       let place=cache.get(cityKey)?.route;
@@ -32,12 +32,13 @@ export function createEventRouter({apiKey, fetchImpl=fetch}={}) {
         console.info('[WTE routing city]',JSON.stringify((cities.results||[]).map(r=>({formatted:r.formatted,city:r.city,name:r.name,type:r.result_type,rank:r.rank,lat:r.lat,lon:r.lon}))));
         const matches=(cities.results||[]).filter(r=>cityName(r.city||r.town||r.village||r.name)===cityName(city) && r.place_id);
         if(matches.length!==1)throw new Error('Comune non riconosciuto univocamente. Specifica città, provincia e CAP.');
-        place=matches[0].place_id;
+        place=matches[0];
         cache.set(cityKey,{route:place,expires:Infinity});
       }
-      filter=`place:${place}`;
+      filter=`place:${place.place_id}`;
+      if(Number.isFinite(place.lat)&&Number.isFinite(place.lon))bias=`proximity:${place.lon},${place.lat}`;
     }
-    const json=await request('geocode/search',{text,format:'json',limit:3,lang:'it',filter});
+    const json=await request('geocode/search',{...address,format:'json',limit:10,lang:'it',filter,...(bias?{bias}:{})});
     console.info('[WTE routing address]',JSON.stringify((json.results||[]).map(r=>({formatted:r.formatted,city:r.city,type:r.result_type,rank:r.rank,lat:r.lat,lon:r.lon}))));
     const results=(json.results||[]).filter(r=>!structured || cityName(r.city||r.town||r.village||r.municipality)===cityName(city));
     const result=results[0];
