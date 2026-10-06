@@ -19,7 +19,7 @@ test('route uses three waypoints and provider totals; secrets stay out of output
  let count=0;
  const router=createEventRouter({apiKey:'secret',fetchImpl:async url=>{
  count++;assert.equal(url.searchParams.get('apiKey'),'secret');
- if(url.pathname.endsWith('/search'))return {ok:true,json:async()=>({results:[{lat:45,lon:7,formatted:'Via test',result_type:'building',rank:{confidence:1}}]})};
+ if(url.pathname.endsWith('/search'))return {ok:true,json:async()=>({results:[{lat:45,lon:7,formatted:'Via test',city:'Condove',result_type:'building',rank:{confidence:1}}]})};
  assert.equal(url.searchParams.get('waypoints').split('|').length,3);
  return {ok:true,json:async()=>({features:[{properties:{distance:100000,time:7200}}]})};
  }});
@@ -28,4 +28,35 @@ test('route uses three waypoints and provider totals; secrets stay out of output
 });
 test('missing key fails without estimating a distance',async()=>{
  await assert.rejects(createEventRouter({})('Other address'),/non configurato/);
+});
+
+test('structured addresses retain requested city and reject other-city matches',async()=>{
+ let searches=0;
+ const router=createEventRouter({apiKey:'test',fetchImpl:async url=>{
+  if(url.pathname.endsWith('/search')){
+   searches++;
+   assert.ok(!url.searchParams.has('text'));
+   const city=url.searchParams.get('city');
+   return {ok:true,json:async()=>({results:[
+    {lat:45,lon:7,formatted:'Wrong city',city:'Milano',result_type:'building',rank:{confidence:1}},
+    {lat:45.1,lon:7.1,formatted:city,city,result_type:'building',rank:{confidence:1}}
+   ]})};
+  }
+  return {ok:true,json:async()=>({features:[{properties:{distance:90000,time:7000}}]})};
+ }});
+ const r=await router('Via Roma 1, Torino, Italia');
+ assert.equal(r.origin,'Condove');assert.equal(r.destination,'Torino');assert.equal(searches,2);
+});
+test('ambiguous same-city addresses and city-only results do not produce prices',async()=>{
+ for(const ambiguous of [true,false]){
+ const router=createEventRouter({apiKey:'test',fetchImpl:async url=>{
+  const city=url.searchParams.get('city');
+  const results=city==='Condove'?[{lat:45,lon:7,city,formatted:city,result_type:'building',rank:{confidence:1}}]:
+   ambiguous?[{lat:45,lon:7,city,formatted:'A',result_type:'building',rank:{confidence:1}},
+     {lat:46,lon:8,city,formatted:'B',result_type:'building',rank:{confidence:1}}]:
+     [{lat:45,lon:7,city,formatted:city,result_type:'city',rank:{confidence:1}}];
+  return {ok:true,json:async()=>({results})};
+ }});
+ await assert.rejects(router('Via Roma 1, Torino, Italia'),ambiguous?/ambiguo/:/precisione/);
+ }
 });
