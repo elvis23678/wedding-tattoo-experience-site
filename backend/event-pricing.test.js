@@ -19,7 +19,7 @@ test('route uses three waypoints and provider totals; secrets stay out of output
  let count=0;
  const router=createEventRouter({apiKey:'secret',fetchImpl:async url=>{
  count++;assert.equal(url.searchParams.get('apiKey'),'secret');
- if(url.searchParams.get('type')==='city')return {ok:true,json:async()=>({results:[{city:'Condove',place_id:'condove'}]})};
+ if(url.searchParams.get('type')==='city')return {ok:true,json:async()=>({results:[{city:'Condove',place_id:'condove',result_type:'city'}]})};
  if(url.pathname.endsWith('/search'))return {ok:true,json:async()=>({results:[{lat:45,lon:7,formatted:'Via test',city:'Condove',result_type:'building',rank:{confidence:1}}]})};
  assert.equal(url.searchParams.get('waypoints').split('|').length,3);
  return {ok:true,json:async()=>({features:[{properties:{distance:100000,time:7200}}]})};
@@ -35,7 +35,7 @@ test('structured addresses retain requested city and reject other-city matches',
  let searches=0;
  const router=createEventRouter({apiKey:'test',fetchImpl:async url=>{
   if(url.pathname.endsWith('/search')){
-   if(url.searchParams.get('type')==='city')return {ok:true,json:async()=>({results:[{city:url.searchParams.get('text').split(',')[0],place_id:'city-place'}]})};
+   if(url.searchParams.get('type')==='city')return {ok:true,json:async()=>({results:[{city:url.searchParams.get('text').split(',')[0],place_id:'city-place',result_type:'city'}]})};
    searches++;
    assert.ok(!url.searchParams.has('text'));
    assert.equal(url.searchParams.get('filter'),'place:city-place');
@@ -53,7 +53,7 @@ test('structured addresses retain requested city and reject other-city matches',
 test('ambiguous same-city addresses and city-only results do not produce prices',async()=>{
  for(const ambiguous of [true,false]){
  const router=createEventRouter({apiKey:'test',fetchImpl:async url=>{
-  if(url.searchParams.get('type')==='city')return {ok:true,json:async()=>({results:[{city:url.searchParams.get('text').split(',')[0],place_id:'city-place'}]})};
+  if(url.searchParams.get('type')==='city')return {ok:true,json:async()=>({results:[{city:url.searchParams.get('text').split(',')[0],place_id:'city-place',result_type:'city'}]})};
   const city=url.searchParams.get('city');
   const results=city==='Condove'?[{lat:45,lon:7,city,formatted:city,result_type:'building',rank:{confidence:1}}]:
    ambiguous?[{lat:45,lon:7,city,formatted:'A',result_type:'building',rank:{confidence:1}},
