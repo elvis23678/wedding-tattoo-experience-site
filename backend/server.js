@@ -3638,6 +3638,7 @@ function pricedPackage(pack,data={}) {
 }
 
 function packageRecommendationExplanation(selected,data,packages){
+  if(!Number(selected.price_cents))return 'Per le esigenze del vostro evento prepariamo un preventivo personalizzato. Prezzo, durata, trasferta e acconto saranno definiti con lo studio.';
   const priced=packages.filter(p=>Number(p.price_cents||0)>0).map(p=>pricedPackage(p,data));
   const chosen=priced.find(p=>p.code===selected.code)||pricedPackage(selected,data);
   const cheapest=priced.slice().sort((a,b)=>a.price_cents-b.price_cents)[0];
